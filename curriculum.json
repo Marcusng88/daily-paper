@@ -1,0 +1,92 @@
+{
+  "schema_version": 1,
+  "collection_title": "Daily AI Papers",
+  "timezone": "Asia/Kuala_Lumpur",
+  "schedule": "daily at 7:50 AM",
+  "selection_policy": "Use one openly accessible, high-quality, educational core paper per day. Mix foundational and newer work across AI, ML, and DL. Verify a readable primary PDF before creating a lesson. Avoid repeats.",
+  "concepts_introduced": [
+    "embeddings", "tokenization", "self-attention", "multi-head attention", "positional encoding", "encoder-decoder", "autoregressive decoding", "residual connections", "layer normalization", "convolutional neural networks", "degradation problem", "identity shortcuts", "residual mapping", "bottleneck blocks", "reinforcement learning", "discounted return", "action-value function", "Bellman backup", "temporal-difference error", "experience replay", "target network", "epsilon-greedy exploration", "off-policy learning", "batch normalization", "mini-batch statistics", "running statistics", "learned affine transform", "stochastic gradient descent", "momentum", "adaptive learning rates", "first moment", "second raw moment", "bias correction", "coordinatewise updates", "preference pairs", "Bradley-Terry model", "KL-regularized reward maximization", "reference policy", "implicit reward", "DPO loss", "beta"
+  ],
+  "completed_lessons": [
+    {
+      "date": "2026-08-22",
+      "slug": "direct-preference-optimization",
+      "title": "Direct Preference Optimization: Your Language Model is Secretly a Reward Model",
+      "lesson_file": "2026-08-22-direct-preference-optimization/direct_preference_optimization.html",
+      "paper_file": "2026-08-22-direct-preference-optimization/direct_preference_optimization.pdf",
+      "authors": ["Rafael Rafailov", "Archit Sharma", "Eric Mitchell", "Stefano Ermon", "Christopher D. Manning", "Chelsea Finn"],
+      "venue": "NeurIPS 2023",
+      "canonical_url": "https://proceedings.neurips.cc/paper_files/paper/2023/file/a85b405ed65c6477a4fe8302b5e06ce7-Paper-Conference.pdf",
+      "domain": "language-model post-training and alignment",
+      "areas": ["language-model post-training", "alignment", "preference learning"],
+      "concepts_introduced": ["preference pairs", "Bradley-Terry model", "KL-regularized reward maximization", "reference policy", "implicit reward", "DPO loss", "beta"],
+      "mental_map_connection": "First collection lesson: establishes the preference-learning and post-training branch."
+    },
+    {
+      "date": "2026-08-22",
+      "slug": "adam-a-method-for-stochastic-optimization",
+      "title": "Adam: A Method for Stochastic Optimization",
+      "authors": ["Diederik P. Kingma", "Jimmy Ba"],
+      "year": 2015,
+      "areas": ["optimization", "deep-learning", "adaptive-methods", "training-dynamics"],
+      "canonical_url": "https://arxiv.org/abs/1412.6980",
+      "paper_file": "2026-08-22-adam-a-method-for-stochastic-optimization/adam_a_method_for_stochastic_optimization.pdf",
+      "lesson_file": "2026-08-22-adam-a-method-for-stochastic-optimization/adam_a_method_for_stochastic_optimization.html"
+    },
+    {
+      "date": "2026-08-21",
+      "slug": "batch-normalization",
+      "title": "Batch Normalization: Accelerating Deep Network Training by Reducing Internal Covariate Shift",
+      "authors": ["Sergey Ioffe", "Christian Szegedy"],
+      "year": 2015,
+      "areas": ["deep-learning", "optimization", "normalization", "computer-vision"],
+      "canonical_url": "https://arxiv.org/abs/1502.03167",
+      "paper_file": "2026-08-21-batch-normalization/batch_normalization_accelerating_deep_network_training.pdf",
+      "lesson_file": "2026-08-21-batch-normalization/batch_normalization_accelerating_deep_network_training.html"
+    },
+    {
+      "date": "2026-08-20",
+      "slug": "generative-adversarial-nets",
+      "title": "Generative Adversarial Nets",
+      "authors": ["Ian Goodfellow et al."],
+      "year": 2014,
+      "areas": ["generative-modeling", "deep-learning", "adversarial-learning", "probabilistic-modeling"],
+      "canonical_url": "https://arxiv.org/abs/1406.2661",
+      "paper_file": "2026-08-20-generative-adversarial-nets/generative_adversarial_nets.pdf",
+      "lesson_file": "2026-08-20-generative-adversarial-nets/generative_adversarial_nets.html"
+    },
+    {
+      "date": "2026-08-19",
+      "slug": "attention-is-all-you-need",
+      "title": "Attention Is All You Need",
+      "authors": ["Ashish Vaswani et al."],
+      "year": 2017,
+      "areas": ["deep-learning", "natural-language-processing", "transformers", "attention"],
+      "canonical_url": "https://arxiv.org/abs/1706.03762",
+      "paper_file": "2026-08-19-attention-is-all-you-need/attention_is_all_you_need.pdf",
+      "lesson_file": "2026-08-19-attention-is-all-you-need/attention_is_all_you_need.html"
+    },
+    {
+      "date": "2026-08-19",
+      "slug": "deep-residual-learning-for-image-recognition",
+      "title": "Deep Residual Learning for Image Recognition",
+      "authors": ["Kaiming He et al."],
+      "year": 2015,
+      "areas": ["deep-learning", "computer-vision", "convolutional-neural-networks", "optimization"],
+      "canonical_url": "https://arxiv.org/abs/1512.03385",
+      "paper_file": "2026-08-19-deep-residual-learning-for-image-recognition/deep_residual_learning_for_image_recognition.pdf",
+      "lesson_file": "2026-08-19-deep-residual-learning-for-image-recognition/deep_residual_learning_for_image_recognition.html"
+    },
+    {
+      "date": "2026-08-19",
+      "slug": "human-level-control-through-deep-reinforcement-learning",
+      "title": "Human-level Control through Deep Reinforcement Learning",
+      "authors": ["Volodymyr Mnih et al."],
+      "year": 2015,
+      "areas": ["deep-reinforcement-learning", "decision-making", "computer-vision", "deep-learning"],
+      "canonical_url": "https://www.nature.com/articles/nature14236",
+      "paper_file": "2026-08-19-human-level-control-through-deep-reinforcement-learning/human_level_control_through_deep_reinforcement_learning.pdf",
+      "lesson_file": "2026-08-19-human-level-control-through-deep-reinforcement-learning/human_level_control_through_deep_reinforcement_learning.html"
+    }
+  ]
+}
