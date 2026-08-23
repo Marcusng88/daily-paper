@@ -1,4 +1,5 @@
 <!doctype html>
+<script>document.addEventListener('DOMContentLoaded',()=>{const add=(starts,html)=>{const h=[...document.querySelectorAll('h2')].find(x=>x.textContent.trim().startsWith(starts));const s=h&&h.closest('section');if(s)s.insertAdjacentHTML('beforeend',html)};add('Before “deep”','<p class="small"><strong>Bridge:</strong> this vocabulary separates an immediate reward from a long-term return, and a value from a probability. With those roles fixed, we can ask where a training label for a Q-value comes from.</p>');add('Tomorrow helps','<p class="callout"><strong>Layman bridge:</strong> a Bellman target is like an accountant writing today’s estimate from a receipt already in hand plus a cautious forecast for what remains. The slider makes that arithmetic concrete; next we need a network that can supply the current and next-state values.</p>');add('One forward pass','<p class="small"><strong>Bridge:</strong> the output values are expected future payoffs, not normalized confidence scores. The network supplies these estimates, which lets the Bellman rule turn one observed transition into one supervised-style update.</p>');add('Trace the value target','<p class="callout"><strong>Read this trace in order:</strong> make target <em>y</em> from reward plus the frozen forecast; compare it with the live prediction; then use the difference to decide whether the chosen action-value should rise or fall.</p>');add('The learner is chasing','<p class="callout"><strong>Why the next mechanisms exist:</strong> the previous trace assumes the target stays meaningful long enough to learn from it. Replay mixes the lessons; the target network holds the answer key still for a while.</p>');add('From pixels and rewards','<p class="small"><strong>Bridge to evidence:</strong> now that the mechanism is connected—value target, network estimate, replay, and frozen target—read the Atari results as evidence about this specific training recipe, not a promise of general intelligence.</p>')})</script>
 <html lang="en">
 <head>
  <meta charset="utf-8">
@@ -48,11 +49,9 @@
    }
    .shell { width: min(1180px, calc(100% - 2rem)); margin: 0 auto; }
    .topbar {
-     display: flex; justify-content: space-between; align-items: center; gap: 1rem;
+     display: flex; align-items: center;
      padding: 1rem 0; border-bottom: 1px solid var(--line); font-size: .88rem;
    }
-   .wordmark { font-family: var(--mono); font-weight: 800; letter-spacing: .04em; }
-   .topbar nav { display: flex; gap: .9rem; flex-wrap: wrap; }
    .topbar a { color: var(--graphite); text-decoration: none; }
    .topbar a:hover { color: var(--cyan-dark); text-decoration: underline; }
    .topbar .home-link { display: inline-flex; align-items: center; padding: .34rem .58rem; border: 1px solid var(--cyan); color: var(--cyan-dark); background: var(--panel); font-weight: 800; }
@@ -95,10 +94,6 @@
    .hero-controls button.active, .hero-controls button:hover { color: var(--ink); background: #dce5e8; }
    .choice-output { color: #c7eff3; font: .8rem var(--mono); margin: .7rem 0 0; min-height: 1.35rem; }
    .layout { min-width: 0; padding-bottom: 5rem; }
-   .rail { display: flex; align-items: baseline; gap: .6rem 1rem; flex-wrap: wrap; padding: .8rem 0; border-bottom: 1px solid var(--line); }
-   .rail p { font: 700 .7rem/1.35 var(--mono); letter-spacing: .06em; text-transform: uppercase; color: var(--graphite); margin: 0; }
-   .rail a { display: block; font-size: .84rem; color: var(--graphite); text-decoration: none; padding: .15rem 0; }
-   .rail a:hover { color: var(--cyan-dark); }
    main, section, figure, .replay-grid > *, .evidence > * { min-width: 0; }
    section { padding: 3.5rem 0; border-top: 1px solid var(--line); }
    section:first-child { border-top: 0; padding-top: 0; }
@@ -245,25 +240,8 @@
 <body>
  <div class="shell">
    <header class="topbar">
-     <div class="wordmark">DQN STUDY NOTES</div>
-     <nav aria-label="Lesson navigation">
-       <a class="home-link" href="../index.html" aria-label="Return to all paper lessons">← Daily AI Paper Lab</a>
-       <a href="#bellman">Bellman target</a>
-       <a href="#worked-trace">Worked trace</a>
-       <a href="#stability">Stability</a>
-       <a href="#recall">Recall</a>
-     </nav>
+     <a class="home-link" href="../index.html" aria-label="Return to all paper lessons">← Daily AI Paper Lab</a>
    </header>
-
-   <aside class="rail" aria-label="Lesson route">
-     <p>Reading route</p>
-     <a href="#kit">The minimal kit</a>
-     <a href="#bellman">Tomorrow labels today</a>
-     <a href="#pixels">Pixels to values</a>
-     <a href="#stability">Stability bench</a>
-     <a href="#evidence">Paper evidence</a>
-     <a href="#recall">Check your model</a>
-   </aside>
 
    <section class="hero" aria-labelledby="lesson-title">
      <div class="hero-grid">
