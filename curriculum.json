@@ -5,9 +5,37 @@
   "schedule": "daily at 7:50 AM",
   "selection_policy": "Use one openly accessible, high-quality, educational core paper per day. Mix foundational and newer work across AI, ML, and DL. Verify a readable primary PDF before creating a lesson. Avoid repeats.",
   "concepts_introduced": [
-    "embeddings", "tokenization", "self-attention", "multi-head attention", "positional encoding", "encoder-decoder", "autoregressive decoding", "residual connections", "layer normalization", "convolutional neural networks", "degradation problem", "identity shortcuts", "residual mapping", "bottleneck blocks", "reinforcement learning", "discounted return", "action-value function", "Bellman backup", "temporal-difference error", "experience replay", "target network", "epsilon-greedy exploration", "off-policy learning", "batch normalization", "mini-batch statistics", "running statistics", "learned affine transform", "stochastic gradient descent", "momentum", "adaptive learning rates", "first moment", "second raw moment", "bias correction", "coordinatewise updates", "preference pairs", "Bradley-Terry model", "KL-regularized reward maximization", "reference policy", "implicit reward", "DPO loss", "beta"
+    "embeddings", "tokenization", "self-attention", "multi-head attention", "positional encoding", "encoder-decoder", "autoregressive decoding", "residual connections", "layer normalization", "convolutional neural networks", "degradation problem", "identity shortcuts", "residual mapping", "bottleneck blocks", "reinforcement learning", "discounted return", "action-value function", "Bellman backup", "temporal-difference error", "experience replay", "target network", "epsilon-greedy exploration", "off-policy learning", "batch normalization", "mini-batch statistics", "running statistics", "learned affine transform", "stochastic gradient descent", "momentum", "adaptive learning rates", "first moment", "second raw moment", "bias correction", "coordinatewise updates", "preference pairs", "Bradley-Terry model", "KL-regularized reward maximization", "reference policy", "implicit reward", "DPO loss", "beta", "latent variables", "generative model", "approximate posterior", "ELBO", "reparameterization trick", "variational inference", "prior distribution", "dropout", "regularization", "generalization", "co-adaptation", "Bernoulli masks", "test-time scaling", "shared-weight ensemble"
   ],
   "completed_lessons": [
+    {
+      "date": "2026-08-23",
+      "slug": "auto-encoding-variational-bayes",
+      "title": "Auto-Encoding Variational Bayes",
+      "lesson_file": "2026-08-23-auto-encoding-variational-bayes/auto_encoding_variational_bayes.html",
+      "paper_file": "2026-08-23-auto-encoding-variational-bayes/auto_encoding_variational_bayes.pdf",
+      "authors": ["Diederik P. Kingma", "Max Welling"],
+      "venue": "ICLR 2014",
+      "canonical_url": "https://arxiv.org/abs/1312.6114",
+      "domain": "probabilistic generative modeling and variational inference",
+      "areas": ["generative modeling", "variational inference", "latent-variable models"],
+      "concepts_introduced": ["latent variables", "generative model", "approximate posterior", "ELBO", "reparameterization trick", "variational inference", "prior distribution"],
+      "mental_map_connection": "Adds a likelihood-based latent-variable branch beside GANs, and connects probabilistic inference to the stochastic-gradient training ideas introduced by Adam."
+    },
+    {
+      "date": "2026-08-23",
+      "slug": "dropout-a-simple-way-to-prevent-neural-networks-from-overfitting",
+      "title": "Dropout: A Simple Way to Prevent Neural Networks from Overfitting",
+      "lesson_file": "2026-08-23-dropout-a-simple-way-to-prevent-neural-networks-from-overfitting/dropout_a_simple_way_to_prevent_neural_networks_from_overfitting.html",
+      "paper_file": "2026-08-23-dropout-a-simple-way-to-prevent-neural-networks-from-overfitting/dropout_a_simple_way_to_prevent_neural_networks_from_overfitting.pdf",
+      "authors": ["Nitish Srivastava", "Geoffrey Hinton", "Alex Krizhevsky", "Ilya Sutskever", "Ruslan Salakhutdinov"],
+      "venue": "JMLR 2014",
+      "canonical_url": "https://www.jmlr.org/papers/v15/srivastava14a.html",
+      "domain": "regularization and generalization",
+      "areas": ["regularization", "generalization", "deep learning", "model averaging"],
+      "concepts_introduced": ["dropout", "regularization", "generalization", "co-adaptation", "Bernoulli masks", "test-time scaling", "shared-weight ensemble"],
+      "mental_map_connection": "Adds a regularization branch: it changes which internal routes train on each pass, unlike Adam's parameter updates, BatchNorm's activation statistics, or ResNet's permanent shortcut paths."
+    },
     {
       "date": "2026-08-22",
       "slug": "direct-preference-optimization",

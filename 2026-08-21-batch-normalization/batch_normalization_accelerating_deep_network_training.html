@@ -1,0 +1,214 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Batch Normalization - guided study lesson</title></head><body>
+<main id="bn">
+<style>#bn{--ink:#172f43;--muted:#536a78;--paper:#f3f7f5;--card:#fffefa;--line:#b7cbd0;--blue:#146c94;--cyan:#7dc5cf;--gold:#f3bb4a;--coral:#d85f4c;max-width:1060px;margin:auto;padding:34px 22px 64px;color:var(--ink);background:radial-gradient(circle at 11px 11px,#d3e7e2 1.3px,transparent 1.5px) 0 0/22px 22px,var(--paper);font:16px/1.63 ui-sans-serif,system-ui,sans-serif}#bn *{box-sizing:border-box}#bn h1,#bn h2{font-family:Georgia,serif;letter-spacing:-.045em;line-height:1.02}#bn h1{font-size:clamp(3rem,8vw,5.7rem);margin:0;max-width:850px}#bn h2{font-size:clamp(1.9rem,4vw,2.7rem);margin:45px 0 14px}#bn h3{margin:0 0 8px}#bn p{margin:0 0 14px}#bn a{color:#075d77;font-weight:750;text-underline-offset:3px}.home{display:inline-block;margin:0 0 25px;padding:8px 11px;background:#fffefa;border:1px solid #6b9eaa;color:#075d77;text-decoration:none;font:800 .78rem ui-monospace,monospace;box-shadow:3px 3px 0 #b9d7d9}.card{background:var(--card);border:1px solid var(--line);padding:24px;margin-top:18px;box-shadow:8px 8px 0 rgba(21,84,99,.09)}.hero{background:#173f57;color:#fff;border:none;overflow:hidden}.hero p{color:#d9eef0}.lead{font:1.3rem/1.4 Georgia,serif;color:#3d5665;margin-top:17px!important;max-width:720px}.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}.two{grid-template-columns:repeat(2,1fr)}.box{background:#fff;border:1px solid var(--line);padding:16px}.box strong{display:block;font-size:1.2rem;color:#075d77}.eq{display:inline-block;background:#163b51;color:#eefcff;padding:18px;font:1.1rem/1.55 ui-monospace,monospace}.note{margin-top:16px;padding:15px 17px;background:#fff4df;border-left:6px solid var(--gold)}.route{display:grid;grid-template-columns:104px 1fr;border-bottom:1px solid var(--line);padding:12px 0;gap:12px}.route:last-child{border:0}.route b{font:.78rem ui-monospace,monospace;color:#075d77}.lab{background:#e9f5f2;border:1px solid var(--line);padding:18px}.tabs{display:flex;gap:8px;flex-wrap:wrap;margin:13px 0}.tabs button{border:1px solid #5a94a4;background:#fffefa;color:#075d77;padding:8px 10px;cursor:pointer;font:800 .78rem ui-monospace,monospace}.tabs button[aria-pressed=true]{background:#173f57;color:#fff}.lab svg{display:block;width:100%;height:auto;background:#fff;border:1px solid #b9d3d6}.readout{background:#fff;margin-top:14px;padding:15px;border-left:6px solid var(--blue)}.details{border:1px solid var(--line);background:#fff;padding:0 15px;margin-top:11px}.details summary{padding:13px 0;cursor:pointer;font-weight:750}.sources ul{margin:0;padding-left:1.25rem}.sources li{margin:.48rem 0}#bn a:focus-visible,#bn button:focus-visible,#bn summary:focus-visible{outline:3px solid #e79225;outline-offset:3px}@media(prefers-reduced-motion:reduce){#bn *{animation:none!important;transition:none!important}}@media(max-width:700px){#bn{padding:25px 15px 45px}.grid,.two{grid-template-columns:1fr}.route{grid-template-columns:1fr}.tabs{display:grid}}</style>
+<a class="home" href="../index.html">← Daily AI Paper Lab</a>
+<h1>Batch Normalization</h1>
+<p class="lead">A batch-normalized layer first makes its incoming features comparable, then learns the scale and offset that the network actually wants.</p>
+<section class="card hero">
+<h2 style="margin-top:0">The stable measuring tape</h2>
+<p>Imagine every layer receiving measurements whose typical size keeps changing while earlier layers learn. Batch Normalization gives each mini-batch a fresh measuring tape: center, scale, then hand the layer a learned way to stretch and shift the result again.</p>
+<svg viewBox="0 0 920 220" role="img" aria-label="A feature distribution is centered, scaled, then adjusted by learned gamma and beta">
+<g font-family="system-ui" font-weight="700">
+<text x="34" y="53" fill="#d8f1ef">incoming activations</text>
+<path d="M43 145C110 55 160 208 232 120S350 65 402 142" fill="none" stroke="#7dc5cf" stroke-width="11"/>
+<path d="M425 113H520" stroke="#f3bb4a" stroke-width="6"/>
+<text x="428" y="91" fill="#fff">center + scale</text>
+<path d="M542 145C608 77 663 197 736 120S826 72 883 136" fill="none" stroke="#f3bb4a" stroke-width="11"/>
+<text x="555" y="53" fill="#d8f1ef">normalized, then γ and β</text>
+</g>
+</svg>
+</section>
+<section class="card">
+<h2 style="margin-top:0">A 60-minute route</h2>
+<div class="route">
+<b>0–8 min</b>
+<span>Build the moving-measuring-tape intuition: why a layer sees an evolving representation rather than fixed raw data.</span>
+</div>
+<div class="route">
+<b>8–18 min</b>
+<span>Use the lab and derive centering, variance scaling, then learned recovery through γ and β.</span>
+</div>
+<div class="route">
+<b>18–30 min</b>
+<span>Trace batch statistics, convolutional axes, and the different rules used at training and inference.</span>
+</div>
+<div class="route">
+<b>30–42 min</b>
+<span>Work through running estimates, residual-block placement, and small-batch failure cases.</span>
+</div>
+<div class="route">
+<b>42–52 min</b>
+<span>Compare BatchNorm with LayerNorm and GroupNorm; test predictions before revealing answers.</span>
+</div>
+<div class="route">
+<b>52–60 min</b>
+<span>Read the paper evidence and limitations, then connect the mechanism to the rest of your mental map.</span>
+</div>
+</section>
+<h2>1. The problem: a moving input distribution</h2>
+<section class="card">
+<p>A deep layer does not receive raw pixels. It receives activations produced by earlier layers, whose weights change after every update. Their scale and mean can drift. The paper calls this <em>internal covariate shift</em> and proposes normalizing each mini-batch as part of the architecture.</p>
+<div class="grid two">
+<div class="box">
+<strong>Intuition</strong>It is easier to tune an instrument when the markings on its dial stay interpretable. BN makes feature coordinates more consistently scaled while learning proceeds.</div>
+<div class="box">
+<strong>Important nuance</strong>BN works well, but later work questions whether reducing internal covariate shift is the complete causal explanation. Treat the paper’s term as its motivation, not settled proof of why every benefit occurs.</div>
+</div>
+</section>
+<h2>2. The batch-normalization transformation</h2>
+<section class="card">
+<div class="eq">μ<sub>B</sub> = (1/m) Σ x<sub>i</sub> &nbsp;&nbsp; σ²<sub>B</sub> = (1/m) Σ(x<sub>i</sub> − μ<sub>B</sub>)²<br>x̂<sub>i</sub> = (x<sub>i</sub> − μ<sub>B</sub>) / √(σ²<sub>B</sub> + ε)<br>y<sub>i</sub> = γx̂<sub>i</sub> + β</div>
+<div class="grid two" style="margin-top:16px">
+<div class="box">
+<strong>μ<sub>B</sub>, σ²<sub>B</sub>
+</strong>Mean and variance measured from the current mini-batch, separately for each feature/channel.</div>
+<div class="box">
+<strong>x̂, ε</strong>Centered-and-scaled activation; ε is a small numerical guard against division by zero.</div>
+<div class="box">
+<strong>γ</strong>Learned scale. It can amplify, shrink, or flip a normalized feature.</div>
+<div class="box">
+<strong>β</strong>Learned shift. It can move a feature’s useful baseline away from zero.</div>
+</div>
+<p style="margin-top:16px">The learned pair <code>γ, β</code> matters: normalization does <em>not</em> force a layer to keep only zero-mean, unit-variance outputs. It gives optimization a stable coordinate system, then lets the model choose a useful representation within it.</p>
+</section>
+<h2>3. Run one batch through the measuring tape</h2>
+<section class="card">
+<div class="lab">
+<h3>Choose the feature values</h3>
+<div class="tabs" role="group" aria-label="Batch examples">
+<button type="button" data-bn="spread" aria-pressed="true">Wide, shifted batch</button>
+<button type="button" data-bn="tight" aria-pressed="false">Tight batch</button>
+<button type="button" data-bn="recover" aria-pressed="false">Learned recovery</button>
+</div>
+<svg viewBox="0 0 920 278" role="img" aria-labelledby="bnlabtitle bnlabd">
+<title id="bnlabtitle">Batch normalization lesson diagram</title>
+<desc id="bnlabd">Dots from a batch are centered and scaled, then transformed by learned gamma and beta.</desc>
+<g font-family="system-ui">
+<text id="bntitle" x="30" y="34" font-size="17" font-weight="800" fill="#173f57">Start: values are far from zero and widely spread</text>
+<line x1="42" y1="153" x2="271" y2="153" stroke="#8aa9af"/>
+<line x1="346" y1="153" x2="575" y2="153" stroke="#8aa9af"/>
+<line x1="650" y1="153" x2="879" y2="153" stroke="#8aa9af"/>
+<g id="raw" fill="#d85f4c">
+<circle cx="78" cy="126" r="11"/>
+<circle cx="132" cy="110" r="11"/>
+<circle cx="190" cy="72" r="11"/>
+<circle cx="244" cy="44" r="11"/>
+</g>
+<path d="M280 153H333" stroke="#146c94" stroke-width="4"/>
+<text x="283" y="132" fill="#075d77" font-size="13">− μ, ÷ σ</text>
+<g id="norm" fill="#146c94">
+<circle cx="374" cy="112" r="11"/>
+<circle cx="428" cy="139" r="11"/>
+<circle cx="492" cy="139" r="11"/>
+<circle cx="548" cy="112" r="11"/>
+</g>
+<path d="M584 153H637" stroke="#146c94" stroke-width="4"/>
+<text x="589" y="132" fill="#075d77" font-size="13">γx̂ + β</text>
+<g id="out" fill="#f3bb4a">
+<circle cx="680" cy="128" r="11"/>
+<circle cx="734" cy="102" r="11"/>
+<circle cx="798" cy="73" r="11"/>
+<circle cx="854" cy="46" r="11"/>
+</g>
+<text x="80" y="202" font-size="14" fill="#536a78">raw batch x</text>
+<text x="386" y="202" font-size="14" fill="#536a78">normalized x̂</text>
+<text x="700" y="202" font-size="14" fill="#536a78">output y</text>
+<text id="bncaption" x="30" y="250" font-size="14" fill="#173f57">BN removes this batch’s mean and rescales its spread; the learned affine transform restores useful freedom.</text>
+</g>
+</svg>
+<div class="readout" id="bnreadout" aria-live="polite">
+<strong>Static reading:</strong> With values <code>[2, 4, 6, 8]</code>, the batch mean is 5. After centering and dividing by its standard deviation, the values are balanced around zero. The learned <code>γ</code> and <code>β</code> then decide the representation the next layer sees.</div>
+</div>
+<h3 style="margin-top:22px">Worked trace</h3>
+<p>For <code>x = [2, 4, 6, 8]</code>, <code>μ<sub>B</sub> = 5</code> and <code>σ²<sub>B</sub> = 5</code>. Ignoring tiny ε for readability:</p>
+<div class="eq">x̂ ≈ [−1.34, −0.45, 0.45, 1.34]<br>if γ = 2 and β = 1, then y ≈ [−1.68, 0.10, 1.90, 3.68]</div>
+<p style="margin-top:14px">The output is not forced back to zero mean or unit variance. The network can learn to use a stretched and shifted version; it simply starts from a normalized coordinate system for this batch.</p>
+</section>
+<h2>4. Training and inference are different moments</h2>
+<section class="card">
+<div class="grid two">
+<div class="box">
+<strong>During training</strong>BN uses the current mini-batch’s mean and variance. This means one example’s output depends slightly on its batch companions.</div>
+<div class="box">
+<strong>During inference</strong>A deployed model cannot rely on a convenient batch. It uses accumulated running estimates of mean and variance instead, making each prediction deterministic with respect to its input.</div>
+</div>
+<div class="note">
+<strong>Practical implication:</strong> batch size and batch composition matter. Very small or unusual batches can make the estimates noisy; alternatives such as LayerNorm or GroupNorm may be preferable depending on the architecture and setting.</div>
+</section>
+<h2>5. What the paper showed—and did not show</h2>
+<section class="card">
+<p>The paper reports that its batch-normalized Inception model reached the reference accuracy with <strong>14× fewer training steps</strong>, and its ensemble reached <strong>4.9% top-5 validation error</strong> and <strong>4.8% test error</strong> on ImageNet. It also reports tolerance for higher learning rates and less careful initialization in its studied models.</p>
+<p>Those results do not mean BN is universally the right normalization layer, that it removes tuning, or that it alone explains every improvement. Its behavior depends on placement, batch regime, task, architecture, and training setup.</p>
+</section>
+<h2>6. Check your model</h2>
+<section class="card">
+<details class="details">
+<summary>Does BN normalize a whole layer with one shared mean?</summary>
+<p>No. It computes statistics per feature or convolutional channel (over the relevant batch and spatial elements), not one global number for every feature.</p>
+</details>
+<details class="details">
+<summary>If normalization is useful, why add γ and β?</summary>
+<p>They preserve expressive freedom. The model can select the scale and offset that serve the task after standardization.</p>
+</details>
+<details class="details">
+<summary>Can training-time batch statistics be used blindly at inference?</summary>
+<p>No. A single example or a differently composed batch would produce a different result. BN normally uses stored running estimates at inference.</p>
+</details>
+<details class="details">
+<summary>Is BN the same as LayerNorm?</summary>
+<p>No. BatchNorm relates examples through batch statistics; LayerNorm normalizes features within an individual example. This is one reason Transformers commonly use LayerNorm.</p>
+</details>
+</section>
+<h2>7. BatchNorm for convolutional feature maps</h2>
+<section class="card">
+<p>For a convolution output <code>X ∈ ℝ<sup>N×C×H×W</sup></code>, BatchNorm gives each channel its own measuring tape. For channel <code>c</code>, it pools values across the batch and every spatial position:</p>
+<div class="eq">μ<sub>c</sub> = (1/NHW) Σ<sub>n,h,w</sub> X<sub>n,c,h,w</sub><br>σ²<sub>c</sub> = (1/NHW) Σ<sub>n,h,w</sub>(X<sub>n,c,h,w</sub> − μ<sub>c</sub>)²</div>
+<div class="grid two" style="margin-top:16px"><div class="box"><strong>What is shared</strong>The same <code>μ<sub>c</sub>, σ²<sub>c</sub>, γ<sub>c</sub>, β<sub>c</sub></code> apply to every spatial location in one channel.</div><div class="box"><strong>What stays separate</strong>Different channels do not share statistics. An edge detector and a texture detector get independent normalization parameters.</div></div>
+<div class="note"><strong>Trace it:</strong> for <code>N=4, C=64, H=W=28</code>, one channel’s statistics use <code>4 × 28 × 28 = 3136</code> values. Not four values, not one value per pixel, and not all channels mixed together.</div>
+<details class="details"><summary>Predict before revealing: what changes for a fully connected layer?</summary><p>For a dense layer shaped <code>N × D</code>, each feature dimension uses its statistics across the <code>N</code> examples. There are no spatial axes to pool.</p></details>
+</section>
+<h2>8. The running-statistics notebook</h2>
+<section class="card">
+<p>Training needs the current batch. Deployment needs a stable estimate that does not depend on which examples happen to arrive together. A running mean can be updated with a small update rate <code>α</code>:</p>
+<div class="eq">r<sub>new</sub> = (1 − α)r<sub>old</sub> + αμ<sub>B</sub></div>
+<table style="width:100%;border-collapse:collapse;margin-top:16px"><thead><tr><th style="text-align:left;border-bottom:1px solid #b7cbd0;padding:8px">arrival</th><th style="text-align:left;border-bottom:1px solid #b7cbd0;padding:8px">batch mean</th><th style="text-align:left;border-bottom:1px solid #b7cbd0;padding:8px">running mean, α = 0.1</th></tr></thead><tbody><tr><td style="padding:8px;border-bottom:1px solid #d8e3e3">initial estimate</td><td style="padding:8px;border-bottom:1px solid #d8e3e3">—</td><td style="padding:8px;border-bottom:1px solid #d8e3e3">0.000</td></tr><tr><td style="padding:8px;border-bottom:1px solid #d8e3e3">batch 1</td><td style="padding:8px;border-bottom:1px solid #d8e3e3">4.0</td><td style="padding:8px;border-bottom:1px solid #d8e3e3">0.400</td></tr><tr><td style="padding:8px;border-bottom:1px solid #d8e3e3">batch 2</td><td style="padding:8px;border-bottom:1px solid #d8e3e3">6.0</td><td style="padding:8px;border-bottom:1px solid #d8e3e3">0.960</td></tr><tr><td style="padding:8px">batch 3</td><td style="padding:8px">5.0</td><td style="padding:8px">1.364</td></tr></tbody></table>
+<p style="margin-top:16px">At inference, an activation uses stored running statistics: <code>y = γ(x − μ<sub>running</sub>) / √(σ²<sub>running</sub> + ε) + β</code>. Frameworks use different names and conventions for “momentum,” so check the documented formula rather than assuming the coefficient’s meaning.</p>
+<details class="details"><summary>Why can train mode and eval mode change a CNN prediction with identical weights?</summary><p>Only the statistics changed. Train mode measures the current batch, so one image’s output can depend on its neighbours. Eval mode uses stored estimates, making the output independent of its batch companions.</p></details>
+</section>
+<h2>9. BN inside a residual network</h2>
+<section class="card"><div class="grid two"><div class="box"><strong>Classic convolutional block</strong><code>Conv → BN → ReLU</code>. BN normalizes the convolution’s channel outputs before the nonlinearity.</div><div class="box"><strong>Original ResNet-style branch</strong><code>x → Conv → BN → ReLU → Conv → BN</code>, then add the shortcut and apply ReLU. Pre-activation ResNets instead place <code>BN → ReLU</code> before each convolution.</div></div><p style="margin-top:16px">These layouts are design choices, not interchangeable slogans. The shortcut remains the baseline information route; BN does not replace it. When a branch changes <code>56×56×64</code> into <code>28×28×128</code>, the shortcut needs the learned projection you studied in the ResNet lesson so addition is valid.</p><div class="note"><strong>Predict before revealing:</strong> Can a shortcut with shape <code>56×56×64</code> be added directly to a residual branch with shape <code>28×28×128</code>? <strong>No.</strong> Addition is elementwise, so both the spatial grid and channel count must align first.</div></section>
+<h2>10. When the measuring tape becomes noisy</h2>
+<section class="card"><p>BN does not “always fail” with small batches, but its estimates become less reliable when too few values contribute. CNNs can still have many samples per channel through <code>N×H×W</code>; late layers with small feature maps lose that help.</p><div class="grid two"><div class="box"><strong>Tiny N or tiny H×W</strong>Batch mean and variance fluctuate more. With only one value per channel in a training step, variance estimation can be unusable.</div><div class="box"><strong>Distributed and fine-tuning regimes</strong>Per-device batches may be too small. Options include synchronized BN, freezing running statistics, or choosing another normalization family; each has trade-offs.</div></div><p style="margin-top:16px">Gradient accumulation does not automatically give BN the statistics of the accumulated effective batch: it sees each forward pass separately. Under domain shift, stale running estimates can also be a real source of mismatch.</p></section>
+<h2>11. Choose the axes before choosing the normalizer</h2>
+<section class="card"><table style="width:100%;border-collapse:collapse"><thead><tr><th style="text-align:left;border-bottom:1px solid #b7cbd0;padding:8px">method</th><th style="text-align:left;border-bottom:1px solid #b7cbd0;padding:8px">statistics pooled over</th><th style="text-align:left;border-bottom:1px solid #b7cbd0;padding:8px">batch-coupled in training?</th></tr></thead><tbody><tr><td style="padding:8px;border-bottom:1px solid #d8e3e3">BatchNorm</td><td style="padding:8px;border-bottom:1px solid #d8e3e3">batch and spatial positions, per channel</td><td style="padding:8px;border-bottom:1px solid #d8e3e3">yes</td></tr><tr><td style="padding:8px;border-bottom:1px solid #d8e3e3">LayerNorm</td><td style="padding:8px;border-bottom:1px solid #d8e3e3">features within one example/token</td><td style="padding:8px;border-bottom:1px solid #d8e3e3">no</td></tr><tr><td style="padding:8px">GroupNorm</td><td style="padding:8px">channel groups and spatial positions within one example</td><td style="padding:8px">no</td></tr></tbody></table><details class="details"><summary>Practice: choose a likely starting point</summary><p>A large-batch image classifier often makes BatchNorm a strong baseline. A Transformer commonly uses LayerNorm because each token can be normalized independently of batch composition. A vision detector constrained to 1–2 images per device often makes GroupNorm a practical candidate. These are starting points, not laws.</p></details><details class="details"><summary>Teach it back in one sentence</summary><p>Complete this before opening: “BatchNorm differs from LayerNorm because …” A strong answer names the axes used for statistics and the train-versus-evaluation consequence.</p></details></section>
+<h2>12. Connect it to your mental map</h2>
+<section class="card">
+<p>
+<strong>ResNet:</strong> residual shortcuts preserve a direct route for representations and gradients; the original ResNet also used Batch Normalization in its residual branch. One makes refinement paths easy; the other makes the branch’s feature scale easier to manage. <strong>Transformer:</strong> it also uses residual additions, but commonly relies on LayerNorm because each token can be normalized independently of batch composition, which fits variable-length and autoregressive sequence work naturally. <strong>DQN:</strong> replay buffers change which samples arrive together, so batch statistics are not a universal stability solution; replay and target networks instead stabilize bootstrapped targets. <strong>GAN:</strong> generator and discriminator distributions move while training, making normalization choices consequential but not a substitute for game stability.</p>
+<div class="note">
+<strong>Question to carry forward:</strong> when you meet a normalization layer, ask: which axes are averaged together, when are the statistics computed, and what train-versus-inference behavior follows?</div>
+</section>
+<h2>13. Takeaway</h2>
+<section class="card">
+<p>
+<strong>Native intuition:</strong> Batch Normalization is a learned measuring tape inside a network. For each mini-batch it recenters and rescales feature values, then gives the model learned knobs to choose the useful scale and offset again. The stable coordinates help learning; the learned affine step keeps representation power.</p>
+</section>
+<footer class="card sources">
+<h2 style="margin-top:0">Source and further exploration</h2>
+<ul>
+<li>
+<a href="batch_normalization_accelerating_deep_network_training.pdf">Original paper PDF (local copy)</a>
+</li>
+<li>
+<a href="https://arxiv.org/abs/1502.03167">arXiv record: 1502.03167</a>
+</li>
+<li>
+<a href="https://proceedings.mlr.press/v37/ioffe15.html">ICML 2015 publication record</a>
+</li>
+</ul>
+</footer>
+<script>(()=>{const states={spread:{title:'Start: values are far from zero and widely spread',cap:'BN removes this batch’s mean and rescales its spread; the learned affine transform restores useful freedom.',read:'<strong>Static reading:</strong> With values <code>[2, 4, 6, 8]</code>, the batch mean is 5. After centering and dividing by its standard deviation, the values are balanced around zero. The learned <code>γ</code> and <code>β</code> then decide the representation the next layer sees.'},tight:{title:'A tight batch still becomes a usable standardized signal',cap:'A small raw spread is scaled up relative to this batch; ε keeps the calculation numerically safe.',read:'<strong>Static reading:</strong> With a tight batch such as <code>[4.8, 5.0, 5.1, 5.2]</code>, normalization makes small relative differences visible. This is useful, but it also shows why noisy small-batch statistics need care.'},recover:{title:'γ and β deliberately move the normalized feature again',cap:'Normalization is not a representational prison: γ stretches and β shifts the balanced feature.',read:'<strong>Static reading:</strong> If the next computation benefits from a positive, spread-out feature, learned <code>γ</code> and <code>β</code> can create it after normalization. BN stabilizes coordinates without forbidding useful scales.'}};const bs=[...document.querySelectorAll('[data-bn]')],title=document.getElementById('bntitle'),cap=document.getElementById('bncaption'),read=document.getElementById('bnreadout'),raw=[...document.querySelectorAll('#raw circle')],out=[...document.querySelectorAll('#out circle')];function set(k){const s=states[k];title.textContent=s.title;cap.textContent=s.cap;read.innerHTML=s.read;const ys=k==='tight'?[124,113,102,91]:k==='recover'?[130,112,87,56]:[126,110,72,44];const oy=k==='recover'?[153,112,69,29]:[128,102,73,46];raw.forEach((e,i)=>e.setAttribute('cy',ys[i]));out.forEach((e,i)=>e.setAttribute('cy',oy[i]));bs.forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.bn===k)))}bs.forEach(b=>b.addEventListener('click',()=>set(b.dataset.bn)))})();</script>
+<section class="card" aria-label="Answer key"><h2>Answer key</h2><details class="details"><summary>Model answer: “BatchNorm differs from LayerNorm because …”</summary><p>BatchNorm measures each feature or channel across the mini-batch (and spatial positions for CNNs), so training examples influence one another and inference uses stored running statistics. LayerNorm measures features within each individual example or token, so it does not depend on batch companions.</p></details></section>
+</main>
+</body></html>
