@@ -5,9 +5,23 @@
   "schedule": "daily at 7:50 AM",
   "selection_policy": "Use one openly accessible, high-quality, educational core paper per day. Mix foundational and newer work across AI, ML, and DL. Verify a readable primary PDF before creating a lesson. Avoid repeats.",
   "concepts_introduced": [
-    "embeddings", "tokenization", "self-attention", "multi-head attention", "positional encoding", "encoder-decoder", "autoregressive decoding", "residual connections", "layer normalization", "convolutional neural networks", "degradation problem", "identity shortcuts", "residual mapping", "bottleneck blocks", "reinforcement learning", "discounted return", "action-value function", "Bellman backup", "temporal-difference error", "experience replay", "target network", "epsilon-greedy exploration", "off-policy learning", "batch normalization", "mini-batch statistics", "running statistics", "learned affine transform", "stochastic gradient descent", "momentum", "adaptive learning rates", "first moment", "second raw moment", "bias correction", "coordinatewise updates", "preference pairs", "Bradley-Terry model", "KL-regularized reward maximization", "reference policy", "implicit reward", "DPO loss", "beta", "latent variables", "generative model", "approximate posterior", "ELBO", "reparameterization trick", "variational inference", "prior distribution", "dropout", "regularization", "generalization", "co-adaptation", "Bernoulli masks", "test-time scaling", "shared-weight ensemble"
+    "graphs", "adjacency matrix", "message passing", "self-loops", "degree normalization", "node classification", "over-smoothing", "embeddings", "tokenization", "self-attention", "multi-head attention", "positional encoding", "encoder-decoder", "autoregressive decoding", "residual connections", "layer normalization", "convolutional neural networks", "degradation problem", "identity shortcuts", "residual mapping", "bottleneck blocks", "reinforcement learning", "discounted return", "action-value function", "Bellman backup", "temporal-difference error", "experience replay", "target network", "epsilon-greedy exploration", "off-policy learning", "batch normalization", "mini-batch statistics", "running statistics", "learned affine transform", "stochastic gradient descent", "momentum", "adaptive learning rates", "first moment", "second raw moment", "bias correction", "coordinatewise updates", "preference pairs", "Bradley-Terry model", "KL-regularized reward maximization", "reference policy", "implicit reward", "DPO loss", "beta", "latent variables", "generative model", "approximate posterior", "ELBO", "reparameterization trick", "variational inference", "prior distribution", "dropout", "regularization", "generalization", "co-adaptation", "Bernoulli masks", "test-time scaling", "shared-weight ensemble"
   ],
   "completed_lessons": [
+    {
+      "date": "2026-08-24",
+      "slug": "semi-supervised-classification-with-graph-convolutional-networks",
+      "title": "Semi-Supervised Classification with Graph Convolutional Networks",
+      "lesson_file": "2026-08-24-semi-supervised-classification-with-graph-convolutional-networks/semi_supervised_classification_with_graph_convolutional_networks.html",
+      "paper_file": "2026-08-24-semi-supervised-classification-with-graph-convolutional-networks/semi_supervised_classification_with_graph_convolutional_networks.pdf",
+      "authors": ["Thomas N. Kipf", "Max Welling"],
+      "venue": "ICLR 2017",
+      "canonical_url": "https://openreview.net/forum?id=SJU4ayYgl",
+      "domain": "graph representation learning and semi-supervised node classification",
+      "areas": ["graph neural networks", "representation learning", "semi-supervised learning"],
+      "concepts_introduced": ["graphs", "adjacency matrix", "message passing", "self-loops", "degree normalization", "node classification", "over-smoothing"],
+      "mental_map_connection": "Adds a graph-structured-data branch: it generalizes the shared local rule of CNNs beyond grids and contrasts fixed graph neighbourhood mixing with the Transformer’s learned attention."
+    },
     {
       "date": "2026-08-23",
       "slug": "auto-encoding-variational-bayes",

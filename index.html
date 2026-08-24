@@ -13,50 +13,42 @@
     <p class="tag">A growing study collection</p><h1>Daily AI Papers</h1><p class="lede">Long-form, offline-ready lessons for building durable intuition across machine learning.</p>
     <form class="catalog-tools" role="search" onsubmit="return false">
       <label>Search papers<input id="paper-search" type="search" placeholder="Title, author, topic…" autocomplete="off"></label>
-      <label>Filter by topic<select id="topic-filter"><option value="all">All topics</option><option value="generative">Generative modeling</option><option value="regularization">Regularization</option><option value="post-training">Post-training</option><option value="optimization">Optimization</option><option value="normalization">Normalization</option><option value="language">Language modeling</option><option value="vision">Computer vision</option><option value="reinforcement">Reinforcement learning</option></select></label>
+      <label>Filter by topic<select id="topic-filter"><option value="all">All topics</option><option value="graphs">Graph machine learning</option><option value="generative">Generative modeling</option><option value="regularization">Regularization</option><option value="post-training">Post-training</option><option value="optimization">Optimization</option><option value="normalization">Normalization</option><option value="language">Language modeling</option><option value="vision">Computer vision</option><option value="reinforcement">Reinforcement learning</option></select></label>
       <label>Sort<select id="sort-order"><option value="newest">Newest first</option><option value="oldest">Oldest first</option><option value="title">Title A–Z</option></select></label>
     </form>
-    <p id="results" class="results" aria-live="polite">9 lessons</p>
-    <section id="lesson-list" aria-label="Paper lessons">
-    <article class="lesson" data-date="2026-08-23" data-topic="generative" data-search="auto-encoding variational bayes kingma welling iclr generative modeling variational inference"><time class="date" datetime="2026-08-23">23 Aug 2026</time><div><p class="tag">Generative modeling · 60 minutes</p><a class="paper-title" href="2026-08-23-auto-encoding-variational-bayes/auto_encoding_variational_bayes.pdf"><h2>Auto-Encoding Variational Bayes</h2></a><p class="meta">Kingma &amp; Welling · ICLR 2014</p><a class="button" href="2026-08-23-auto-encoding-variational-bayes/auto_encoding_variational_bayes.html">Open lesson →</a></div></article>
-    <article class="lesson" data-date="2026-08-23" data-topic="regularization" data-search="dropout simple way prevent neural networks overfitting srivastava hinton regularization generalization model averaging"><time class="date" datetime="2026-08-23">23 Aug 2026</time><div><p class="tag">Regularization · 60 minutes</p><a class="paper-title" href="2026-08-23-dropout-a-simple-way-to-prevent-neural-networks-from-overfitting/dropout_a_simple_way_to_prevent_neural_networks_from_overfitting.pdf"><h2>Dropout: A Simple Way to Prevent Neural Networks from Overfitting</h2></a><p class="meta">Srivastava et al. · JMLR 2014</p><a class="button" href="2026-08-23-dropout-a-simple-way-to-prevent-neural-networks-from-overfitting/dropout_a_simple_way_to_prevent_neural_networks_from_overfitting.html">Open lesson →</a></div></article>
-    <article class="lesson" data-date="2026-08-22" data-topic="post-training" data-search="direct preference optimization dpo rafailov sharma alignment reward model language model post training"><time class="date" datetime="2026-08-22">22 Aug 2026</time><div><p class="tag">Post-training · 60 minutes</p><a class="paper-title" href="2026-08-22-direct-preference-optimization/direct_preference_optimization.pdf"><h2>Direct Preference Optimization: Your Language Model is Secretly a Reward Model</h2></a><p class="meta">Rafailov et al. · NeurIPS 2023</p><a class="button" href="2026-08-22-direct-preference-optimization/direct_preference_optimization.html">Open lesson →</a></div></article>
-    <article class="lesson" data-date="2026-08-22" data-topic="optimization" data-search="adam method stochastic optimization kingma ba adaptive moment learning rate"><time class="date" datetime="2026-08-22">22 Aug 2026</time><div><p class="tag">Optimization · 60 minutes</p><a class="paper-title" href="2026-08-22-adam-a-method-for-stochastic-optimization/adam_a_method_for_stochastic_optimization.pdf"><h2>Adam: A Method for Stochastic Optimization</h2></a><p class="meta">Kingma &amp; Ba · ICLR 2015</p><a class="button" href="2026-08-22-adam-a-method-for-stochastic-optimization/adam_a_method_for_stochastic_optimization.html">Open lesson →</a></div></article>
-    <article class="lesson" data-date="2026-08-21" data-topic="normalization" data-search="batch normalization accelerating deep network training ioffe szegedy normalization internal covariate shift"><time class="date" datetime="2026-08-21">21 Aug 2026</time><div><p class="tag">Normalization · 60 minutes</p><a class="paper-title" href="2026-08-21-batch-normalization/batch_normalization_accelerating_deep_network_training.pdf"><h2>Batch Normalization: Accelerating Deep Network Training by Reducing Internal Covariate Shift</h2></a><p class="meta">Ioffe &amp; Szegedy · ICML 2015</p><a class="button" href="2026-08-21-batch-normalization/batch_normalization_accelerating_deep_network_training.html">Open lesson →</a></div></article>
-    <article class="lesson" data-date="2026-08-20" data-topic="generative" data-search="generative adversarial nets gan goodfellow adversarial generator discriminator"><time class="date" datetime="2026-08-20">20 Aug 2026</time><div><p class="tag">Generative modeling · 60 minutes</p><a class="paper-title" href="2026-08-20-generative-adversarial-nets/generative_adversarial_nets.pdf"><h2>Generative Adversarial Nets</h2></a><p class="meta">Goodfellow et al. · NeurIPS 2014</p><a class="button" href="2026-08-20-generative-adversarial-nets/generative_adversarial_nets.html">Open lesson →</a></div></article>
-    <article class="lesson" data-date="2026-08-19" data-topic="language" data-search="attention is all you need vaswani transformer language modeling self attention"><time class="date" datetime="2026-08-19">19 Aug 2026</time><div><p class="tag">Language modeling · 60 minutes</p><a class="paper-title" href="2026-08-19-attention-is-all-you-need/attention_is_all_you_need.pdf"><h2>Attention Is All You Need</h2></a><p class="meta">Vaswani et al. · NeurIPS 2017</p><a class="button" href="2026-08-19-attention-is-all-you-need/attention_is_all_you_need.html">Open lesson →</a></div></article>
-    <article class="lesson" data-date="2026-08-19" data-topic="vision" data-search="deep residual learning image recognition resnet he computer vision convolution"><time class="date" datetime="2026-08-19">19 Aug 2026</time><div><p class="tag">Computer vision · 60 minutes</p><a class="paper-title" href="2026-08-19-deep-residual-learning-for-image-recognition/deep_residual_learning_for_image_recognition.pdf"><h2>Deep Residual Learning for Image Recognition</h2></a><p class="meta">He et al. · CVPR 2016</p><a class="button" href="2026-08-19-deep-residual-learning-for-image-recognition/deep_residual_learning_for_image_recognition.html">Open lesson →</a></div></article>
-    <article class="lesson" data-date="2026-08-19" data-topic="reinforcement" data-search="human level control deep reinforcement learning dqn mnih atari replay target network"><time class="date" datetime="2026-08-19">19 Aug 2026</time><div><p class="tag">Reinforcement learning · 60 minutes</p><a class="paper-title" href="2026-08-19-human-level-control-through-deep-reinforcement-learning/human_level_control_through_deep_reinforcement_learning.pdf"><h2>Human-level Control through Deep Reinforcement Learning</h2></a><p class="meta">Mnih et al. · Nature 2015</p><a class="button" href="2026-08-19-human-level-control-through-deep-reinforcement-learning/human_level_control_through_deep_reinforcement_learning.html">Open lesson →</a></div></article>
-    </section>
+    <p id="results" class="results" aria-live="polite"></p>
+    <section id="lesson-list" aria-label="Paper lessons"></section>
   </main>
+  <script src="catalog.js"></script>
   <script>
     (() => {
+      const catalog = window.DAILY_PAPER_CATALOG;
       const search = document.querySelector('#paper-search');
       const filter = document.querySelector('#topic-filter');
       const sort = document.querySelector('#sort-order');
       const list = document.querySelector('#lesson-list');
       const results = document.querySelector('#results');
-      const cards = [...list.querySelectorAll('.lesson')];
-      const update = () => {
-        const query = search.value.trim().toLowerCase();
-        const topic = filter.value;
-        const order = sort.value;
-        const sorted = [...cards].sort((a, b) => order === 'title'
-          ? a.querySelector('h2').textContent.localeCompare(b.querySelector('h2').textContent)
-          : order === 'oldest' ? a.dataset.date.localeCompare(b.dataset.date)
-          : b.dataset.date.localeCompare(a.dataset.date));
-        sorted.forEach(card => {
-          const visible = (topic === 'all' || card.dataset.topic === topic) && (!query || card.dataset.search.includes(query));
-          card.hidden = !visible;
-          list.append(card);
-        });
-        const count = cards.filter(card => !card.hidden).length;
-        results.textContent = `${count} ${count === 1 ? 'lesson' : 'lessons'} found`;
+      if (!Array.isArray(catalog)) { results.textContent = 'The lesson catalog could not be loaded.'; return; }
+      const dateLabel = date => new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }).format(new Date(`${date}T00:00:00`));
+      const card = record => {
+        const article = document.createElement('article'); article.className = 'lesson'; article.dataset.date = record.date; article.dataset.topic = record.topic; article.dataset.search = record.search;
+        const time = document.createElement('time'); time.className = 'date'; time.dateTime = record.date; time.textContent = dateLabel(record.date);
+        const content = document.createElement('div');
+        const tag = document.createElement('p'); tag.className = 'tag'; tag.textContent = `${record.topicLabel} · 60 minutes`;
+        const paper = document.createElement('a'); paper.className = 'paper-title'; paper.href = record.paperFile;
+        const title = document.createElement('h2'); title.textContent = record.title; paper.append(title);
+        const meta = document.createElement('p'); meta.className = 'meta'; meta.textContent = `${record.authors} · ${record.venue}`;
+        const lesson = document.createElement('a'); lesson.className = 'button'; lesson.href = record.lessonFile; lesson.textContent = 'Open lesson →';
+        content.append(tag, paper, meta, lesson); article.append(time, content); return article;
       };
-      search.addEventListener('input', update);
-      filter.addEventListener('change', update);
-      sort.addEventListener('change', update);
-      update();
+      const cards = catalog.map(card);
+      const update = () => {
+        const query = search.value.trim().toLowerCase(); const topic = filter.value; const order = sort.value;
+        const sorted = [...cards].sort((a, b) => order === 'title' ? a.querySelector('h2').textContent.localeCompare(b.querySelector('h2').textContent) : order === 'oldest' ? a.dataset.date.localeCompare(b.dataset.date) : b.dataset.date.localeCompare(a.dataset.date));
+        sorted.forEach(item => { item.hidden = !((topic === 'all' || item.dataset.topic === topic) && (!query || item.dataset.search.includes(query))); list.append(item); });
+        const count = cards.filter(item => !item.hidden).length; results.textContent = `${count} ${count === 1 ? 'lesson' : 'lessons'} found`;
+      };
+      search.addEventListener('input', update); filter.addEventListener('change', update); sort.addEventListener('change', update); update();
     })();
   </script>
 </body>
