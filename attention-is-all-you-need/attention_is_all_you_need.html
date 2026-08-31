@@ -1,0 +1,492 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Attention Is All You Need - one-hour lesson</title>
+<style>
+:root {
+  --ink: #17212b;
+  --muted: #56616d;
+  --paper: #f7f9fb;
+  --surface: #ffffff;
+  --wash: #eef3f7;
+  --rule: #c9d2dc;
+  --query: #394b8a;
+  --query-soft: #e7eafa;
+  --memory: #23705b;
+  --memory-soft: #e2f1ec;
+  --signal: #a74c2a;
+  --signal-soft: #f7e8e0;
+  --blocked: #8c3e45;
+  --code: #111a24;
+  --focus: #b75b20;
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0;
+  background:
+    linear-gradient(90deg, transparent calc(50% - 560px), rgba(57,75,138,.08) calc(50% - 560px), rgba(57,75,138,.08) calc(50% - 559px), transparent calc(50% - 559px)),
+    var(--paper);
+  color: var(--ink);
+  font: 18px/1.66 Palatino, "Palatino Linotype", "Book Antiqua", Georgia, serif;
+}
+a { color: var(--query); text-underline-offset: .18em; }
+a:hover { text-decoration-thickness: 2px; }
+a:focus-visible, button:focus-visible, summary:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 3px;
+}
+.table-wrap:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+.page { width: min(100% - 40px, 1040px); margin: 0 auto; padding: 26px 0 90px; }
+.home {
+  display: inline-block;
+  font: 700 .76rem/1.2 ui-sans-serif, system-ui, sans-serif;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+.hero { margin: 58px 0 48px; border-top: 6px solid var(--ink); padding-top: 24px; }
+.kicker, .figure-label, .minute {
+  font: 750 .69rem/1.25 ui-sans-serif, system-ui, sans-serif;
+  letter-spacing: .105em;
+  text-transform: uppercase;
+}
+.kicker { color: var(--signal); }
+h1, h2, h3 { font-family: Charter, "Iowan Old Style", Georgia, serif; line-height: 1.13; }
+h1 { margin: .14em 0 .22em; max-width: 860px; font-size: clamp(3rem, 8.5vw, 6.2rem); letter-spacing: -.055em; }
+h2 { margin: 76px 0 18px; padding-top: 14px; border-top: 1px solid var(--rule); font-size: clamp(1.75rem, 4vw, 2.42rem); letter-spacing: -.02em; }
+h3 { margin: 34px 0 10px; font-size: 1.28rem; }
+.promise { max-width: 780px; margin: 0; color: var(--muted); font-size: clamp(1.16rem, 2.6vw, 1.5rem); }
+.byline { max-width: 900px; margin: 26px 0 0; color: var(--muted); font-size: .91rem; }
+.hero-rule { display: grid; grid-template-columns: 1.1fr 2fr 1fr; gap: 7px; height: 8px; margin-top: 34px; }
+.hero-rule span:nth-child(1) { background: var(--query); }
+.hero-rule span:nth-child(2) { background: var(--memory); }
+.hero-rule span:nth-child(3) { background: var(--signal); }
+.route { display: grid; grid-template-columns: repeat(6, 1fr); border-block: 1px solid var(--rule); }
+.route div { min-height: 130px; padding: 17px 13px 16px; border-left: 1px solid var(--rule); }
+.route div:first-child { border-left: 0; }
+.minute { display: block; margin-bottom: 10px; color: var(--query); }
+.route span:last-child { display: block; color: var(--muted); font-size: .84rem; line-height: 1.42; }
+p, li { max-width: 820px; }
+.lead { font-size: 1.16rem; }
+.bridge, .margin-note {
+  max-width: 850px;
+  margin: 25px 0;
+  padding: 16px 20px;
+  border-left: 4px solid var(--query);
+  background: var(--query-soft);
+}
+.margin-note { border-left-color: var(--memory); background: var(--memory-soft); }
+.baseline, .actors, .trace-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 22px; }
+.baseline article, .actors article, .trace-grid article {
+  background: var(--surface);
+  border-top: 3px solid var(--rule);
+  padding: 18px 20px;
+}
+.baseline article:first-child { border-color: var(--signal); }
+.baseline article:last-child { border-color: var(--memory); }
+.baseline h3, .actors h3, .trace-grid h3 { margin-top: 0; }
+.compact { margin: 0; padding-left: 1.18em; }
+.compact li + li { margin-top: .42em; }
+.formula {
+  margin: 24px 0;
+  overflow-x: auto;
+  padding: 20px 22px;
+  background: var(--code);
+  color: #f3f6fa;
+  font: 600 clamp(.82rem, 2.2vw, 1.02rem)/1.65 ui-monospace, SFMono-Regular, Consolas, monospace;
+  white-space: nowrap;
+}
+.formula strong { color: #b8c6ff; }
+.formula .mem { color: #86d1b9; }
+.formula .sig { color: #f2b397; }
+math { font-family: "STIX Two Math", "Cambria Math", "Latin Modern Math", serif; }
+math.math-inline { vertical-align: -.18em; white-space: nowrap; }
+.formula math[display="block"], .math-display math[display="block"] { min-width: max-content; margin: 0 auto; }
+.math-display { max-width: 100%; margin: 24px 0; overflow-x: auto; padding: 18px 12px; text-align: center; background: var(--surface); border-block: 1px solid var(--rule); }
+.formula mfrac, .math-display mfrac { padding-inline: .12em; }
+.table-wrap { max-width: 100%; margin: 24px 0; overflow-x: auto; border-block: 1px solid var(--rule); background: var(--surface); }
+table { width: 100%; border-collapse: collapse; font-size: .9rem; line-height: 1.42; }
+th, td { padding: 11px 12px; border-bottom: 1px solid #dbe1e7; text-align: left; vertical-align: top; }
+th { color: var(--muted); font: 750 .68rem/1.3 ui-sans-serif, system-ui, sans-serif; letter-spacing: .065em; text-transform: uppercase; }
+tbody tr:last-child td { border-bottom: 0; }
+.shape-table { min-width: 670px; }
+.shape-table td:first-child { color: var(--query); font: 700 .86rem/1.45 ui-monospace, SFMono-Regular, Consolas, monospace; }
+code { padding: .08em .3em; background: var(--wash); color: #273664; font: .87em/1.3 ui-monospace, SFMono-Regular, Consolas, monospace; }
+figure { margin: 34px 0; }
+.diagram, .paper-figure, .instrument, .results-ledger { border: 1px solid var(--rule); background: var(--surface); padding: clamp(16px, 3vw, 28px); }
+.figure-label { display: inline-block; margin-bottom: 14px; color: var(--query); }
+figcaption { max-width: 850px; margin-top: 14px; color: var(--muted); font-size: .86rem; line-height: 1.5; }
+svg { display: block; width: 100%; height: auto; }
+.paper-figure img { display: block; width: auto; max-width: min(100%, 620px); height: auto; margin: 0 auto; }
+.routing-question { margin: 0 0 18px; font-size: 1.08rem; }
+.query-controls { display: flex; flex-wrap: wrap; gap: 10px; margin: 14px 0 24px; }
+button {
+  border: 1px solid var(--query);
+  border-radius: 2px;
+  background: var(--surface);
+  color: var(--query);
+  padding: 9px 13px;
+  font: 750 .78rem/1.2 ui-sans-serif, system-ui, sans-serif;
+  cursor: pointer;
+}
+button[aria-pressed="true"] { background: var(--query); color: #fff; }
+.routing-grid { display: grid; grid-template-columns: 180px 1fr; gap: 11px 18px; align-items: center; }
+.routing-grid .station { font-size: .9rem; }
+.routing-grid .station strong { display: block; }
+.bar-track { height: 18px; background: var(--wash); border-left: 1px solid var(--rule); }
+.bar { height: 100%; background: var(--memory); transition: width .28s ease; }
+.bar-line { display: grid; grid-template-columns: 1fr 52px; gap: 10px; align-items: center; }
+.bar-value { color: var(--muted); font: 700 .78rem ui-monospace, SFMono-Regular, Consolas, monospace; text-align: right; }
+.routing-output { margin: 22px 0 0; padding: 15px 18px; border-left: 4px solid var(--memory); background: var(--memory-soft); }
+.static-reading { color: var(--muted); font-size: .9rem; }
+.steps { counter-reset: mechanism; margin: 24px 0; padding: 0; list-style: none; }
+.steps li { position: relative; margin: 0; padding: 14px 16px 14px 62px; border-top: 1px solid var(--rule); }
+.steps li::before {
+  counter-increment: mechanism;
+  content: counter(mechanism);
+  position: absolute;
+  left: 14px;
+  top: 15px;
+  color: var(--query);
+  font: 800 1rem ui-monospace, SFMono-Regular, Consolas, monospace;
+}
+.calc { display: grid; grid-template-columns: 118px 1fr; gap: 0; margin: 24px 0; border: 1px solid var(--rule); background: var(--surface); }
+.calc dt, .calc dd { margin: 0; padding: 13px 15px; border-bottom: 1px solid var(--rule); }
+.calc dt { color: var(--query); font: 750 .72rem/1.4 ui-sans-serif, system-ui, sans-serif; letter-spacing: .04em; text-transform: uppercase; }
+.calc dd { border-left: 1px solid var(--rule); font-family: ui-monospace, SFMono-Regular, Consolas, monospace; font-size: .86rem; overflow-wrap: anywhere; }
+.calc dt:last-of-type, .calc dd:last-of-type { border-bottom: 0; }
+.mask { display: grid; grid-template-columns: 108px repeat(4, 1fr); max-width: 590px; margin: 23px 0; border: 1px solid var(--rule); background: var(--surface); }
+.mask span { min-width: 0; padding: 10px 6px; border-right: 1px solid var(--rule); border-bottom: 1px solid var(--rule); text-align: center; font: 700 .78rem/1.2 ui-sans-serif, system-ui, sans-serif; }
+.mask span:nth-child(5n) { border-right: 0; }
+.mask span:nth-last-child(-n+5) { border-bottom: 0; }
+.mask .axis { background: var(--wash); color: var(--muted); }
+.mask .allowed { background: var(--memory-soft); color: var(--memory); }
+.mask .blocked { background: var(--signal-soft); color: var(--blocked); }
+details { max-width: 850px; margin: 14px 0; border-block: 1px solid var(--rule); background: var(--surface); }
+details + details { border-top: 0; margin-top: -14px; }
+summary { cursor: pointer; padding: 14px 42px 14px 16px; font-weight: 700; }
+details > div, details > p { margin: 0; padding: 0 16px 16px; }
+.answer { border-left: 4px solid var(--memory); }
+.evidence-table { min-width: 760px; }
+.evidence-table td:not(:first-child), .evidence-table th:not(:first-child) { text-align: right; }
+.evidence-table .transformer td { background: var(--query-soft); font-weight: 700; }
+.dash { color: var(--muted); }
+.evidence-reading { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-top: 24px; }
+.evidence-reading div { padding-top: 12px; border-top: 3px solid var(--rule); }
+.evidence-reading div:nth-child(1) { border-color: var(--query); }
+.evidence-reading div:nth-child(2) { border-color: var(--memory); }
+.evidence-reading div:nth-child(3) { border-color: var(--signal); }
+.evidence-reading strong { display: block; margin-bottom: 6px; }
+.limitations { columns: 2 320px; column-gap: 36px; padding-left: 1.2em; }
+.limitations li { break-inside: avoid; margin: 0 0 13px; }
+.mental-map { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; }
+.mental-map article { padding: 18px 0; border-top: 3px solid var(--query); }
+.mental-map article:nth-child(even) { border-color: var(--memory); }
+.mental-map h3 { margin-top: 0; }
+.takeaway { margin: 24px 0 0; padding: clamp(22px, 4vw, 38px); background: var(--ink); color: #f7f9fb; font-size: clamp(1.12rem, 2.5vw, 1.4rem); }
+footer { margin-top: 76px; padding-top: 24px; border-top: 5px solid var(--ink); color: var(--muted); font-size: .9rem; }
+footer h2 { margin: 0 0 14px; padding: 0; border: 0; color: var(--ink); font-size: 1.45rem; }
+footer ul { margin: 0; padding-left: 1.2em; }
+footer li + li { margin-top: .4em; }
+@media (max-width: 820px) {
+  .route { grid-template-columns: repeat(3, 1fr); }
+  .route div:nth-child(4) { border-left: 0; }
+  .route div:nth-child(-n+3) { border-bottom: 1px solid var(--rule); }
+  .evidence-reading { grid-template-columns: 1fr; }
+}
+@media (max-width: 620px) {
+  body { font-size: 17px; background: var(--paper); }
+  .page { width: min(100% - 28px, 1040px); padding-top: 20px; }
+  .hero { margin-top: 42px; }
+  h1 { font-size: clamp(2.7rem, 15vw, 4rem); }
+  h2 { margin-top: 60px; }
+  .route { grid-template-columns: 1fr 1fr; }
+  .route div, .route div:nth-child(4) { min-height: 112px; border-left: 1px solid var(--rule); border-bottom: 1px solid var(--rule); }
+  .route div:nth-child(odd) { border-left: 0; }
+  .route div:nth-last-child(-n+2) { border-bottom: 0; }
+  .baseline, .actors, .trace-grid, .mental-map { grid-template-columns: 1fr; }
+  .routing-grid { grid-template-columns: 105px 1fr; gap: 10px; }
+  .routing-grid .station { font-size: .8rem; }
+  .calc { grid-template-columns: 92px 1fr; }
+  .calc dt, .calc dd { padding: 11px 10px; }
+  .mask { grid-template-columns: 82px repeat(4, 1fr); }
+  .mask span { padding: 9px 2px; font-size: .66rem; }
+  .diagram, .paper-figure, .instrument, .results-ledger { padding: 14px; }
+  .diagram { overflow-x: auto; }
+  .diagram svg { width: 700px; max-width: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  .bar { transition: none; }
+}
+</style>
+</head>
+<body>
+<main class="page">
+<a class="home" href="../index.html">← Daily AI Paper Lab</a>
+
+<header class="hero">
+  <span class="kicker">A 60-minute university lesson in sequence modeling</span>
+  <h1>The learned routing machine</h1>
+  <p class="promise">By the end, you will be able to calculate one attention update, trace the shapes through an encoder-decoder Transformer, explain what masking and position contribute, and read the paper's translation evidence without overclaiming it.</p>
+  <p class="byline"><em>Attention Is All You Need</em> · Ashish Vaswani, Noam Shazeer, Niki Parmar, Jakob Uszkoreit, Llion Jones, Aidan N. Gomez, Łukasz Kaiser, Illia Polosukhin · NIPS 2017</p>
+  <div class="hero-rule" aria-hidden="true"><span></span><span></span><span></span></div>
+</header>
+
+<nav class="route" aria-label="Timed study route">
+  <div><span class="minute">0-7 min</span><span>Bridge from weighted averages to learned routing.</span></div>
+  <div><span class="minute">7-17 min</span><span>See why recurrence was the baseline to beat.</span></div>
+  <div><span class="minute">17-31 min</span><span>Map Q, K, V, shapes, scaling, and softmax.</span></div>
+  <div><span class="minute">31-43 min</span><span>Work two traces: numbers, then a decoder step.</span></div>
+  <div><span class="minute">43-52 min</span><span>Assemble the full architecture and inspect evidence.</span></div>
+  <div><span class="minute">52-60 min</span><span>Diagnose misconceptions, recall, and connect.</span></div>
+</nav>
+
+<section aria-labelledby="bridge-title">
+  <h2 id="bridge-title">1. Prerequisite bridge: a weighted conversation</h2>
+  <p class="lead">You already know a weighted average: multiply each candidate value by a weight, then add. Attention makes the weights depend on a question asked by the item being updated.</p>
+  <p>Imagine a seminar in which every word holds a note. When the word <em>it</em> updates its note, it asks the room a question such as “which earlier noun could I refer to?” Each word advertises what it knows; the best matches speak most loudly. The updated note is a weighted mixture of their messages.</p>
+  <div class="bridge"><strong>The analogy has a boundary.</strong> A trained Transformer does not receive English questions such as “find my antecedent.” It learns vector projections. The seminar is useful because it keeps three roles separate: the request, the searchable label, and the information returned.</div>
+  <div class="actors">
+    <article><h3 style="color:var(--query)">Query: the request</h3><p>“What information would help me update?” One query is created for every position being updated.</p></article>
+    <article><h3 style="color:var(--memory)">Key and value: label and message</h3><p>The key decides how well a source matches the query. The value is what that source contributes after the match becomes a weight.</p></article>
+  </div>
+</section>
+
+<section aria-labelledby="problem-title">
+  <h2 id="problem-title">2. The problem and the 2017 baseline</h2>
+  <p>Machine translation maps one sequence to another. Before the Transformer, strong systems usually used a recurrent encoder and decoder, sometimes with attention between them. A recurrent state at position <em>t</em> depends on the state at <em>t - 1</em>, so positions inside one training example form a sequential chain.</p>
+  <div class="baseline">
+    <article><h3>Recurrent route</h3><ul class="compact"><li>Process positions in order.</li><li>Needs <math class="math-inline" aria-label="order n"><mi mathvariant="normal">O</mi><mo>(</mo><mi>n</mi><mo>)</mo></math> sequential operations per layer.</li><li>A distant dependency crosses an <math class="math-inline" aria-label="order n"><mi mathvariant="normal">O</mi><mo>(</mo><mi>n</mi><mo>)</mo></math>-length path.</li></ul></article>
+    <article><h3>Self-attention route</h3><ul class="compact"><li>Compare all allowed positions in parallel.</li><li>Needs <math class="math-inline" aria-label="order one"><mi mathvariant="normal">O</mi><mo>(</mo><mn>1</mn><mo>)</mo></math> sequential operations per layer.</li><li>Any two positions connect through an <math class="math-inline" aria-label="order one"><mi mathvariant="normal">O</mi><mo>(</mo><mn>1</mn><mo>)</mo></math>-length path.</li></ul></article>
+  </div>
+  <p class="margin-note"><strong>The trade-off is not “attention is always cheaper.”</strong> The paper gives self-attention per-layer complexity <math class="math-inline" aria-label="order n squared d"><mi mathvariant="normal">O</mi><mo>(</mo><msup><mi>n</mi><mn>2</mn></msup><mi>d</mi><mo>)</mo></math> versus recurrent <math class="math-inline" aria-label="order n d squared"><mi mathvariant="normal">O</mi><mo>(</mo><mi>n</mi><msup><mi>d</mi><mn>2</mn></msup><mo>)</mo></math>. Self-attention is computationally favorable when sequence length <em>n</em> is smaller than representation width <em>d</em>, the translation regime the authors emphasize. Its all-pairs matrix becomes expensive for long sequences.</p>
+</section>
+
+<section aria-labelledby="symbols-title">
+  <h2 id="symbols-title">3. Name the actors, symbols, and shapes</h2>
+  <p>Let <em>n<sub>q</sub></em> be the number of positions asking questions, <em>n<sub>k</sub></em> the number of positions that may be read, and <em>d<sub>model</sub></em> the width of each representation. One head projects those representations into smaller query, key, and value spaces.</p>
+  <div class="table-wrap" role="region" aria-label="Attention symbol and shape table" tabindex="0">
+    <table class="shape-table">
+      <thead><tr><th>Object</th><th>Shape</th><th>Job</th></tr></thead>
+      <tbody>
+        <tr><td><math class="math-inline" aria-label="X q and X k v"><msub><mi>X</mi><mi>q</mi></msub><mo>,</mo><msub><mi>X</mi><mrow><mi>k</mi><mi>v</mi></mrow></msub></math></td><td><math class="math-inline" aria-label="n q by d model; n k by d model"><msub><mi>n</mi><mi>q</mi></msub><mo>×</mo><msub><mi>d</mi><mi>model</mi></msub><mo>;</mo><msub><mi>n</mi><mi>k</mi></msub><mo>×</mo><msub><mi>d</mi><mi>model</mi></msub></math></td><td>Representations that ask, and representations that can be read.</td></tr>
+        <tr><td><math class="math-inline" aria-label="Q equals X q W Q"><mi>Q</mi><mo>=</mo><msub><mi>X</mi><mi>q</mi></msub><msub><mi>W</mi><mi>Q</mi></msub></math></td><td><math class="math-inline" aria-label="n q by d k"><msub><mi>n</mi><mi>q</mi></msub><mo>×</mo><msub><mi>d</mi><mi>k</mi></msub></math></td><td>One request vector per querying position.</td></tr>
+        <tr><td><math class="math-inline" aria-label="K equals X k v W K"><mi>K</mi><mo>=</mo><msub><mi>X</mi><mrow><mi>k</mi><mi>v</mi></mrow></msub><msub><mi>W</mi><mi>K</mi></msub></math></td><td><math class="math-inline" aria-label="n k by d k"><msub><mi>n</mi><mi>k</mi></msub><mo>×</mo><msub><mi>d</mi><mi>k</mi></msub></math></td><td>One searchable label per readable position.</td></tr>
+        <tr><td><math class="math-inline" aria-label="V equals X k v W V"><mi>V</mi><mo>=</mo><msub><mi>X</mi><mrow><mi>k</mi><mi>v</mi></mrow></msub><msub><mi>W</mi><mi>V</mi></msub></math></td><td><math class="math-inline" aria-label="n k by d v"><msub><mi>n</mi><mi>k</mi></msub><mo>×</mo><msub><mi>d</mi><mi>v</mi></msub></math></td><td>One message per readable position.</td></tr>
+        <tr><td><math class="math-inline" aria-label="S equals Q K transpose over square root d k"><mi>S</mi><mo>=</mo><mfrac><mrow><mi>Q</mi><msup><mi>K</mi><mi>T</mi></msup></mrow><msqrt><msub><mi>d</mi><mi>k</mi></msub></msqrt></mfrac></math></td><td><math class="math-inline" aria-label="n q by n k"><msub><mi>n</mi><mi>q</mi></msub><mo>×</mo><msub><mi>n</mi><mi>k</mi></msub></math></td><td>Every allowed query-key compatibility score.</td></tr>
+        <tr><td><math class="math-inline" aria-label="A equals softmax of S"><mi>A</mi><mo>=</mo><mi mathvariant="normal">softmax</mi><mo>(</mo><mi>S</mi><mo>)</mo></math></td><td><math class="math-inline" aria-label="n q by n k"><msub><mi>n</mi><mi>q</mi></msub><mo>×</mo><msub><mi>n</mi><mi>k</mi></msub></math></td><td>Row-normalized routing weights; every row sums to 1.</td></tr>
+        <tr><td><math class="math-inline" aria-label="A V"><mi>A</mi><mi>V</mi></math></td><td><math class="math-inline" aria-label="n q by d v"><msub><mi>n</mi><mi>q</mi></msub><mo>×</mo><msub><mi>d</mi><mi>v</mi></msub></math></td><td>One weighted value mixture per query.</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p>In encoder self-attention, <math class="math-inline" aria-label="X q equals X k v"><msub><mi>X</mi><mi>q</mi></msub><mo>=</mo><msub><mi>X</mi><mrow><mi>k</mi><mi>v</mi></mrow></msub></math> and <math class="math-inline" aria-label="n q equals n k"><msub><mi>n</mi><mi>q</mi></msub><mo>=</mo><msub><mi>n</mi><mi>k</mi></msub></math>. In encoder-decoder attention, decoder states supply queries while encoder outputs supply keys and values, so the two sequence lengths can differ.</p>
+</section>
+
+<section aria-labelledby="mechanism-title">
+  <h2 id="mechanism-title">4. Scaled dot-product attention, one operation at a time</h2>
+  <div class="formula"><math display="block" aria-label="Attention of Q K V equals softmax of Q K transpose divided by square root of d k, multiplied by V"><mrow><mi mathvariant="normal">Attention</mi><mo>(</mo><mi>Q</mi><mo>,</mo><mi>K</mi><mo>,</mo><mi>V</mi><mo>)</mo><mo>=</mo><mi mathvariant="normal">softmax</mi><mo>(</mo><mfrac><mrow><mi>Q</mi><msup><mi>K</mi><mi>T</mi></msup></mrow><msqrt><msub><mi>d</mi><mi>k</mi></msub></msqrt></mfrac><mo>)</mo><mi>V</mi></mrow></math></div>
+  <ol class="steps">
+    <li><strong>Project roles.</strong> Learned matrices turn the same incoming representation into Q, K, and V. A role is learned, not an intrinsic property of a token.</li>
+    <li><strong>Score matches.</strong> Each query-key dot product measures compatibility. The score matrix has one row per query and one column per readable source.</li>
+    <li><strong>Scale.</strong> If query and key components have variance 1 and are independent, their dot product has variance <math class="math-inline" aria-label="d k"><msub><mi>d</mi><mi>k</mi></msub></math>. Dividing by <math class="math-inline" aria-label="square root d k"><msqrt><msub><mi>d</mi><mi>k</mi></msub></msqrt></math> keeps large dimensions from pushing softmax into very small-gradient regions.</li>
+    <li><strong>Normalize each row.</strong> Softmax converts scores into positive weights summing to 1 across readable keys.</li>
+    <li><strong>Route values.</strong> Multiply the weight row by V. Keys determine <em>where to read</em>; values determine <em>what is returned</em>.</li>
+  </ol>
+  <figure class="diagram">
+    <span class="figure-label">Lesson diagram</span>
+    <svg viewBox="0 0 900 330" role="img" aria-labelledby="route-diagram-title route-diagram-desc">
+      <title id="route-diagram-title">One row of scaled dot-product attention</title>
+      <desc id="route-diagram-desc">The query from the token it is compared with the keys of animal, street, and tired. The softmax weights route their corresponding values into one output mixture.</desc>
+      <defs><marker id="arrow-query" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8z" fill="#394b8a"/></marker><marker id="arrow-memory" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8z" fill="#23705b"/></marker></defs>
+      <g font-family="system-ui, sans-serif">
+        <text x="24" y="30" font-size="13" font-weight="700" letter-spacing="1.5" fill="#394b8a">ONE QUERY ROW</text>
+        <rect x="24" y="58" width="145" height="66" fill="#e7eafa" stroke="#394b8a"/><text x="96" y="86" text-anchor="middle" font-size="18" fill="#17212b">query from “it”</text><text x="96" y="109" text-anchor="middle" font-size="14" fill="#394b8a">q = [1, 0]</text>
+        <line x1="170" y1="91" x2="248" y2="91" stroke="#394b8a" stroke-width="2" marker-end="url(#arrow-query)"/>
+        <rect x="258" y="39" width="174" height="104" fill="#fff" stroke="#c9d2dc"/><text x="345" y="68" text-anchor="middle" font-size="15" font-weight="700">compare with keys</text><text x="345" y="91" text-anchor="middle" font-size="14">animal · street · tired</text><text x="345" y="119" text-anchor="middle" font-size="14" fill="#394b8a">scaled scores</text>
+        <line x1="433" y1="91" x2="511" y2="91" stroke="#394b8a" stroke-width="2" marker-end="url(#arrow-query)"/>
+        <rect x="521" y="58" width="145" height="66" fill="#f7e8e0" stroke="#a74c2a"/><text x="593" y="86" text-anchor="middle" font-size="18">softmax</text><text x="593" y="109" text-anchor="middle" font-size="14" fill="#a74c2a">[.62, .07, .31]</text>
+        <line x1="667" y1="91" x2="746" y2="91" stroke="#23705b" stroke-width="2" marker-end="url(#arrow-memory)"/>
+        <rect x="756" y="58" width="120" height="66" fill="#e2f1ec" stroke="#23705b"/><text x="816" y="86" text-anchor="middle" font-size="18">mixture</text><text x="816" y="109" text-anchor="middle" font-size="14" fill="#23705b">[.93, .38]</text>
+        <line x1="284" y1="210" x2="756" y2="210" stroke="#c9d2dc"/><text x="24" y="190" font-size="13" font-weight="700" letter-spacing="1.5" fill="#23705b">VALUES CARRY THE MESSAGES</text>
+        <g font-size="16"><rect x="24" y="214" width="230" height="54" fill="#e2f1ec" stroke="#23705b"/><text x="139" y="247" text-anchor="middle">animal value [1, 0] × .62</text><rect x="335" y="214" width="230" height="54" fill="#e2f1ec" stroke="#23705b"/><text x="450" y="247" text-anchor="middle">street value [0, 1] × .07</text><rect x="646" y="214" width="230" height="54" fill="#e2f1ec" stroke="#23705b"/><text x="761" y="247" text-anchor="middle">tired value [1, 1] × .31</text></g>
+        <text x="450" y="308" text-anchor="middle" font-size="15" fill="#56616d">The weights are attached to keys, but the weighted objects are values.</text>
+      </g>
+    </svg>
+    <figcaption>The query chooses a distribution over keys; that same distribution blends the paired values. This is a teaching calculation, not a visualization of weights measured from the paper's trained model.</figcaption>
+  </figure>
+</section>
+
+<section aria-labelledby="trace-one-title">
+  <h2 id="trace-one-title">5. Worked trace I: calculate one attention row</h2>
+  <p>Use the query <math class="math-inline" aria-label="q equals row vector one zero"><mi>q</mi><mo>=</mo><mfenced open="[" close="]"><mtable><mtr><mtd><mn>1</mn></mtd><mtd><mn>0</mn></mtd></mtr></mtable></mfenced></math>, three keys, and three values. The vectors are deliberately tiny so every operation is visible.</p>
+  <div class="table-wrap"><table><thead><tr><th>Token</th><th>Key</th><th>Value</th><th><math class="math-inline" aria-label="q dot key"><mi>q</mi><mo>·</mo><mi>key</mi></math></th></tr></thead><tbody><tr><td>animal</td><td><math class="math-inline" aria-label="row vector two zero"><mfenced open="[" close="]"><mtable><mtr><mtd><mn>2</mn></mtd><mtd><mn>0</mn></mtd></mtr></mtable></mfenced></math></td><td><math class="math-inline" aria-label="row vector one zero"><mfenced open="[" close="]"><mtable><mtr><mtd><mn>1</mn></mtd><mtd><mn>0</mn></mtd></mtr></mtable></mfenced></math></td><td>2</td></tr><tr><td>street</td><td><math class="math-inline" aria-label="row vector negative one one"><mfenced open="[" close="]"><mtable><mtr><mtd><mo>−</mo><mn>1</mn></mtd><mtd><mn>1</mn></mtd></mtr></mtable></mfenced></math></td><td><math class="math-inline" aria-label="row vector zero one"><mfenced open="[" close="]"><mtable><mtr><mtd><mn>0</mn></mtd><mtd><mn>1</mn></mtd></mtr></mtable></mfenced></math></td><td>-1</td></tr><tr><td>tired</td><td><math class="math-inline" aria-label="row vector one zero"><mfenced open="[" close="]"><mtable><mtr><mtd><mn>1</mn></mtd><mtd><mn>0</mn></mtd></mtr></mtable></mfenced></math></td><td><math class="math-inline" aria-label="row vector one one"><mfenced open="[" close="]"><mtable><mtr><mtd><mn>1</mn></mtd><mtd><mn>1</mn></mtd></mtr></mtable></mfenced></math></td><td>1</td></tr></tbody></table></div>
+  <div class="math-display"><math display="block" aria-label="Aligned worked attention calculation"><mtable columnalign="left left" rowspacing=".65em"><mtr><mtd><mtext>Scale</mtext></mtd><mtd><mrow><mi>s</mi><mo>=</mo><mfrac><mrow><mi>q</mi><msup><mi>K</mi><mi>T</mi></msup></mrow><msqrt><mn>2</mn></msqrt></mfrac><mo>=</mo><mfrac><mfenced open="[" close="]"><mtable><mtr><mtd><mn>2</mn></mtd><mtd><mo>−</mo><mn>1</mn></mtd><mtd><mn>1</mn></mtd></mtr></mtable></mfenced><msqrt><mn>2</mn></msqrt></mfrac><mo>≈</mo><mfenced open="[" close="]"><mtable><mtr><mtd><mn>1.414</mn></mtd><mtd><mo>−</mo><mn>0.707</mn></mtd><mtd><mn>0.707</mn></mtd></mtr></mtable></mfenced></mrow></mtd></mtr><mtr><mtd><mtext>Softmax</mtext></mtd><mtd><mrow><mi>a</mi><mo>=</mo><mi mathvariant="normal">softmax</mi><mo>(</mo><mi>s</mi><mo>)</mo><mo>≈</mo><mfenced open="[" close="]"><mtable><mtr><mtd><mn>0.620</mn></mtd><mtd><mn>0.074</mn></mtd><mtd><mn>0.306</mn></mtd></mtr></mtable></mfenced></mrow></mtd></mtr><mtr><mtd><mtext>Mix</mtext></mtd><mtd><mrow><mi>z</mi><mo>=</mo><munderover><mo>∑</mo><mrow><mi>j</mi><mo>=</mo><mn>1</mn></mrow><mn>3</mn></munderover><msub><mi>a</mi><mi>j</mi></msub><msub><mi>v</mi><mi>j</mi></msub><mo>=</mo><mn>0.620</mn><mfenced open="[" close="]"><mtable><mtr><mtd><mn>1</mn></mtd><mtd><mn>0</mn></mtd></mtr></mtable></mfenced><mo>+</mo><mn>0.074</mn><mfenced open="[" close="]"><mtable><mtr><mtd><mn>0</mn></mtd><mtd><mn>1</mn></mtd></mtr></mtable></mfenced><mo>+</mo><mn>0.306</mn><mfenced open="[" close="]"><mtable><mtr><mtd><mn>1</mn></mtd><mtd><mn>1</mn></mtd></mtr></mtable></mfenced></mrow></mtd></mtr><mtr><mtd><mtext>Output</mtext></mtd><mtd><mrow><mi>z</mi><mo>≈</mo><mfenced open="[" close="]"><mtable><mtr><mtd><mn>0.926</mn></mtd><mtd><mn>0.380</mn></mtd></mtr></mtable></mfenced></mrow></mtd></mtr></mtable></math></div>
+  <p>The output is not a hard pointer to <em>animal</em>. It is a new representation dominated by the animal value, with smaller contributions from the other values. Softmax gives every finite score a positive weight; a mask is what makes a connection exactly unavailable.</p>
+  <figure class="instrument">
+    <span class="figure-label">Lesson diagram</span>
+    <p class="routing-question"><strong>Routing bench.</strong> Keep the same keys and values; change only the query. Predict which station will receive the largest weight, then select a query.</p>
+    <div class="query-controls" aria-label="Choose a query vector"><button type="button" data-query="it" aria-pressed="true">“it” q = (1, 0)</button><button type="button" data-query="street" aria-pressed="false">“street” q = (0, 1)</button><button type="button" data-query="tired" aria-pressed="false">“tired” q = (1, 1)</button></div>
+    <div class="routing-grid">
+      <div class="station"><strong>animal</strong>key [2, 0]</div><div class="bar-line"><div class="bar-track"><div id="bar-animal" class="bar" style="width:62%"></div></div><span id="weight-animal" class="bar-value">62.0%</span></div>
+      <div class="station"><strong>street</strong>key [-1, 1]</div><div class="bar-line"><div class="bar-track"><div id="bar-street" class="bar" style="width:7.4%"></div></div><span id="weight-street" class="bar-value">7.4%</span></div>
+      <div class="station"><strong>tired</strong>key [1, 0]</div><div class="bar-line"><div class="bar-track"><div id="bar-tired" class="bar" style="width:30.6%"></div></div><span id="weight-tired" class="bar-value">30.6%</span></div>
+    </div>
+    <p id="routing-output" class="routing-output" aria-live="polite">For “it”, the scaled scores are 1.414 for animal, -0.707 for street, and 0.707 for tired. The two output coordinates are approximately 0.926 and 0.380.</p>
+    <p class="static-reading">Static reading: the default query <code>[1,0]</code> aligns most strongly with <em>animal</em>'s key <code>[2,0]</code>. Changing the query changes routing even though the memory keys and values stay fixed.</p>
+    <figcaption>This exact toy instrument computes scaled dot products, row-wise softmax, and the value mixture. Its purpose is to expose the mechanism; its vectors are not paper measurements.</figcaption>
+  </figure>
+</section>
+
+<section aria-labelledby="block-title">
+  <h2 id="block-title">6. From one head to a Transformer block</h2>
+  <p>The base model uses <math class="math-inline" aria-label="h equals eight"><mi>h</mi><mo>=</mo><mn>8</mn></math> heads with <math class="math-inline" aria-label="d model equals five hundred twelve"><msub><mi>d</mi><mi>model</mi></msub><mo>=</mo><mn>512</mn></math> and <math class="math-inline" aria-label="d k equals d v equals sixty four"><msub><mi>d</mi><mi>k</mi></msub><mo>=</mo><msub><mi>d</mi><mi>v</mi></msub><mo>=</mo><mn>64</mn></math>. Each head gets its own learned projections. The eight 64-wide outputs concatenate back to 512 dimensions and pass through a learned output projection.</p>
+  <div class="formula"><math display="block" aria-label="Multi-head attention and the definition of each head"><mtable columnalign="right center left" rowspacing=".7em"><mtr><mtd><mi mathvariant="normal">MultiHead</mi><mo>(</mo><mi>Q</mi><mo>,</mo><mi>K</mi><mo>,</mo><mi>V</mi><mo>)</mo></mtd><mtd><mo>=</mo></mtd><mtd><mi mathvariant="normal">Concat</mi><mo>(</mo><msub><mi>head</mi><mn>1</mn></msub><mo>,</mo><mo>…</mo><mo>,</mo><msub><mi>head</mi><mi>h</mi></msub><mo>)</mo><msup><mi>W</mi><mi>O</mi></msup></mtd></mtr><mtr><mtd><msub><mi>head</mi><mi>i</mi></msub></mtd><mtd><mo>=</mo></mtd><mtd><mi mathvariant="normal">Attention</mi><mo>(</mo><mi>Q</mi><msubsup><mi>W</mi><mi>i</mi><mi>Q</mi></msubsup><mo>,</mo><mi>K</mi><msubsup><mi>W</mi><mi>i</mi><mi>K</mi></msubsup><mo>,</mo><mi>V</mi><msubsup><mi>W</mi><mi>i</mi><mi>V</mi></msubsup><mo>)</mo></mtd></mtr></mtable></math></div>
+  <div class="trace-grid">
+    <article><h3>Exchange across positions</h3><p>Multi-head attention lets each position collect information from other allowed positions. Different projections give heads the capacity to route through different representation subspaces; the architecture does not guarantee that every head learns a neat human concept.</p></article>
+    <article><h3>Transform within a position</h3><p>The feed-forward network applies the same two-layer MLP separately to every position: <math class="math-inline" aria-label="F F N of x equals max of zero and x W one plus b one, times W two plus b two"><mi mathvariant="normal">FFN</mi><mo>(</mo><mi>x</mi><mo>)</mo><mo>=</mo><mi mathvariant="normal">max</mi><mo>(</mo><mn>0</mn><mo>,</mo><mi>x</mi><msub><mi>W</mi><mn>1</mn></msub><mo>+</mo><msub><mi>b</mi><mn>1</mn></msub><mo>)</mo><msub><mi>W</mi><mn>2</mn></msub><mo>+</mo><msub><mi>b</mi><mn>2</mn></msub></math>. In the base model it expands 512 → 2048 → 512.</p></article>
+    <article><h3>Preserve and normalize</h3><p>The original paper wraps each sublayer as <math class="math-inline" aria-label="Layer norm of x plus sublayer of x"><mi mathvariant="normal">LayerNorm</mi><mo>(</mo><mi>x</mi><mo>+</mo><mi mathvariant="normal">Sublayer</mi><mo>(</mo><mi>x</mi><mo>)</mo><mo>)</mo></math>: residual addition first, layer normalization second. Later “pre-norm” Transformers change this order.</p></article>
+    <article><h3>Inject sequence order</h3><p>Attention alone is permutation-equivariant. The paper adds sinusoidal positional encodings to token embeddings so identical tokens at different positions enter with different representations.</p></article>
+  </div>
+</section>
+
+<section aria-labelledby="prediction-title">
+  <h2 id="prediction-title">7. Predict before reveal: who may the decoder read?</h2>
+  <p>During training, suppose the shifted target input has four positions: <code>&lt;start&gt;</code>, <code>Das</code>, <code>Tier</code>, <code>schläft</code>. When computing the representation at target position 3, may it attend to position 4?</p>
+  <div class="mask" role="img" aria-label="Four by four causal mask. Rows are querying target positions and columns are readable target positions. Cells on and below the diagonal are allowed; cells above the diagonal are blocked.">
+    <span class="axis">query ↓ / read →</span><span class="axis">1 start</span><span class="axis">2 Das</span><span class="axis">3 Tier</span><span class="axis">4 schläft</span>
+    <span class="axis">1 start</span><span class="allowed">allowed</span><span class="blocked">blocked</span><span class="blocked">blocked</span><span class="blocked">blocked</span>
+    <span class="axis">2 Das</span><span class="allowed">allowed</span><span class="allowed">allowed</span><span class="blocked">blocked</span><span class="blocked">blocked</span>
+    <span class="axis">3 Tier</span><span class="allowed">allowed</span><span class="allowed">allowed</span><span class="allowed">allowed</span><span class="blocked">blocked</span>
+    <span class="axis">4 schläft</span><span class="allowed">allowed</span><span class="allowed">allowed</span><span class="allowed">allowed</span><span class="allowed">allowed</span>
+  </div>
+  <details class="answer"><summary>Reveal the information rule</summary><div><strong>No.</strong> Position 3 may use positions 1 through 3, never position 4. The model sets forbidden logits to -∞ before softmax, so their weights become zero. Training can compute all rows in parallel because the known target is present, but the mask prevents target leakage.</div></details>
+  <p class="margin-note"><strong>Training parallelism does not remove autoregressive generation.</strong> At inference, the next target token does not yet exist. The decoder predicts one token, appends it to the prefix, and runs again.</p>
+</section>
+
+<section aria-labelledby="trace-two-title">
+  <h2 id="trace-two-title">8. Worked trace II: follow one decoder step by shape</h2>
+  <p>Take a four-token source and a three-token target prefix. Use the base model dimensions: <em>d<sub>model</sub> = 512</em>, eight heads, and 64 dimensions per head. The goal is to predict a distribution for the next target token.</p>
+  <div class="table-wrap"><table class="shape-table"><thead><tr><th>Stage</th><th>Per-head calculation</th><th>What it means</th></tr></thead><tbody>
+    <tr><td>Encoder self-attention</td><td>Q,K,V: 4×64 → scores: 4×4 → head output: 4×64</td><td>Each source position may read every source position.</td></tr>
+    <tr><td>Concatenate 8 heads</td><td>8 × (4×64) → 4×512</td><td>Every source position now carries a context-aware 512-wide representation.</td></tr>
+    <tr><td>Decoder masked self-attention</td><td>Q,K,V: 3×64 → masked scores: 3×3</td><td>The third target position reads target positions 1-3, not any future target.</td></tr>
+    <tr><td>Encoder-decoder attention</td><td>Q: 3×64; K,V: 4×64 → scores: 3×4 → output: 3×64</td><td>Each target position asks the encoded source a different question.</td></tr>
+    <tr><td>Concatenate and refine</td><td>8 × (3×64) → 3×512 → FFN 512→2048→512</td><td>Cross-source messages are combined, then each target position is transformed locally.</td></tr>
+    <tr><td>Predict next token</td><td>last row 1×512 → vocabulary logits → softmax</td><td>Only the final prefix position is used to choose the next token during generation.</td></tr>
+  </tbody></table></div>
+  <p>The central distinction is visible in the score shapes. Decoder self-attention builds a target-to-target matrix, 3×3. Cross-attention builds a target-to-source matrix, 3×4. The latter is the bridge between the two towers.</p>
+</section>
+
+<section aria-labelledby="architecture-title">
+  <h2 id="architecture-title">9. Assemble the complete encoder-decoder</h2>
+  <p>The paper stacks six encoder layers and six decoder layers. The encoder alternates self-attention and position-wise feed-forward sublayers. The decoder adds a third sublayer: encoder-decoder attention between its masked self-attention and feed-forward network.</p>
+  <figure class="paper-figure"><img src="original_transformer_architecture.png" width="1520" height="2239" alt="Original Transformer architecture. The left encoder stack contains multi-head self-attention and feed-forward sublayers. The right decoder stack adds masked self-attention and encoder-decoder attention before producing output probabilities."><figcaption><strong>Original paper Figure 1 (PDF p. 3).</strong> The encoder is on the left and decoder on the right. “Add &amp; Norm” means the paper's post-norm residual form, and “Outputs (shifted right)” supplies each decoder position only the preceding target prefix.</figcaption></figure>
+  <p><strong>Read the arrows as information permissions.</strong> Encoder self-attention reads the full source. Masked decoder self-attention reads the target prefix. Encoder-decoder attention uses decoder queries to read all encoder outputs. The final linear layer and softmax turn a decoder representation into next-token probabilities.</p>
+</section>
+
+<section aria-labelledby="evidence-title">
+  <h2 id="evidence-title">10. What the paper's evidence supports</h2>
+  <p>The central experiments use WMT 2014 machine translation. The authors trained on about 4.5 million English-German sentence pairs and 36 million English-French sentence pairs. The base model trained for 100,000 steps (about 12 hours) and the big model for 300,000 steps (3.5 days), each on eight NVIDIA P100 GPUs.</p>
+  <figure class="results-ledger">
+    <span class="figure-label" style="color:var(--signal)">Original paper table</span>
+    <div class="table-wrap" role="region" aria-label="Reconstruction of original paper Table 2" tabindex="0">
+      <table class="evidence-table"><thead><tr><th rowspan="2">Model</th><th colspan="2">BLEU</th><th colspan="2">Training cost (FLOPs)</th></tr><tr><th>EN-DE</th><th>EN-FR</th><th>EN-DE</th><th>EN-FR</th></tr></thead><tbody>
+        <tr><td>ByteNet</td><td>23.75</td><td class="dash">-</td><td class="dash">-</td><td class="dash">-</td></tr>
+        <tr><td>Deep-Att + PosUnk</td><td class="dash">-</td><td>39.2</td><td class="dash">-</td><td><math class="math-inline"><mn>1.0</mn><mo>×</mo><msup><mn>10</mn><mn>20</mn></msup></math></td></tr>
+        <tr><td>GNMT + RL</td><td>24.6</td><td>39.92</td><td><math class="math-inline"><mn>2.3</mn><mo>×</mo><msup><mn>10</mn><mn>19</mn></msup></math></td><td><math class="math-inline"><mn>1.4</mn><mo>×</mo><msup><mn>10</mn><mn>20</mn></msup></math></td></tr>
+        <tr><td>ConvS2S</td><td>25.16</td><td>40.46</td><td><math class="math-inline"><mn>9.6</mn><mo>×</mo><msup><mn>10</mn><mn>18</mn></msup></math></td><td><math class="math-inline"><mn>1.5</mn><mo>×</mo><msup><mn>10</mn><mn>20</mn></msup></math></td></tr>
+        <tr><td>MoE</td><td>26.03</td><td>40.56</td><td><math class="math-inline"><mn>2.0</mn><mo>×</mo><msup><mn>10</mn><mn>19</mn></msup></math></td><td><math class="math-inline"><mn>1.2</mn><mo>×</mo><msup><mn>10</mn><mn>20</mn></msup></math></td></tr>
+        <tr><td>Deep-Att + PosUnk Ensemble</td><td class="dash">-</td><td>40.4</td><td class="dash">-</td><td><math class="math-inline"><mn>8.0</mn><mo>×</mo><msup><mn>10</mn><mn>20</mn></msup></math></td></tr>
+        <tr><td>GNMT + RL Ensemble</td><td>26.30</td><td>41.16</td><td><math class="math-inline"><mn>1.8</mn><mo>×</mo><msup><mn>10</mn><mn>20</mn></msup></math></td><td><math class="math-inline"><mn>1.1</mn><mo>×</mo><msup><mn>10</mn><mn>21</mn></msup></math></td></tr>
+        <tr><td>ConvS2S Ensemble</td><td>26.36</td><td>41.29</td><td><math class="math-inline"><mn>7.7</mn><mo>×</mo><msup><mn>10</mn><mn>19</mn></msup></math></td><td><math class="math-inline"><mn>1.2</mn><mo>×</mo><msup><mn>10</mn><mn>21</mn></msup></math></td></tr>
+        <tr class="transformer"><td>Transformer (base)</td><td>27.3</td><td>38.1</td><td><math class="math-inline"><mn>3.3</mn><mo>×</mo><msup><mn>10</mn><mn>18</mn></msup></math></td><td class="dash">-</td></tr>
+        <tr class="transformer"><td>Transformer (big)</td><td>28.4</td><td>41.8</td><td><math class="math-inline"><mn>2.3</mn><mo>×</mo><msup><mn>10</mn><mn>19</mn></msup></math></td><td class="dash">-</td></tr>
+      </tbody></table>
+    </div>
+    <figcaption><strong>Reconstruction of original paper Table 2 (PDF p. 8).</strong> Dashes mark cells left blank in the source table. The big Transformer reached 28.4 BLEU on English-German and 41.8 on English-French; the table reports training-cost estimates only in the English-German column for the Transformer rows.</figcaption>
+  </figure>
+  <div class="evidence-reading"><div><strong>Quality claim</strong>The big Transformer exceeds the listed English-German ensemble baselines by more than 2 BLEU and has the highest listed English-French BLEU.</div><div><strong>Efficiency claim</strong>The base model's reported English-German training cost, <math class="math-inline" aria-label="three point three times ten to the eighteenth"><mn>3.3</mn><mo>×</mo><msup><mn>10</mn><mn>18</mn></msup></math> FLOPs, is below every comparison row with an English-German cost.</div><div><strong>Scope boundary</strong>These are 2014 WMT test sets, the paper's tokenization and decoding setup, and estimated training FLOPs - not a universal latency or quality guarantee.</div></div>
+  <details class="answer"><summary>Evidence-reading check: why not quote “41.8 BLEU” alone?</summary><div>Because BLEU is meaningful only with its task, test set, model setting, and comparison conditions. Here it is the big model on WMT 2014 English-French newstest2014. Also note a source inconsistency: the abstract and Table 2 report 41.8, while the Section 6.1 prose says 41.0. This lesson uses the table and abstract value and makes the location explicit.</div></details>
+</section>
+
+<section aria-labelledby="limits-title">
+  <h2 id="limits-title">11. Limitations and misconception checks</h2>
+  <ul class="limitations">
+    <li><strong>Quadratic pair matrix.</strong> Full self-attention forms an <em>n × n</em> score matrix per head, so long sequences are costly.</li>
+    <li><strong>Generation remains sequential.</strong> Training positions parallelize under a causal mask; autoregressive output tokens still arrive one at a time.</li>
+    <li><strong>Order is not automatic.</strong> The paper must add positional encodings because content-only attention does not identify order.</li>
+    <li><strong>Translation evidence is scoped.</strong> The original results do not by themselves establish today's language-model scaling behavior or every other modality.</li>
+    <li><strong>Attention is not a full explanation.</strong> A routing weight shows contribution inside one operation, not a complete causal account of a model decision.</li>
+    <li><strong>Short paths are not free understanding.</strong> <math class="math-inline" aria-label="order one"><mi mathvariant="normal">O</mi><mo>(</mo><mn>1</mn><mo>)</mo></math> path length makes interaction direct; learning the right interaction still depends on data and optimization.</li>
+  </ul>
+  <details><summary>Misconception: “A token has one permanent query, key, and value.”</summary><div>No. Q, K, and V are contextual, learned projections of the current layer's representations. They change across layers, heads, positions, and inputs.</div></details>
+  <details><summary>Misconception: “Multi-head attention means eight identical attention maps.”</summary><div>No. Each head has its own learned projection matrices. That gives heads capacity to learn different routing patterns, although it does not guarantee eight cleanly interpretable roles.</div></details>
+  <details><summary>Misconception: “The decoder's two attention sublayers do the same job.”</summary><div>No. Masked self-attention reads the target prefix. Encoder-decoder attention uses target-side queries to read source-side encoder outputs.</div></details>
+  <details><summary>Misconception: “The original Transformer used today's common pre-norm block.”</summary><div>No. The paper states <math class="math-inline" aria-label="Layer norm of x plus sublayer of x"><mi mathvariant="normal">LayerNorm</mi><mo>(</mo><mi>x</mi><mo>+</mo><mi mathvariant="normal">Sublayer</mi><mo>(</mo><mi>x</mi><mo>)</mo><mo>)</mo></math>, usually called post-norm. Many later Transformers move normalization before the sublayer.</div></details>
+</section>
+
+<section aria-labelledby="recall-title">
+  <h2 id="recall-title">12. Active recall</h2>
+  <p>Answer aloud or on paper before opening each response.</p>
+  <details class="answer"><summary>1. What does <math class="math-inline" aria-label="Q K transpose"><mi>Q</mi><msup><mi>K</mi><mi>T</mi></msup></math> contain, and what is its shape?</summary><div>It contains every query-key compatibility score. Its shape is <math class="math-inline" aria-label="n q by n k"><msub><mi>n</mi><mi>q</mi></msub><mo>×</mo><msub><mi>n</mi><mi>k</mi></msub></math>: one row per query and one column per readable key.</div></details>
+  <details class="answer"><summary>2. Why divide dot products by <math class="math-inline" aria-label="square root d k"><msqrt><msub><mi>d</mi><mi>k</mi></msub></msqrt></math>?</summary><div>Under the paper's simple independent, unit-variance assumption, dot-product variance grows with <math class="math-inline" aria-label="d k"><msub><mi>d</mi><mi>k</mi></msub></math>. Scaling keeps score magnitudes controlled so softmax is less likely to enter tiny-gradient regions.</div></details>
+  <details class="answer"><summary>3. Keys and values come from the same positions. Why keep them separate?</summary><div>Keys determine how strongly a position matches a query; values carry the information that is mixed. The model can learn a searchable label that differs from the returned content.</div></details>
+  <details class="answer"><summary>4. What are the Transformer's three attention sites?</summary><div>Encoder self-attention; masked decoder self-attention; and encoder-decoder attention, where decoder states provide queries and encoder outputs provide keys and values.</div></details>
+  <details class="answer"><summary>5. Which operation communicates across positions, and which transforms positions independently?</summary><div>Attention communicates across allowed positions. The position-wise feed-forward network applies the same MLP independently to each position.</div></details>
+  <details class="answer"><summary>6. Why can training parallelize target positions while generation cannot?</summary><div>During training, the complete target is available and a causal mask blocks illegal future information, so all rows can be computed together. During generation, the next token does not exist until the previous prediction has been appended.</div></details>
+  <details class="answer"><summary>7. State one result and one limitation without overclaiming.</summary><div>Result: the big Transformer reports 28.4 BLEU on WMT 2014 English-German newstest2014, above the listed prior systems and ensembles. Limitation: full attention has an <em>n × n</em> pair matrix, and the experiments do not establish universal superiority on every sequence task.</div></details>
+</section>
+
+<section aria-labelledby="map-title">
+  <h2 id="map-title">13. Connect it to your mental map</h2>
+  <div class="mental-map">
+    <article><h3>ResNet: preserve, then revise</h3><p>A Transformer residual path preserves a representation while an attention or feed-forward branch proposes an additive update. The paper adopts the same optimization grammar you saw in residual networks, now around token communication.</p></article>
+    <article><h3>GCN: fixed versus learned neighborhoods</h3><p>A graph convolution aggregates across edges supplied by a graph. Self-attention constructs a dense, input-dependent routing matrix. Both are message passing; one starts from fixed adjacency, the other learns weights among allowed token pairs.</p></article>
+    <article><h3>Adam: architecture versus optimization</h3><p>The Transformer specifies how representations communicate. Adam specifies how parameters update. The paper uses Adam with a warm-up and inverse-square-root learning-rate schedule; the architecture and optimizer solve different problems.</p></article>
+    <article><h3>DPO: backbone versus post-training objective</h3><p>Modern preference optimization often changes a Transformer's parameters, but DPO's pairwise loss is not part of attention. Keep backbone mechanism, pretraining objective, and post-training objective as separate layers in your map.</p></article>
+  </div>
+</section>
+
+<section aria-labelledby="takeaway-title">
+  <h2 id="takeaway-title">14. Takeaway</h2>
+  <p class="takeaway"><strong>Native intuition:</strong> a Transformer is repeated learned routing plus local revision. Each token asks through a query, matches allowed keys, mixes their values, then refines the result through a feed-forward network while residual paths preserve what was already known. Position tells the model where tokens are; masking tells it what information is legal. The 2017 contribution was to make this exchange-and-refine pattern the whole encoder-decoder backbone rather than an accessory to recurrence.</p>
+</section>
+
+<footer>
+  <h2>Source and further exploration</h2>
+  <ul><li><a href="attention_is_all_you_need.pdf">Original paper PDF (local copy)</a></li><li><a href="https://arxiv.org/abs/1706.03762">arXiv record and version history</a></li><li><a href="https://papers.nips.cc/paper/7181-attention-is-all-you-need">NIPS 2017 proceedings record</a></li><li><a href="https://github.com/tensorflow/tensor2tensor">Tensor2Tensor repository cited by the paper</a></li></ul>
+</footer>
+</main>
+
+<script>
+(() => {
+  const root = document;
+  const buttons = [...root.querySelectorAll('[data-query]')];
+  const values = [[1, 0], [0, 1], [1, 1]];
+  const cases = { it: { label: '“it”', scores: [2, -1, 1] }, street: { label: '“street”', scores: [0, 1, 0] }, tired: { label: '“tired”', scores: [2, 0, 1] } };
+  const names = ['animal', 'street', 'tired'];
+  const format = number => Number(number).toFixed(3);
+  function render(key) {
+    const current = cases[key];
+    if (!current) return;
+    const scaled = current.scores.map(score => score / Math.sqrt(2));
+    const exponentials = scaled.map(Math.exp);
+    const total = exponentials.reduce((sum, value) => sum + value, 0);
+    const weights = exponentials.map(value => value / total);
+    const output = [0, 1].map(dimension => weights.reduce((sum, weight, index) => sum + weight * values[index][dimension], 0));
+    buttons.forEach(button => button.setAttribute('aria-pressed', String(button.dataset.query === key)));
+    names.forEach((name, index) => {
+      const percent = weights[index] * 100;
+      root.getElementById(`bar-${name}`).style.width = `${percent}%`;
+      root.getElementById(`weight-${name}`).textContent = `${percent.toFixed(1)}%`;
+    });
+    root.getElementById('routing-output').textContent = `For ${current.label}, the scaled scores are ${format(scaled[0])} for animal, ${format(scaled[1])} for street, and ${format(scaled[2])} for tired. The two output coordinates are approximately ${format(output[0])} and ${format(output[1])}.`;
+  }
+  buttons.forEach(button => button.addEventListener('click', () => render(button.dataset.query)));
+})();
+</script>
+</body>
+</html>

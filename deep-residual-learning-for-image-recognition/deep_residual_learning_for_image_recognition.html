@@ -1,0 +1,1101 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="A gradual one-hour university lesson on residual learning, projection shortcuts, optimization, and the evidence in the original ResNet paper.">
+  <title>Deep Residual Learning - a one-hour ResNet lesson</title>
+  <style>
+    :root {
+      --paper: #f2f6f7;
+      --sheet: #fbfcfc;
+      --ink: #17242a;
+      --muted: #556970;
+      --rule: #b8c8cd;
+      --grid: #d9e4e7;
+      --identity: #205f7a;
+      --identity-soft: #deedf2;
+      --residual: #9b472c;
+      --residual-soft: #f4e5df;
+      --sum: #8a6821;
+      --sum-soft: #f2ead5;
+      --green: #3e6957;
+      --green-soft: #e1ece6;
+      --dark: #14232a;
+      --serif: Charter, "Iowan Old Style", "Palatino Linotype", Georgia, serif;
+      --sans: "Avenir Next", Avenir, "Helvetica Neue", Arial, sans-serif;
+      --mono: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      background:
+        linear-gradient(rgba(32,95,122,.045) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(32,95,122,.045) 1px, transparent 1px),
+        var(--paper);
+      background-size: 32px 32px;
+      color: var(--ink);
+      font: 18px/1.68 var(--serif);
+    }
+
+    img, svg { max-width: 100%; }
+    svg { display: block; width: 100%; height: auto; }
+    a { color: var(--identity); text-underline-offset: .2em; text-decoration-thickness: .08em; }
+    a:hover { color: var(--residual); }
+    a:focus-visible,
+    button:focus-visible,
+    input:focus-visible,
+    summary:focus-visible,
+    [tabindex="0"]:focus-visible {
+      outline: 3px solid #b17824;
+      outline-offset: 4px;
+    }
+
+    .skip-link {
+      position: absolute;
+      left: 1rem;
+      top: -5rem;
+      z-index: 10;
+      padding: .65rem .9rem;
+      background: var(--dark);
+      color: white;
+      font: 700 .8rem/1 var(--sans);
+    }
+    .skip-link:focus { top: 1rem; }
+
+    .wrap { width: min(1080px, calc(100% - 44px)); margin-inline: auto; }
+    .reading { width: min(780px, 100%); margin-inline: auto; }
+
+    .mast {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1rem;
+      min-height: 62px;
+      border-bottom: 1px solid var(--rule);
+      font: 700 .75rem/1.2 var(--sans);
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+    .mast a { color: var(--ink); }
+    .mast span { color: var(--muted); }
+
+    header {
+      position: relative;
+      overflow: hidden;
+      padding: 74px 0 62px;
+      border-bottom: 1px solid var(--rule);
+      background: rgba(251,252,252,.84);
+    }
+    .hero {
+      position: relative;
+      z-index: 1;
+      width: min(820px, calc(100% - 44px));
+      text-align: center;
+    }
+    .kicker, .eyebrow, .label {
+      margin: 0 0 12px;
+      color: var(--residual);
+      font: 750 .73rem/1.35 var(--sans);
+      letter-spacing: .1em;
+      text-transform: uppercase;
+    }
+    h1, h2, h3 { color: var(--ink); line-height: 1.14; }
+    h1 {
+      max-width: 12ch;
+      margin: 0 auto;
+      font: 650 clamp(3rem, 7vw, 6rem)/.98 var(--sans);
+      letter-spacing: -.055em;
+    }
+    h2 {
+      margin: 0 0 18px;
+      font: 650 clamp(2rem, 4.5vw, 3.3rem)/1.05 var(--sans);
+      letter-spacing: -.04em;
+    }
+    h3 {
+      margin: 1.8em 0 .55em;
+      font: 700 1.16rem/1.28 var(--sans);
+      letter-spacing: -.01em;
+    }
+    .subtitle {
+      max-width: 44rem;
+      margin: 24px auto 0;
+      color: var(--muted);
+      font-size: 1.25rem;
+    }
+    .paper-meta {
+      margin: 26px auto 0;
+      color: var(--muted);
+      font-size: .88rem;
+    }
+    .guiding {
+      max-width: 42rem;
+      margin: 30px auto 0;
+      padding: 18px 0 2px;
+      border-top: 3px solid var(--sum);
+      font-size: 1.05rem;
+    }
+    .guiding strong {
+      display: block;
+      margin-bottom: 8px;
+      color: var(--sum);
+      font: 750 .72rem/1.3 var(--sans);
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+
+    .route {
+      margin: 0 auto 18px;
+      padding: 24px 0 28px;
+      border-bottom: 1px solid var(--rule);
+      background: rgba(242,246,247,.94);
+    }
+    .route-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 1px;
+      background: var(--rule);
+      border: 1px solid var(--rule);
+    }
+    .route a {
+      min-height: 102px;
+      padding: 13px;
+      background: var(--sheet);
+      color: var(--ink);
+      text-decoration: none;
+      font: 650 .78rem/1.35 var(--sans);
+    }
+    .route a:hover { background: var(--identity-soft); }
+    .route time {
+      display: block;
+      margin-bottom: 8px;
+      color: var(--identity);
+      font: 750 .69rem/1.2 var(--mono);
+    }
+    .route-title {
+      display: flex;
+      justify-content: space-between;
+      gap: 1rem;
+      margin-bottom: 12px;
+      color: var(--muted);
+      font: 700 .72rem/1.3 var(--sans);
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+
+    main { padding-bottom: 44px; }
+    section {
+      position: relative;
+      margin-top: 0;
+      padding: 80px 0;
+      border-bottom: 1px solid var(--rule);
+    }
+    section::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: -18px;
+      width: 7px;
+      height: 80px;
+      background: linear-gradient(var(--identity) 0 45%, transparent 45% 55%, var(--residual) 55%);
+    }
+    p { max-width: 760px; }
+    .lede { font-size: 1.2rem; color: #2e444d; }
+    code {
+      padding: .08em .25em;
+      background: #e5edef;
+      font: .92em/1.5 var(--mono);
+    }
+    math {
+      font-family: "STIX Two Math", "Cambria Math", "Latin Modern Math", serif;
+    }
+    math[display="block"] {
+      width: max-content;
+      max-width: none;
+      margin: 0 auto;
+      font-size: 1.08rem;
+    }
+    .math-inline {
+      vertical-align: -.12em;
+      white-space: nowrap;
+    }
+    .equation {
+      margin: 25px 0;
+      padding: 20px 24px;
+      overflow-x: auto;
+      background: var(--dark);
+      color: #f3f7f8;
+      font: 1rem/1.7 var(--mono);
+      text-align: center;
+    }
+    .equation math,
+    .equation math * { color: inherit; }
+    .equation mtext { font-family: var(--serif); }
+    .math-scroll {
+      max-width: 100%;
+      overflow-x: auto;
+      padding-block: .2rem;
+    }
+
+    .bridge, .callout {
+      margin: 28px 0;
+      padding: 18px 22px;
+      border-left: 5px solid var(--identity);
+      background: var(--identity-soft);
+    }
+    .bridge { font-size: 1.06rem; }
+    .callout.residual { border-color: var(--residual); background: var(--residual-soft); }
+    .callout.sum { border-color: var(--sum); background: var(--sum-soft); }
+    .callout.green { border-color: var(--green); background: var(--green-soft); }
+    .callout p:first-child { margin-top: 0; }
+    .callout p:last-child { margin-bottom: 0; }
+
+    .split {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 26px;
+      align-items: start;
+      margin: 30px 0;
+    }
+    .plain-sheet {
+      padding: 22px;
+      border-top: 5px solid var(--muted);
+      background: var(--sheet);
+    }
+    .plain-sheet.residual { border-color: var(--residual); }
+    .plain-sheet h3 { margin-top: 0; }
+
+    figure {
+      margin: 38px 0;
+      padding: 24px;
+      border: 1px solid var(--rule);
+      background: var(--sheet);
+    }
+    figure.diagram { border-top: 6px solid var(--identity); }
+    figure.diagram > svg { width: 100%; max-width: 720px; margin-inline: auto; }
+    figcaption {
+      margin-top: 17px;
+      color: var(--muted);
+      font-size: .88rem;
+      line-height: 1.55;
+    }
+    figcaption strong, .figure-kind {
+      color: var(--identity);
+      font: 750 .72rem/1.3 var(--sans);
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+
+    .symbol-table, .evidence-table {
+      width: 100%;
+      margin: 25px 0;
+      border-collapse: collapse;
+      background: var(--sheet);
+      font-size: .93rem;
+    }
+    .symbol-table caption, .evidence-table caption {
+      padding-bottom: 10px;
+      color: var(--muted);
+      text-align: left;
+      font-size: .86rem;
+    }
+    th, td {
+      padding: 13px 14px;
+      border-bottom: 1px solid var(--rule);
+      text-align: left;
+      vertical-align: top;
+    }
+    th {
+      color: var(--muted);
+      font: 750 .7rem/1.35 var(--sans);
+      letter-spacing: .07em;
+      text-transform: uppercase;
+    }
+    td:first-child { color: var(--identity); font-family: var(--mono); }
+
+    .trace {
+      margin: 28px 0;
+      padding: 0;
+      list-style: none;
+      counter-reset: trace;
+    }
+    .trace li {
+      position: relative;
+      min-height: 80px;
+      padding: 0 0 30px 74px;
+      counter-increment: trace;
+    }
+    .trace li::before {
+      content: counter(trace);
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 46px;
+      height: 46px;
+      display: grid;
+      place-items: center;
+      border: 2px solid var(--sum);
+      border-radius: 50%;
+      background: var(--sheet);
+      color: var(--sum);
+      font: 750 .85rem/1 var(--mono);
+    }
+    .trace li:not(:last-child)::after {
+      content: "";
+      position: absolute;
+      left: 22px;
+      top: 49px;
+      bottom: 1px;
+      width: 2px;
+      background: var(--rule);
+    }
+    .trace h3 { margin: 0 0 6px; }
+    .trace p { margin: 0; }
+
+    .worked {
+      margin: 32px 0;
+      padding: 26px;
+      border: 1px solid var(--rule);
+      background: var(--sheet);
+    }
+    .worked h3 { margin-top: 0; }
+    .calculation {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1px;
+      margin: 22px 0;
+      background: var(--rule);
+      border: 1px solid var(--rule);
+    }
+    .calculation > div {
+      min-width: 0;
+      padding: 18px;
+      overflow-x: auto;
+      background: white;
+    }
+    .calculation b {
+      display: block;
+      margin-bottom: 8px;
+      color: var(--residual);
+      font: 750 .7rem/1.3 var(--sans);
+      letter-spacing: .07em;
+      text-transform: uppercase;
+    }
+    .calculation code { padding: 0; background: transparent; }
+
+    .prediction {
+      margin: 30px 0;
+      padding: 26px;
+      border: 1px solid var(--sum);
+      background: var(--sum-soft);
+    }
+    .prediction h3 { margin-top: 0; }
+    .vector-inputs {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr)) auto;
+      gap: 12px;
+      align-items: end;
+      margin: 20px 0 0;
+    }
+    .vector-inputs label {
+      display: block;
+      color: var(--ink);
+      font: 700 .76rem/1.3 var(--sans);
+    }
+    .vector-inputs input {
+      width: 100%;
+      min-height: 44px;
+      margin-top: 6px;
+      padding: 8px 10px;
+      border: 1px solid var(--rule);
+      border-radius: 0;
+      background: white;
+      color: var(--ink);
+      font: 1rem/1 var(--mono);
+    }
+    button {
+      min-height: 44px;
+      padding: 10px 15px;
+      border: 1px solid var(--identity);
+      border-radius: 0;
+      background: var(--identity);
+      color: white;
+      cursor: pointer;
+      font: 750 .78rem/1.2 var(--sans);
+    }
+    button:hover { background: #17495f; }
+    .feedback {
+      min-height: 3.2em;
+      margin: 17px 0 0;
+      padding: 11px 14px;
+      border-left: 4px solid var(--sum);
+      background: white;
+    }
+
+    details {
+      margin: 14px 0;
+      padding: 15px 0;
+      border-top: 1px solid var(--rule);
+    }
+    summary {
+      min-height: 44px;
+      cursor: pointer;
+      color: var(--ink);
+      font: 700 1rem/1.45 var(--sans);
+    }
+    details p { margin: 12px 0 0; }
+    details.answer { padding-inline: 16px; background: var(--green-soft); }
+
+    .paper-figure-scroller {
+      max-width: 100%;
+      overflow-x: auto;
+      overscroll-behavior-inline: contain;
+    }
+    .paper-figure {
+      display: block;
+      width: 100%;
+      height: auto;
+    }
+
+    .evidence-cards {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 18px;
+      margin: 28px 0;
+    }
+    .evidence-cards article {
+      padding: 20px;
+      border-top: 4px solid var(--identity);
+      background: var(--sheet);
+    }
+    .evidence-cards article:nth-child(2) { border-color: var(--residual); }
+    .evidence-cards article:nth-child(3) { border-color: var(--sum); }
+    .evidence-cards h3 { margin-top: 0; }
+
+    .mental-map {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1px;
+      margin: 30px 0;
+      background: var(--rule);
+      border: 1px solid var(--rule);
+    }
+    .mental-map > div { padding: 22px; background: var(--sheet); }
+    .mental-map dt {
+      margin-bottom: 7px;
+      color: var(--identity);
+      font: 750 .79rem/1.3 var(--sans);
+      letter-spacing: .06em;
+      text-transform: uppercase;
+    }
+    .mental-map dd { margin: 0; }
+
+    .takeaway {
+      padding-top: 92px;
+      padding-bottom: 96px;
+      border-bottom: 0;
+    }
+    .takeaway blockquote {
+      max-width: 900px;
+      margin: 30px 0 0;
+      padding: 0 0 0 26px;
+      border-left: 8px solid var(--sum);
+      font: 600 clamp(1.55rem, 3.6vw, 2.5rem)/1.25 var(--sans);
+      letter-spacing: -.025em;
+    }
+
+    .sources {
+      padding: 44px 0 56px;
+      border-top: 2px solid var(--ink);
+      background: var(--dark);
+      color: #dce7ea;
+    }
+    .sources h2 { color: white; font-size: 1.45rem; letter-spacing: -.02em; }
+    .sources a { color: #b8deed; }
+    .sources li { margin: .5em 0; }
+    .sources p { color: #b6c6cc; font-size: .86rem; }
+
+    @media (max-width: 900px) {
+      .route-grid { grid-template-columns: repeat(4, 1fr); }
+      .evidence-cards { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 720px) {
+      body { font-size: 17px; }
+      .wrap { width: min(100% - 28px, 1080px); }
+      .mast span { display: none; }
+      header { padding: 52px 0 46px; }
+      .guiding { max-width: 36rem; }
+      .route-grid { grid-template-columns: 1fr 1fr; }
+      .route a { min-height: 84px; }
+      section { padding: 60px 0; }
+      section::before { left: -8px; height: 60px; }
+      .split, .mental-map { grid-template-columns: 1fr; }
+      .calculation { grid-template-columns: 1fr; }
+      figure { margin-inline: -4px; padding: 13px; }
+      .symbol-table, .evidence-table { table-layout: fixed; }
+      th, td { padding: 9px 7px; overflow-wrap: anywhere; }
+      .vector-inputs { grid-template-columns: 1fr; }
+      .paper-figure { width: 900px; max-width: none; }
+      .paper-figure-scroller { border-right: 3px solid var(--rule); }
+      .trace li { padding-left: 64px; }
+    }
+    @media (max-width: 420px) {
+      .route-grid { grid-template-columns: 1fr; }
+      h1 { font-size: 2.7rem; }
+      .route-title { display: block; }
+      .route-title span { display: block; margin-top: 4px; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+    }
+  </style>
+</head>
+<body>
+  <a class="skip-link" href="#lesson">Skip to lesson</a>
+  <div class="wrap mast">
+    <a href="../index.html">← Daily AI Paper Lab</a>
+    <span>Computer vision · optimization · CVPR 2016</span>
+  </div>
+
+  <header>
+    <div class="wrap hero">
+      <div>
+        <p class="kicker">A 60-minute active study route</p>
+        <h1>Keep the signal. Learn the correction.</h1>
+        <p class="subtitle">ResNet turns “construct the next representation” into “preserve what already works, then revise it.” Follow that change from the optimization puzzle to the forward pass, the backward pass, stage transitions, and the paper’s evidence.</p>
+        <p class="paper-meta"><em>Deep Residual Learning for Image Recognition</em> · Kaiming He, Xiangyu Zhang, Shaoqing Ren, and Jian Sun · CVPR 2016</p>
+      </div>
+      <p class="guiding"><strong>Guiding question</strong>If a deeper network can imitate a shallower one, why can the deeper network still have worse training error?</p>
+    </div>
+  </header>
+
+  <nav class="route" aria-label="One-hour study route">
+    <div class="wrap">
+      <div class="route-title"><b>One-hour route</b><span>Read, calculate, predict, then retrieve</span></div>
+      <div class="route-grid">
+        <a href="#prerequisites"><time>0–7 min</time>Bridge the prerequisites</a>
+        <a href="#problem"><time>7–16 min</time>Diagnose degradation</a>
+        <a href="#mechanism"><time>16–29 min</time>Build the residual block</a>
+        <a href="#gradient"><time>29–39 min</time>Trace the gradient</a>
+        <a href="#shapes"><time>39–49 min</time>Align shapes and stages</a>
+        <a href="#evidence"><time>49–55 min</time>Read the evidence</a>
+        <a href="#recall"><time>55–60 min</time>Recall and connect</a>
+      </div>
+    </div>
+  </nav>
+
+  <main id="lesson" class="wrap">
+    <section id="prerequisites">
+      <div class="reading">
+        <p class="eyebrow">01 · Prerequisite bridge</p>
+        <h2>Three ideas are enough to begin.</h2>
+        <p class="lede">You do not need to memorize a full convolutional architecture. Keep only tensors, elementwise addition, and the chain rule in working memory.</p>
+        <div class="bridge">
+          <p><strong>Analogy: revision paper over a blueprint.</strong> Imagine preserving an engineer’s existing drawing on the bottom sheet. A transparent sheet on top contains only corrections. Align the sheets and add the marks. The lower sheet is the shortcut <math class="math-inline" aria-label="x"><mi>x</mi></math>; the corrections are <math class="math-inline" aria-label="F of x"><mi>F</mi><mo>(</mo><mi>x</mi><mo>)</mo></math>; the revised drawing is <math class="math-inline" aria-label="H of x"><mi>H</mi><mo>(</mo><mi>x</mi><mo>)</mo></math>.</p>
+          <p>This analogy has a boundary: a neural residual is not necessarily small or human-interpretable. It is simply learned relative to the input baseline.</p>
+        </div>
+        <div class="split">
+          <article class="plain-sheet">
+            <h3>Convolution changes a feature map</h3>
+            <p>A feature tensor has spatial dimensions and channels: <math class="math-inline" aria-label="H by W by C"><mi>H</mi><mo>×</mo><mi>W</mi><mo>×</mo><mi>C</mi></math>. A learned convolution mixes nearby values and channels.</p>
+          </article>
+          <article class="plain-sheet residual">
+            <h3>Addition demands agreement</h3>
+            <p>For <math class="math-inline" aria-label="x plus F of x"><mi>x</mi><mo>+</mo><mi>F</mi><mo>(</mo><mi>x</mi><mo>)</mo></math>, both paths must end at the same <math class="math-inline" aria-label="H by W by C"><mi>H</mi><mo>×</mo><mi>W</mi><mo>×</mo><mi>C</mi></math>. Addition is elementwise, not concatenation.</p>
+          </article>
+        </div>
+        <div class="callout green">
+          <p><span class="label">Chain-rule reminder</span>If <math class="math-inline" aria-label="y"><mi>y</mi></math> depends on <math class="math-inline" aria-label="x"><mi>x</mi></math> through two paths, the gradient with respect to <math class="math-inline" aria-label="x"><mi>x</mi></math> is the sum of the contributions from both paths. This will make the shortcut’s backward route visible later.</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="problem">
+      <div class="reading">
+        <p class="eyebrow">02 · Problem and baseline</p>
+        <h2>More depth created an optimization puzzle.</h2>
+        <p class="lede">The paper’s key failure is not ordinary overfitting. Some deeper <em>plain</em> networks have higher training error than shallower ones.</p>
+        <p>A deeper architecture can represent the shallower solution by copying the shallower layers and making every added layer an identity mapping. In that sense, the deeper solution space contains a no-worse constructed solution. Yet the solver did not reliably find it in feasible time. The authors call this the <strong>degradation problem</strong>.</p>
+        <figure class="diagram">
+          <svg viewBox="0 0 720 350" role="img" aria-labelledby="degrade-title degrade-desc">
+            <title id="degrade-title">The degradation counterfactual</title>
+            <desc id="degrade-desc">A trained shallow path is extended with identity layers. The represented solution should remain available, yet optimization may fail to discover it in a deep plain network.</desc>
+            <defs>
+              <marker id="arrow-problem" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto">
+                <path d="M0,0 L9,4.5 L0,9z" fill="#205f7a"/>
+              </marker>
+            </defs>
+            <text x="30" y="42" fill="#205f7a" font-family="Avenir Next, Arial" font-size="27" font-weight="700">SHALLOW SOLUTION</text>
+            <rect x="30" y="72" width="150" height="82" fill="#deedf2" stroke="#205f7a" stroke-width="3"/>
+            <text x="105" y="122" text-anchor="middle" fill="#17242a" font-family="Georgia" font-size="28">learned</text>
+            <line x1="180" y1="113" x2="260" y2="113" stroke="#205f7a" stroke-width="4" marker-end="url(#arrow-problem)"/>
+            <rect x="272" y="72" width="150" height="82" fill="#deedf2" stroke="#205f7a" stroke-width="3"/>
+            <text x="347" y="122" text-anchor="middle" fill="#17242a" font-family="Georgia" font-size="28">learned</text>
+            <path d="M422 113 H485 V205" fill="none" stroke="#205f7a" stroke-width="4" marker-end="url(#arrow-problem)"/>
+            <text x="30" y="228" fill="#9b472c" font-family="Avenir Next, Arial" font-size="27" font-weight="700">DEEPER CONSTRUCTION</text>
+            <rect x="30" y="252" width="150" height="68" fill="#deedf2" stroke="#205f7a" stroke-width="3"/>
+            <text x="105" y="295" text-anchor="middle" fill="#17242a" font-family="Georgia" font-size="27">same</text>
+            <line x1="180" y1="286" x2="230" y2="286" stroke="#205f7a" stroke-width="4" marker-end="url(#arrow-problem)"/>
+            <rect x="240" y="252" width="124" height="68" fill="#f2ead5" stroke="#8a6821" stroke-width="3"/>
+            <text x="302" y="295" text-anchor="middle" fill="#17242a" font-family="Georgia" font-size="27">identity</text>
+            <line x1="364" y1="286" x2="414" y2="286" stroke="#205f7a" stroke-width="4" marker-end="url(#arrow-problem)"/>
+            <rect x="424" y="252" width="124" height="68" fill="#f2ead5" stroke="#8a6821" stroke-width="3"/>
+            <text x="486" y="295" text-anchor="middle" fill="#17242a" font-family="Georgia" font-size="27">identity</text>
+            <line x1="548" y1="286" x2="610" y2="286" stroke="#205f7a" stroke-width="4" marker-end="url(#arrow-problem)"/>
+            <text x="624" y="294" fill="#17242a" font-family="Georgia" font-size="30">same y</text>
+            <text x="503" y="89" fill="#9b472c" font-family="Georgia" font-size="25">Representable</text>
+            <text x="503" y="123" fill="#9b472c" font-family="Georgia" font-size="25">≠ easy to find</text>
+          </svg>
+          <figcaption><strong>Lesson diagram</strong> The deeper plain network contains a constructed copy of the shallower solution. The surprising observation is that representational capacity did not make that solution easy for optimization to reach.</figcaption>
+        </figure>
+        <div class="callout residual">
+          <p><span class="label">Diagnostic boundary</span><strong>High training error after adding depth</strong> points first to optimization. <strong>Low training error but worse validation error</strong> points to generalization. ResNet was proposed to address the former degradation pattern, not to abolish overfitting.</p>
+        </div>
+        <details class="answer">
+          <summary>Checkpoint: why is “deeper has more capacity” not a complete answer?</summary>
+          <p>Capacity says a good solution exists in the function class. It does not say stochastic gradient descent can find that solution efficiently under a given parameterization.</p>
+        </details>
+      </div>
+    </section>
+
+    <section id="mechanism">
+      <div class="reading">
+        <p class="eyebrow">03 · The causal move</p>
+        <h2>Make the no-change baseline explicit.</h2>
+        <p class="lede">Let <math class="math-inline" aria-label="H of x"><mi>H</mi><mo>(</mo><mi>x</mi><mo>)</mo></math> be the mapping a stack should produce. A plain stack learns <math class="math-inline" aria-label="H"><mi>H</mi></math> directly. A residual stack learns only the difference from the input:</p>
+        <div class="equation" aria-label="Residual mapping equations">
+          <math display="block" aria-label="F of x equals H of x minus x; therefore H of x equals F of x plus x">
+            <mtable columnalign="right center left" columnspacing=".7em" rowspacing=".65em">
+              <mtr>
+                <mtd><mi>F</mi><mo>(</mo><mi>x</mi><mo>)</mo></mtd>
+                <mtd><mo>=</mo></mtd>
+                <mtd><mi>H</mi><mo>(</mo><mi>x</mi><mo>)</mo><mo>−</mo><mi>x</mi></mtd>
+              </mtr>
+              <mtr>
+                <mtd><mtext>therefore&nbsp;</mtext><mi>H</mi><mo>(</mo><mi>x</mi><mo>)</mo></mtd>
+                <mtd><mo>=</mo></mtd>
+                <mtd><mi>F</mi><mo>(</mo><mi>x</mi><mo>)</mo><mo>+</mo><mi>x</mi></mtd>
+              </mtr>
+            </mtable>
+          </math>
+        </div>
+        <p>If keeping the current representation is useful, the residual branch can move toward <math class="math-inline" aria-label="F of x equals zero"><mi>F</mi><mo>(</mo><mi>x</mi><mo>)</mo><mo>=</mo><mn>0</mn></math> while the shortcut already carries <math class="math-inline" aria-label="x"><mi>x</mi></math>. This does not prove optimization will succeed; it changes the coordinate system so the identity baseline is directly present.</p>
+        <figure class="diagram">
+          <svg viewBox="0 0 760 440" role="img" aria-labelledby="block-title block-desc">
+            <title id="block-title">The two paths of an original residual block</title>
+            <desc id="block-desc">Input x splits into an identity shortcut and a learned residual branch with two layers. Matching tensors meet at elementwise addition, followed by ReLU in the paper's original post-activation block.</desc>
+            <defs>
+              <marker id="arrow-block-blue" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto">
+                <path d="M0,0 L9,4.5 L0,9z" fill="#205f7a"/>
+              </marker>
+              <marker id="arrow-block-rust" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto">
+                <path d="M0,0 L9,4.5 L0,9z" fill="#9b472c"/>
+              </marker>
+            </defs>
+            <text x="382" y="33" text-anchor="middle" fill="#9b472c" font-family="Avenir Next, Arial" font-size="22" font-weight="700">LEARNED RESIDUAL BRANCH  F(x)</text>
+            <text x="38" y="231" fill="#17242a" font-family="Georgia" font-size="34">input x</text>
+            <line x1="126" y1="220" x2="148" y2="220" stroke="#205f7a" stroke-width="5"/>
+            <circle cx="156" cy="220" r="8" fill="#205f7a"/>
+            <path d="M164 220 V108 H210" fill="none" stroke="#9b472c" stroke-width="5" marker-end="url(#arrow-block-rust)"/>
+            <rect x="225" y="66" width="150" height="84" fill="#f4e5df" stroke="#9b472c" stroke-width="3"/>
+            <text x="300" y="99" text-anchor="middle" fill="#9b472c" font-family="Avenir Next, Arial" font-size="22" font-weight="700">LEARNED</text>
+            <text x="300" y="129" text-anchor="middle" fill="#17242a" font-family="Georgia" font-size="24">conv · BN · ReLU</text>
+            <line x1="375" y1="108" x2="400" y2="108" stroke="#9b472c" stroke-width="5" marker-end="url(#arrow-block-rust)"/>
+            <rect x="415" y="66" width="150" height="84" fill="#f4e5df" stroke="#9b472c" stroke-width="3"/>
+            <text x="490" y="99" text-anchor="middle" fill="#9b472c" font-family="Avenir Next, Arial" font-size="22" font-weight="700">LEARNED</text>
+            <text x="490" y="129" text-anchor="middle" fill="#17242a" font-family="Georgia" font-size="24">conv · BN</text>
+            <path d="M565 108 H650 V180" fill="none" stroke="#9b472c" stroke-width="5" marker-end="url(#arrow-block-rust)"/>
+            <path d="M164 220 H608" fill="none" stroke="#205f7a" stroke-width="5" marker-end="url(#arrow-block-blue)"/>
+            <text x="366" y="260" text-anchor="middle" fill="#205f7a" font-family="Avenir Next, Arial" font-size="22" font-weight="700">IDENTITY SHORTCUT  x</text>
+            <circle cx="650" cy="220" r="32" fill="#f2ead5" stroke="#8a6821" stroke-width="4"/>
+            <text x="650" y="232" text-anchor="middle" fill="#8a6821" font-family="Georgia" font-size="45">+</text>
+            <text x="604" y="200" text-anchor="end" fill="#8a6821" font-family="Georgia" font-size="21">a = x + F(x)</text>
+            <line x1="650" y1="252" x2="650" y2="310" stroke="#8a6821" stroke-width="5" marker-end="url(#arrow-block-blue)"/>
+            <rect x="556" y="327" width="188" height="64" fill="#deedf2" stroke="#205f7a" stroke-width="3"/>
+            <text x="650" y="367" text-anchor="middle" fill="#17242a" font-family="Georgia" font-size="26">ReLU → output y</text>
+            <text x="380" y="425" text-anchor="middle" fill="#556970" font-family="Georgia" font-size="23">Both lanes must end at the same H × W × C before addition.</text>
+          </svg>
+          <figcaption><strong>Lesson diagram</strong> The paper’s Figure 2 uses a post-activation block: the second ReLU comes after addition. Later ResNet variants reorder these operations, so keep this lesson’s block tied to the 2015 paper.</figcaption>
+        </figure>
+
+        <table class="symbol-table">
+          <caption>Map every symbol to a path and a shape before calculating.</caption>
+          <thead>
+            <tr><th>Symbol</th><th>Meaning</th><th>Visual path</th><th>Example shape</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><math class="math-inline" aria-label="x"><mi>x</mi></math></td><td>Incoming feature tensor</td><td>Blue identity lane</td><td><math class="math-inline" aria-label="56 by 56 by 64"><mn>56</mn><mo>×</mo><mn>56</mn><mo>×</mo><mn>64</mn></math></td></tr>
+            <tr><td><math class="math-inline" aria-label="H of x"><mi>H</mi><mo>(</mo><mi>x</mi><mo>)</mo></math></td><td>Desired block mapping</td><td>Whole block output before naming the residual</td><td><math class="math-inline" aria-label="56 by 56 by 64"><mn>56</mn><mo>×</mo><mn>56</mn><mo>×</mo><mn>64</mn></math></td></tr>
+            <tr><td><math class="math-inline" aria-label="F of x and weights W sub i"><mi>F</mi><mo>(</mo><mi>x</mi><mo>,</mo><mo>{</mo><msub><mi>W</mi><mi>i</mi></msub><mo>}</mo><mo>)</mo></math></td><td>Learned residual correction</td><td>Rust learned lane</td><td><math class="math-inline" aria-label="56 by 56 by 64"><mn>56</mn><mo>×</mo><mn>56</mn><mo>×</mo><mn>64</mn></math></td></tr>
+            <tr><td><math class="math-inline" aria-label="a"><mi>a</mi></math></td><td>Pre-activation sum <math class="math-inline" aria-label="x plus F of x"><mi>x</mi><mo>+</mo><mi>F</mi><mo>(</mo><mi>x</mi><mo>)</mo></math></td><td>Gold addition node</td><td><math class="math-inline" aria-label="56 by 56 by 64"><mn>56</mn><mo>×</mo><mn>56</mn><mo>×</mo><mn>64</mn></math></td></tr>
+            <tr><td><math class="math-inline" aria-label="y"><mi>y</mi></math></td><td>Block output <math class="math-inline" aria-label="ReLU of a"><mi mathvariant="normal">ReLU</mi><mo>(</mo><mi>a</mi><mo>)</mo></math> in the original block</td><td>Lane after the add node</td><td><math class="math-inline" aria-label="56 by 56 by 64"><mn>56</mn><mo>×</mo><mn>56</mn><mo>×</mo><mn>64</mn></math></td></tr>
+            <tr><td><math class="math-inline" aria-label="W sub s times x"><msub><mi>W</mi><mi>s</mi></msub><mi>x</mi></math></td><td>Projected shortcut when dimensions differ</td><td>Blue lane with a learned 1×1 map</td><td><math class="math-inline" aria-label="28 by 28 by 128"><mn>28</mn><mo>×</mo><mn>28</mn><mo>×</mo><mn>128</mn></math></td></tr>
+          </tbody>
+        </table>
+
+        <div class="worked">
+          <p class="label">Worked trace A · forward pass</p>
+          <h3>Add first, then apply the paper’s ReLU.</h3>
+          <p>At one spatial position, suppose the shortcut carries the following vector and the residual branch proposes the following correction.</p>
+          <div class="math-scroll">
+            <math display="block" aria-label="x equals column vector 2, negative 1, 3; F of x equals column vector negative 0.5, 2, negative 4">
+              <mtable columnalign="right center left" columnspacing=".65em" rowspacing=".8em">
+                <mtr>
+                  <mtd><mi>x</mi></mtd><mtd><mo>=</mo></mtd>
+                  <mtd><mo>[</mo><mtable><mtr><mtd><mn>2</mn></mtd></mtr><mtr><mtd><mo>−</mo><mn>1</mn></mtd></mtr><mtr><mtd><mn>3</mn></mtd></mtr></mtable><mo>]</mo></mtd>
+                </mtr>
+                <mtr>
+                  <mtd><mi>F</mi><mo>(</mo><mi>x</mi><mo>)</mo></mtd><mtd><mo>=</mo></mtd>
+                  <mtd><mo>[</mo><mtable><mtr><mtd><mo>−</mo><mn>0.5</mn></mtd></mtr><mtr><mtd><mn>2</mn></mtd></mtr><mtr><mtd><mo>−</mo><mn>4</mn></mtd></mtr></mtable><mo>]</mo></mtd>
+                </mtr>
+              </mtable>
+            </math>
+          </div>
+          <div class="calculation">
+            <div><b>Identity lane</b><math display="block" aria-label="x equals column vector 2, negative 1, 3"><mi>x</mi><mo>=</mo><mo>[</mo><mtable><mtr><mtd><mn>2</mn></mtd></mtr><mtr><mtd><mo>−</mo><mn>1</mn></mtd></mtr><mtr><mtd><mn>3</mn></mtd></mtr></mtable><mo>]</mo></math></div>
+            <div><b>Residual lane</b><math display="block" aria-label="F of x equals column vector negative 0.5, 2, negative 4"><mi>F</mi><mo>(</mo><mi>x</mi><mo>)</mo><mo>=</mo><mo>[</mo><mtable><mtr><mtd><mo>−</mo><mn>0.5</mn></mtd></mtr><mtr><mtd><mn>2</mn></mtd></mtr><mtr><mtd><mo>−</mo><mn>4</mn></mtd></mtr></mtable><mo>]</mo></math></div>
+            <div><b>Add, then gate</b><math display="block" aria-label="a equals column vector 1.5, 1, negative 1; y equals ReLU of a equals column vector 1.5, 1, 0"><mtable columnalign="right center left" rowspacing=".55em"><mtr><mtd><mi>a</mi></mtd><mtd><mo>=</mo></mtd><mtd><mo>[</mo><mtable><mtr><mtd><mn>1.5</mn></mtd></mtr><mtr><mtd><mn>1</mn></mtd></mtr><mtr><mtd><mo>−</mo><mn>1</mn></mtd></mtr></mtable><mo>]</mo></mtd></mtr><mtr><mtd><mi>y</mi></mtd><mtd><mo>=</mo></mtd><mtd><mi mathvariant="normal">ReLU</mi><mo>(</mo><mi>a</mi><mo>)</mo><mo>=</mo><mo>[</mo><mtable><mtr><mtd><mn>1.5</mn></mtd></mtr><mtr><mtd><mn>1</mn></mtd></mtr><mtr><mtd><mn>0</mn></mtd></mtr></mtable><mo>]</mo></mtd></mtr></mtable></math></div>
+          </div>
+          <p>The shortcut preserves a baseline; it does not bypass the block’s final nonlinearity in this original design.</p>
+        </div>
+
+        <div class="prediction" aria-labelledby="predict-title">
+          <p class="label">Predict before reveal</p>
+          <h3 id="predict-title">What reaches the addition node?</h3>
+          <p>Using the same <math class="math-inline" aria-label="x"><mi>x</mi></math> and <math class="math-inline" aria-label="F of x"><mi>F</mi><mo>(</mo><mi>x</mi><mo>)</mo></math>, enter the three entries of the pre-activation sum <math class="math-inline" aria-label="a equals x plus F of x"><mi>a</mi><mo>=</mo><mi>x</mi><mo>+</mo><mi>F</mi><mo>(</mo><mi>x</mi><mo>)</mo></math>.</p>
+          <div class="vector-inputs">
+            <label for="guess-1">a₁<input id="guess-1" inputmode="decimal" autocomplete="off"></label>
+            <label for="guess-2">a₂<input id="guess-2" inputmode="decimal" autocomplete="off"></label>
+            <label for="guess-3">a₃<input id="guess-3" inputmode="decimal" autocomplete="off"></label>
+            <button type="button" id="check-vector">Check answer</button>
+          </div>
+          <p id="vector-feedback" class="feedback" aria-live="polite">Predict the sum before applying ReLU.</p>
+          <details class="answer">
+            <summary>Reveal the worked answer</summary>
+            <div class="math-scroll"><math display="block" aria-label="column vector 2, negative 1, 3 plus column vector negative 0.5, 2, negative 4 equals column vector 1.5, 1, negative 1"><mo>[</mo><mtable><mtr><mtd><mn>2</mn></mtd></mtr><mtr><mtd><mo>−</mo><mn>1</mn></mtd></mtr><mtr><mtd><mn>3</mn></mtd></mtr></mtable><mo>]</mo><mo>+</mo><mo>[</mo><mtable><mtr><mtd><mo>−</mo><mn>0.5</mn></mtd></mtr><mtr><mtd><mn>2</mn></mtd></mtr><mtr><mtd><mo>−</mo><mn>4</mn></mtd></mtr></mtable><mo>]</mo><mo>=</mo><mo>[</mo><mtable><mtr><mtd><mn>1.5</mn></mtd></mtr><mtr><mtd><mn>1</mn></mtd></mtr><mtr><mtd><mo>−</mo><mn>1</mn></mtd></mtr></mtable><mo>]</mo></math></div>
+            <p>The subsequent ReLU produces <math class="math-inline" aria-label="column vector 1.5, 1, 0"><mo>[</mo><mtable><mtr><mtd><mn>1.5</mn></mtd></mtr><mtr><mtd><mn>1</mn></mtd></mtr><mtr><mtd><mn>0</mn></mtd></mtr></mtable><mo>]</mo></math>.</p>
+          </details>
+        </div>
+      </div>
+    </section>
+
+    <section id="gradient">
+      <div class="reading">
+        <p class="eyebrow">04 · Backward causal trace</p>
+        <h2>The shortcut contributes an additive gradient route.</h2>
+        <p class="lede">For the pre-activation sum <math class="math-inline" aria-label="a equals x plus F of x"><mi>a</mi><mo>=</mo><mi>x</mi><mo>+</mo><mi>F</mi><mo>(</mo><mi>x</mi><mo>)</mo></math>, let <math class="math-inline" aria-label="g sub a equals partial L over partial a"><msub><mi>g</mi><mi>a</mi></msub><mo>=</mo><mfrac><mrow><mo>∂</mo><mi>L</mi></mrow><mrow><mo>∂</mo><mi>a</mi></mrow></mfrac></math> be the gradient that arrives at the addition node after any ReLU mask has been applied.</p>
+        <div class="equation" aria-label="Gradient through a residual addition">
+          <math display="block" aria-label="partial L over partial x equals g sub a from the shortcut plus J sub F of x transpose times g sub a from the learned branch">
+            <mfrac><mrow><mo>∂</mo><mi>L</mi></mrow><mrow><mo>∂</mo><mi>x</mi></mrow></mfrac>
+            <mo>=</mo>
+            <munder><msub><mi>g</mi><mi>a</mi></msub><mtext>shortcut</mtext></munder>
+            <mo>+</mo>
+            <munder>
+              <mrow><msup><mrow><msub><mi>J</mi><mi>F</mi></msub><mo>(</mo><mi>x</mi><mo>)</mo></mrow><mi>T</mi></msup><msub><mi>g</mi><mi>a</mi></msub></mrow>
+              <mtext>learned branch</mtext>
+            </munder>
+          </math>
+        </div>
+        <p>The first term comes from differentiating the identity path. The second comes through the residual branch’s Jacobian. This is an extra route for signal, not a theorem that gradients can never vanish, explode, cancel, or be gated.</p>
+        <div class="worked">
+          <p class="label">Worked trace B · gradient</p>
+          <h3>Follow both contributions numerically.</h3>
+          <p>Use a toy linear residual and suppose:</p>
+          <div class="math-scroll">
+            <math display="block" aria-label="F of x equals W x, W equals diagonal matrix 0.2 and negative 0.5, and g sub a equals column vector 3, 2">
+              <mtable columnalign="right center left" columnspacing=".65em" rowspacing=".65em">
+                <mtr><mtd><mi>F</mi><mo>(</mo><mi>x</mi><mo>)</mo></mtd><mtd><mo>=</mo></mtd><mtd><mi>W</mi><mi>x</mi></mtd></mtr>
+                <mtr><mtd><mi>W</mi></mtd><mtd><mo>=</mo></mtd><mtd><mo>[</mo><mtable><mtr><mtd><mn>0.2</mn></mtd><mtd><mn>0</mn></mtd></mtr><mtr><mtd><mn>0</mn></mtd><mtd><mo>−</mo><mn>0.5</mn></mtd></mtr></mtable><mo>]</mo></mtd></mtr>
+                <mtr><mtd><msub><mi>g</mi><mi>a</mi></msub></mtd><mtd><mo>=</mo></mtd><mtd><mo>[</mo><mtable><mtr><mtd><mn>3</mn></mtd></mtr><mtr><mtd><mn>2</mn></mtd></mtr></mtable><mo>]</mo></mtd></mtr>
+              </mtable>
+            </math>
+          </div>
+          <ol class="trace">
+            <li><h3>Shortcut contribution</h3><p>The derivative of <math class="math-inline" aria-label="x"><mi>x</mi></math> with respect to itself is the identity, so the blue lane contributes:</p><math display="block" aria-label="column vector 3, 2"><mo>[</mo><mtable><mtr><mtd><mn>3</mn></mtd></mtr><mtr><mtd><mn>2</mn></mtd></mtr></mtable><mo>]</mo></math></li>
+            <li><h3>Residual contribution</h3><div class="math-scroll"><math display="block" aria-label="W transpose times g sub a equals diagonal matrix 0.2 negative 0.5 times column vector 3, 2 equals column vector 0.6, negative 1"><msup><mi>W</mi><mi>T</mi></msup><msub><mi>g</mi><mi>a</mi></msub><mo>=</mo><mo>[</mo><mtable><mtr><mtd><mn>0.2</mn></mtd><mtd><mn>0</mn></mtd></mtr><mtr><mtd><mn>0</mn></mtd><mtd><mo>−</mo><mn>0.5</mn></mtd></mtr></mtable><mo>]</mo><mo>[</mo><mtable><mtr><mtd><mn>3</mn></mtd></mtr><mtr><mtd><mn>2</mn></mtd></mtr></mtable><mo>]</mo><mo>=</mo><mo>[</mo><mtable><mtr><mtd><mn>0.6</mn></mtd></mtr><mtr><mtd><mo>−</mo><mn>1</mn></mtd></mtr></mtable><mo>]</mo></math></div></li>
+            <li><h3>Add the paths</h3><div class="math-scroll"><math display="block" aria-label="partial L over partial x equals column vector 3, 2 plus column vector 0.6, negative 1 equals column vector 3.6, 1"><mfrac><mrow><mo>∂</mo><mi>L</mi></mrow><mrow><mo>∂</mo><mi>x</mi></mrow></mfrac><mo>=</mo><mo>[</mo><mtable><mtr><mtd><mn>3</mn></mtd></mtr><mtr><mtd><mn>2</mn></mtd></mtr></mtable><mo>]</mo><mo>+</mo><mo>[</mo><mtable><mtr><mtd><mn>0.6</mn></mtd></mtr><mtr><mtd><mo>−</mo><mn>1</mn></mtd></mtr></mtable><mo>]</mo><mo>=</mo><mo>[</mo><mtable><mtr><mtd><mn>3.6</mn></mtd></mtr><mtr><mtd><mn>1</mn></mtd></mtr></mtable><mo>]</mo></math></div></li>
+          </ol>
+        </div>
+        <div class="callout residual">
+          <p><span class="label">Post-activation boundary</span>In the original block, <math class="math-inline" aria-label="y equals ReLU of a"><mi>y</mi><mo>=</mo><mi mathvariant="normal">ReLU</mi><mo>(</mo><mi>a</mi><mo>)</mo></math>. The arriving gradient is therefore <math class="math-inline" aria-label="g sub a equals g sub y elementwise multiplied by the indicator that a is greater than zero"><msub><mi>g</mi><mi>a</mi></msub><mo>=</mo><msub><mi>g</mi><mi>y</mi></msub><mo>⊙</mo><mn mathvariant="double-struck">1</mn><mo>[</mo><mi>a</mi><mo>&gt;</mo><mn>0</mn><mo>]</mo></math>. If an entry of <math class="math-inline" aria-label="a"><mi>a</mi></math> is negative, ReLU can set that entry of <math class="math-inline" aria-label="g sub a"><msub><mi>g</mi><mi>a</mi></msub></math> to zero before either path receives it.</p>
+        </div>
+        <details class="answer">
+          <summary>Predict: if the learned Jacobian is zero at one point, is the input gradient necessarily zero?</summary>
+          <p>No. At the addition node, the shortcut still contributes <math class="math-inline" aria-label="g sub a"><msub><mi>g</mi><mi>a</mi></msub></math>. In the original post-activation block, however, a preceding ReLU mask may already have made an entry of <math class="math-inline" aria-label="g sub a"><msub><mi>g</mi><mi>a</mi></msub></math> zero.</p>
+        </details>
+      </div>
+    </section>
+
+    <section id="shapes">
+      <div class="reading">
+        <p class="eyebrow">05 · Shapes, projections, and stages</p>
+        <h2>A shortcut can add only after the geometry agrees.</h2>
+        <p class="lede">When height, width, and channels match, the cheapest shortcut is the identity. When they differ, the paper considers zero-padding or a learned projection <math class="math-inline" aria-label="W sub s times x"><msub><mi>W</mi><mi>s</mi></msub><mi>x</mi></math>.</p>
+        <figure class="diagram">
+          <svg viewBox="0 0 720 455" role="img" aria-labelledby="stage-title stage-desc">
+            <title id="stage-title">A normal ResNet stage transition</title>
+            <desc id="stage-desc">An input of shape 56 by 56 by 64 splits. The residual branch uses a stride-two convolution and increases channels to 128. An option B shortcut uses a learned one-by-one stride-two projection. Both outputs are 28 by 28 by 128 before addition.</desc>
+            <defs>
+              <marker id="arrow-stage-blue" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto">
+                <path d="M0,0 L9,4.5 L0,9z" fill="#205f7a"/>
+              </marker>
+              <marker id="arrow-stage-rust" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto">
+                <path d="M0,0 L9,4.5 L0,9z" fill="#9b472c"/>
+              </marker>
+            </defs>
+            <rect x="25" y="169" width="140" height="116" fill="#deedf2" stroke="#205f7a" stroke-width="3"/>
+            <text x="95" y="215" text-anchor="middle" fill="#17242a" font-family="Georgia" font-size="28">input x</text>
+            <text x="95" y="255" text-anchor="middle" fill="#205f7a" font-family="Avenir Next, Arial" font-size="24" font-weight="700">56×56×64</text>
+            <circle cx="205" cy="227" r="8" fill="#205f7a"/>
+            <line x1="165" y1="227" x2="197" y2="227" stroke="#205f7a" stroke-width="5"/>
+            <path d="M213 227 H252 V99 H286" fill="none" stroke="#9b472c" stroke-width="5" marker-end="url(#arrow-stage-rust)"/>
+            <rect x="300" y="35" width="246" height="128" fill="#f4e5df" stroke="#9b472c" stroke-width="3"/>
+            <text x="423" y="78" text-anchor="middle" fill="#9b472c" font-family="Avenir Next, Arial" font-size="24" font-weight="700">RESIDUAL BRANCH</text>
+            <text x="423" y="113" text-anchor="middle" fill="#17242a" font-family="Georgia" font-size="27">first 3×3 · stride 2</text>
+            <text x="423" y="146" text-anchor="middle" fill="#17242a" font-family="Georgia" font-size="25">output 28×28×128</text>
+            <path d="M546 99 H652 V202" fill="none" stroke="#9b472c" stroke-width="5" marker-end="url(#arrow-stage-rust)"/>
+            <path d="M213 227 H252 V360 H286" fill="none" stroke="#205f7a" stroke-width="5" marker-end="url(#arrow-stage-blue)"/>
+            <rect x="300" y="300" width="246" height="120" fill="#deedf2" stroke="#205f7a" stroke-width="3"/>
+            <text x="423" y="344" text-anchor="middle" fill="#205f7a" font-family="Avenir Next, Arial" font-size="24" font-weight="700">OPTION B SHORTCUT</text>
+            <text x="423" y="377" text-anchor="middle" fill="#17242a" font-family="Georgia" font-size="27">1×1 · stride 2</text>
+            <text x="423" y="407" text-anchor="middle" fill="#17242a" font-family="Georgia" font-size="24">output 28×28×128</text>
+            <path d="M546 360 H652 V252" fill="none" stroke="#205f7a" stroke-width="5" marker-end="url(#arrow-stage-blue)"/>
+            <circle cx="652" cy="227" r="33" fill="#f2ead5" stroke="#8a6821" stroke-width="4"/>
+            <text x="652" y="239" text-anchor="middle" fill="#8a6821" font-family="Georgia" font-size="45">+</text>
+            <text x="25" y="447" fill="#556970" font-family="Georgia" font-size="24">Stride halves H and W; learned filters raise C.</text>
+          </svg>
+          <figcaption><strong>Lesson diagram</strong> In the original basic-block ImageNet architecture, normal stage transitions halve spatial resolution and double the number of filters. The first residual-branch convolution downsamples with stride 2; an Option B projection shortcut uses a 1×1 stride-2 convolution so addition is defined.</figcaption>
+        </figure>
+
+        <h3>What a 1×1 projection actually does</h3>
+        <p>At each sampled spatial location, a 1×1 convolution reads the entire input channel vector and multiplies it by a learned matrix. A matrix with more output rows expands channels; one with fewer output rows compresses channels. Stride controls which spatial locations are sampled. These are separate choices.</p>
+        <div class="worked">
+          <p class="label">Worked trace C · projection and addition</p>
+          <h3>Expansion: two channels become three.</h3>
+          <p>At one location, let:</p>
+          <div class="equation">
+            <math display="block" aria-label="x equals column vector 2, negative 1; W sub s equals three by two matrix with rows 1 point 5, negative 1 2, point 25 1; W sub s x equals column vector 1.5, negative 4, negative 0.5">
+              <mtable columnalign="right center left" columnspacing=".65em" rowspacing=".7em">
+                <mtr><mtd><mi>x</mi></mtd><mtd><mo>=</mo></mtd><mtd><mo>[</mo><mtable><mtr><mtd><mn>2</mn></mtd></mtr><mtr><mtd><mo>−</mo><mn>1</mn></mtd></mtr></mtable><mo>]</mo></mtd></mtr>
+                <mtr><mtd><msub><mi>W</mi><mi>s</mi></msub></mtd><mtd><mo>=</mo></mtd><mtd><mo>[</mo><mtable><mtr><mtd><mn>1</mn></mtd><mtd><mn>0.5</mn></mtd></mtr><mtr><mtd><mo>−</mo><mn>1</mn></mtd><mtd><mn>2</mn></mtd></mtr><mtr><mtd><mn>0.25</mn></mtd><mtd><mn>1</mn></mtd></mtr></mtable><mo>]</mo></mtd></mtr>
+                <mtr><mtd><msub><mi>W</mi><mi>s</mi></msub><mi>x</mi></mtd><mtd><mo>=</mo></mtd><mtd><mo>[</mo><mtable><mtr><mtd><mn>1.5</mn></mtd></mtr><mtr><mtd><mo>−</mo><mn>4</mn></mtd></mtr><mtr><mtd><mo>−</mo><mn>0.5</mn></mtd></mtr></mtable><mo>]</mo></mtd></mtr>
+              </mtable>
+            </math>
+          </div>
+          <p>If the residual branch ends at the following correction, the projected shortcut and residual branch add before the paper’s post-add ReLU:</p>
+          <div class="math-scroll">
+            <math display="block" aria-label="F of x equals column vector 0.5, 1, 2; a equals W sub s x plus F of x equals column vector 2, negative 3, 1.5; y equals ReLU of a equals column vector 2, 0, 1.5">
+              <mtable columnalign="right center left" columnspacing=".65em" rowspacing=".65em">
+                <mtr><mtd><mi>F</mi><mo>(</mo><mi>x</mi><mo>)</mo></mtd><mtd><mo>=</mo></mtd><mtd><mo>[</mo><mtable><mtr><mtd><mn>0.5</mn></mtd></mtr><mtr><mtd><mn>1</mn></mtd></mtr><mtr><mtd><mn>2</mn></mtd></mtr></mtable><mo>]</mo></mtd></mtr>
+                <mtr><mtd><mi>a</mi></mtd><mtd><mo>=</mo></mtd><mtd><msub><mi>W</mi><mi>s</mi></msub><mi>x</mi><mo>+</mo><mi>F</mi><mo>(</mo><mi>x</mi><mo>)</mo><mo>=</mo><mo>[</mo><mtable><mtr><mtd><mn>2</mn></mtd></mtr><mtr><mtd><mo>−</mo><mn>3</mn></mtd></mtr><mtr><mtd><mn>1.5</mn></mtd></mtr></mtable><mo>]</mo></mtd></mtr>
+                <mtr><mtd><mi>y</mi></mtd><mtd><mo>=</mo></mtd><mtd><mi mathvariant="normal">ReLU</mi><mo>(</mo><mi>a</mi><mo>)</mo><mo>=</mo><mo>[</mo><mtable><mtr><mtd><mn>2</mn></mtd></mtr><mtr><mtd><mn>0</mn></mtd></mtr><mtr><mtd><mn>1.5</mn></mtd></mtr></mtable><mo>]</mo></mtd></mtr>
+              </mtable>
+            </math>
+          </div>
+          <p>Every projected output channel is a learned mixture of the two inputs.</p>
+        </div>
+
+        <div class="split">
+          <article class="plain-sheet residual">
+            <h3>Projection can compress in general</h3>
+            <p>For the following input and projection matrix, three input channels become two learned mixtures:</p>
+            <div class="math-scroll"><math display="block" aria-label="x equals column vector 2, negative 1, 3; W sub s equals two by three matrix with rows 1 0 negative 1 and point 5 point 5 point 5; W sub s x equals column vector negative 1, 2"><mtable columnalign="right center left" rowspacing=".55em"><mtr><mtd><mi>x</mi></mtd><mtd><mo>=</mo></mtd><mtd><mo>[</mo><mtable><mtr><mtd><mn>2</mn></mtd></mtr><mtr><mtd><mo>−</mo><mn>1</mn></mtd></mtr><mtr><mtd><mn>3</mn></mtd></mtr></mtable><mo>]</mo></mtd></mtr><mtr><mtd><msub><mi>W</mi><mi>s</mi></msub></mtd><mtd><mo>=</mo></mtd><mtd><mo>[</mo><mtable><mtr><mtd><mn>1</mn></mtd><mtd><mn>0</mn></mtd><mtd><mo>−</mo><mn>1</mn></mtd></mtr><mtr><mtd><mn>0.5</mn></mtd><mtd><mn>0.5</mn></mtd><mtd><mn>0.5</mn></mtd></mtr></mtable><mo>]</mo></mtd></mtr><mtr><mtd><msub><mi>W</mi><mi>s</mi></msub><mi>x</mi></mtd><mtd><mo>=</mo></mtd><mtd><mo>[</mo><mtable><mtr><mtd><mo>−</mo><mn>1</mn></mtd></mtr><mtr><mtd><mn>2</mn></mtd></mtr></mtable><mo>]</mo></mtd></mtr></mtable></math></div>
+          </article>
+          <article class="plain-sheet">
+            <h3>But normal ResNet downsampling expands</h3>
+            <p>The paper’s stage transitions increase channel count while halving <math class="math-inline" aria-label="H"><mi>H</mi></math> and <math class="math-inline" aria-label="W"><mi>W</mi></math>. Shortcut compression is mathematically possible, but it is not the standard forward stage transition described in this architecture.</p>
+          </article>
+        </div>
+
+        <div class="callout sum">
+          <p><span class="label">Do not confuse two uses of 1×1 convolutions</span><strong>Shortcut projection:</strong> align the shortcut to a new output shape, usually expanding channels at a downsampling stage. <strong>Bottleneck residual branch:</strong> a first 1×1 convolution compresses channels, the 3×3 works in that narrower space, and a final 1×1 restores the block’s output width. In Figure 5, the 256-dimensional input is reduced to 64, processed at 64, then restored to 256.</p>
+        </div>
+        <details class="answer">
+          <summary>Predict: does “1×1” mean each output channel copies one input channel?</summary>
+          <p>No. The 1×1 label describes the spatial footprint. Each output channel can be a learned weighted mixture of all input channels at that sampled location.</p>
+        </details>
+      </div>
+    </section>
+
+    <section id="evidence">
+      <div class="reading">
+        <p class="eyebrow">06 · Paper evidence</p>
+        <h2>The controlled comparison reverses the depth failure.</h2>
+        <p class="lede">The most informative result holds the broad architecture, depth, width, parameter count, and computation nearly fixed, then adds parameter-free residual shortcuts.</p>
+      </div>
+
+      <figure>
+        <div class="paper-figure-scroller" tabindex="0" role="region" aria-label="Scrollable original Figure 4 from the ResNet paper">
+          <img class="paper-figure" src="original_imagenet_results.png" width="1575" height="555" alt="Original Figure 4 from the ResNet paper. On the left, the 34-layer plain network has higher training and validation error than the 18-layer plain network. On the right, the 34-layer residual network reaches lower training and validation error than the 18-layer residual network.">
+        </div>
+        <figcaption><span class="figure-kind">Original paper figure</span> Figure 4 on paper page 5. Thin curves are training error; bold curves are center-crop validation error. Read left to right: added depth hurts the plain network, while added depth helps the residual network. On narrow screens, pan the sharp crop horizontally.</figcaption>
+      </figure>
+
+      <div class="reading">
+        <table class="evidence-table">
+          <caption>ImageNet validation top-1 error, 10-crop testing (paper Table 2).</caption>
+          <thead>
+            <tr><th>Architecture</th><th>18 layers</th><th>34 layers</th><th>Depth effect</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Plain</td><td>27.94%</td><td>28.54%</td><td>0.60 percentage points worse</td></tr>
+            <tr><td>Residual, Option A</td><td>27.88%</td><td>25.03%</td><td>2.85 percentage points better</td></tr>
+          </tbody>
+        </table>
+        <p>Option A uses identity shortcuts and zero padding when dimensions increase, so the residual models add no parameters relative to the plain counterparts. Figure 4 uses center-crop validation curves during training; Table 2 reports final 10-crop validation error. They answer related but not identical measurement questions.</p>
+        <div class="evidence-cards">
+          <article>
+            <p class="label">Optimization evidence</p>
+            <h3>Training error moves the right way.</h3>
+            <p>The 34-layer plain model has higher training error throughout; the 34-layer ResNet has lower training error than the 18-layer ResNet.</p>
+          </article>
+          <article>
+            <p class="label">Scale result</p>
+            <h3>152 layers remained economical.</h3>
+            <p>The paper reports 11.3 billion FLOPs for ResNet-152, below VGG-19’s 19.6 billion, using bottleneck blocks.</p>
+          </article>
+          <article>
+            <p class="label">Landmark benchmark</p>
+            <h3>Separate single model from ensemble.</h3>
+            <p>Table 3 reports 21.43% top-1 and 5.71% top-5 10-crop validation error for ResNet-152. The six-model ensemble reports 3.57% top-5 test error in Table 5.</p>
+          </article>
+        </div>
+
+        <h3>What the evidence does not establish</h3>
+        <div class="callout residual">
+          <p>The experiments establish strong results for supervised convolutional vision models and 2015 training recipes. They do not prove that every deeper residual network generalizes better, that residual branches must be small, or that shortcuts alone guarantee stable gradients.</p>
+          <p>On CIFAR-10, the 1202-layer ResNet reaches very low training error but 7.93% test error, worse than the 110-layer model’s reported 6.43% best result (6.61±0.16 over five runs). The authors attribute this gap to overfitting on the small dataset and leave stronger regularization as future work. They also state that the precise reason for the deep plain networks’ optimization difficulty remains for future study.</p>
+        </div>
+        <details class="answer">
+          <summary>Evidence check: did the paper prove residual connections solve vanishing gradients?</summary>
+          <p>No. The authors explicitly argue that the observed plain-network degradation was unlikely to be vanishing gradients: the networks used batch normalization and showed healthy backward gradient norms. Their evidence supports easier optimization under residual parameterization, not a universal gradient guarantee.</p>
+        </details>
+      </div>
+    </section>
+
+    <section id="misconceptions">
+      <div class="reading">
+        <p class="eyebrow">07 · Misconception clinic</p>
+        <h2>Keep four boundaries sharp.</h2>
+        <details>
+          <summary>“Residual” means the learned correction must be small.</summary>
+          <p>False. The correction can be large. The name means the branch is parameterized relative to <math class="math-inline" aria-label="x"><mi>x</mi></math>. Figure 7 reports that residual responses were generally smaller in the experiments, but smallness is an observation, not a constraint.</p>
+        </details>
+        <details>
+          <summary>The shortcut concatenates old and new features.</summary>
+          <p>False. ResNet adds matching tensors elementwise, producing one tensor with the same shape. Concatenation would increase a dimension and describes a different architecture.</p>
+        </details>
+        <details>
+          <summary>A projection shortcut is just zero padding.</summary>
+          <p>False. Option A can pad channels with zeros and has no learned parameters. Option B uses a learned 1×1 convolution, typically with stride 2 at a stage transition.</p>
+        </details>
+        <details>
+          <summary>More residual layers always improve test accuracy.</summary>
+          <p>False. ResNet addresses an optimization barrier, not every source of error. The 1202-layer CIFAR-10 result is the paper’s own counterexample to “deeper always generalizes better.”</p>
+        </details>
+      </div>
+    </section>
+
+    <section id="recall">
+      <div class="reading">
+        <p class="eyebrow">08 · Active recall</p>
+        <h2>Close the loop without looking back.</h2>
+        <p>Answer aloud before opening each item. Every prompt includes its answer so you can check the exact distinction.</p>
+        <details class="answer">
+          <summary>1. What observation defines the degradation problem?</summary>
+          <p>After adding depth to a suitably deep plain network, training error can become higher, even though the deeper model can represent the shallower solution by construction.</p>
+        </details>
+        <details class="answer">
+          <summary>2. What is the difference between H(x) and F(x)?</summary>
+          <p><math class="math-inline" aria-label="H of x"><mi>H</mi><mo>(</mo><mi>x</mi><mo>)</mo></math> is the desired whole mapping. The residual branch learns <math class="math-inline" aria-label="F of x equals H of x minus x"><mi>F</mi><mo>(</mo><mi>x</mi><mo>)</mo><mo>=</mo><mi>H</mi><mo>(</mo><mi>x</mi><mo>)</mo><mo>−</mo><mi>x</mi></math>, so the block reconstructs <math class="math-inline" aria-label="H of x equals F of x plus x"><mi>H</mi><mo>(</mo><mi>x</mi><mo>)</mo><mo>=</mo><mi>F</mi><mo>(</mo><mi>x</mi><mo>)</mo><mo>+</mo><mi>x</mi></math>.</p>
+        </details>
+        <details class="answer">
+          <summary>3. Why must shortcut and residual shapes match?</summary>
+          <p>Because their outputs are added elementwise. Height, width, and channel count must agree at the addition node.</p>
+        </details>
+        <details class="answer">
+          <summary>4. What does a normal original-ResNet stage transition do?</summary>
+          <p>It halves spatial resolution with stride 2 and increases channel count. The residual branch downsamples; a zero-padded Option A shortcut or learned 1×1 stride-2 Option B shortcut aligns the other path.</p>
+        </details>
+        <details class="answer">
+          <summary>5. What two terms form the input gradient at an addition node?</summary>
+          <p>The shortcut contribution <math class="math-inline" aria-label="g sub a"><msub><mi>g</mi><mi>a</mi></msub></math> plus the learned-branch contribution <math class="math-inline" aria-label="J sub F of x transpose times g sub a"><msup><mrow><msub><mi>J</mi><mi>F</mi></msub><mo>(</mo><mi>x</mi><mo>)</mo></mrow><mi>T</mi></msup><msub><mi>g</mi><mi>a</mi></msub></math>. In the original post-activation block, the ReLU mask affects <math class="math-inline" aria-label="g sub a"><msub><mi>g</mi><mi>a</mi></msub></math> first.</p>
+        </details>
+        <details class="answer">
+          <summary>6. What is the strongest causal reading of Figure 4 and Table 2?</summary>
+          <p>With the compared architectures held closely matched, adding shortcuts reverses the harmful depth trend: the deeper residual model trains better and validates better, while the deeper plain model trains worse. This supports the residual parameterization as the operative change in that experiment.</p>
+        </details>
+      </div>
+    </section>
+
+    <section id="map">
+      <div class="reading">
+        <p class="eyebrow">09 · Connect it to your mental map</p>
+        <h2>ResNet belongs to a family of useful reformulations.</h2>
+        <dl class="mental-map">
+          <div><dt>Batch normalization</dt><dd>BatchNorm controls activation statistics; ResNet supplies an explicit information path. The paper uses both, so do not treat one as the explanation for the other.</dd></div>
+          <div><dt>Transformers</dt><dd>Attention and feed-forward sublayers also revise representations through residual additions. The data structure changes from image grids to token sequences, but “baseline plus learned correction” persists.</dd></div>
+          <div><dt>DPO</dt><dd>DPO and ResNet solve different problems, yet both teach the same meta-lesson: an equivalent objective or function class can become easier to optimize after choosing a better reference-centered parameterization.</dd></div>
+          <div><dt>Adam and SGD</dt><dd>Optimizers decide how parameters move. Residual learning changes the landscape they move through by exposing the identity baseline in the model itself.</dd></div>
+        </dl>
+        <div class="callout green">
+          <p><span class="label">Mental checklist for future architectures</span>What travels unchanged? What is learned as a correction? Where do paths meet? What operation makes their shapes compatible? Which claim is architectural, which is an optimization argument, and which is only empirical?</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="takeaway">
+      <div class="reading">
+        <p class="eyebrow">10 · Takeaway</p>
+        <h2>A residual block is a revision step.</h2>
+        <blockquote>It preserves a usable representation on a direct lane, learns evidence for changing it on another lane, and adds the two only after their shapes agree.</blockquote>
+        <p class="lede">That simple reparameterization does not guarantee success. It makes “keep what works” an explicit baseline—and the paper’s controlled experiments show that this was enough to turn additional depth from a training liability into an advantage.</p>
+      </div>
+    </section>
+  </main>
+
+  <footer class="sources">
+    <div class="wrap reading">
+      <h2>Source and further exploration</h2>
+      <ul>
+        <li><a href="deep_residual_learning_for_image_recognition.pdf">Local 12-page paper PDF</a></li>
+        <li><a href="https://arxiv.org/abs/1512.03385">Canonical arXiv record and version history</a></li>
+        <li><a href="https://openaccess.thecvf.com/content_cvpr_2016/html/He_Deep_Residual_Learning_CVPR_2016_paper.html">CVPR 2016 open-access record</a></li>
+        <li><a href="https://github.com/KaimingHe/deep-residual-networks">Authors’ original ResNet implementation repository</a></li>
+      </ul>
+      <p>Primary evidence and numerical results in this lesson come from He et al., <em>Deep Residual Learning for Image Recognition</em>, especially Sections 3–4, Figures 2, 4, 5, and Tables 1–6.</p>
+    </div>
+  </footer>
+
+  <script>
+    (function () {
+      var expected = [1.5, 1, -1];
+      var button = document.getElementById("check-vector");
+      var feedback = document.getElementById("vector-feedback");
+
+      function readGuess(index) {
+        var raw = document.getElementById("guess-" + index).value.trim();
+        return raw === "" ? NaN : Number(raw);
+      }
+
+      button.addEventListener("click", function () {
+        var guess = [readGuess(1), readGuess(2), readGuess(3)];
+        var complete = guess.every(Number.isFinite);
+        var correct = complete && guess.every(function (value, index) {
+          return Math.abs(value - expected[index]) < 1e-9;
+        });
+
+        if (correct) {
+          feedback.innerHTML = "<strong>Correct.</strong> The pre-activation sum is <math class=\"math-inline\" aria-label=\"column vector 1.5, 1, negative 1\"><mo>[</mo><mtable><mtr><mtd><mn>1.5</mn></mtd></mtr><mtr><mtd><mn>1</mn></mtd></mtr><mtr><mtd><mo>−</mo><mn>1</mn></mtd></mtr></mtable><mo>]</mo></math>; the following ReLU changes it to <math class=\"math-inline\" aria-label=\"column vector 1.5, 1, 0\"><mo>[</mo><mtable><mtr><mtd><mn>1.5</mn></mtd></mtr><mtr><mtd><mn>1</mn></mtd></mtr><mtr><mtd><mn>0</mn></mtd></mtr></mtable><mo>]</mo></math>.";
+        } else if (!complete) {
+          feedback.textContent = "Enter all three numbers, then check again.";
+        } else {
+          feedback.innerHTML = "<strong>Not yet.</strong> Add matching entries: <math class=\"math-inline\" aria-label=\"2 plus negative 0.5\"><mn>2</mn><mo>+</mo><mo>(</mo><mo>−</mo><mn>0.5</mn><mo>)</mo></math>, <math class=\"math-inline\" aria-label=\"negative 1 plus 2\"><mo>−</mo><mn>1</mn><mo>+</mo><mn>2</mn></math>, and <math class=\"math-inline\" aria-label=\"3 plus negative 4\"><mn>3</mn><mo>+</mo><mo>(</mo><mo>−</mo><mn>4</mn><mo>)</mo></math>.";
+        }
+      });
+    }());
+  </script>
+</body>
+</html>

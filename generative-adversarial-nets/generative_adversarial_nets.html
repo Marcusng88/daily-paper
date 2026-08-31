@@ -1,0 +1,569 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="A one-hour university lesson on the original generative adversarial nets paper, with worked calculations, source figures, and active recall.">
+<title>Generative Adversarial Nets - one-hour lesson</title>
+<style>
+:root{
+  --ink:#18211f;
+  --muted:#53615d;
+  --paper:#f2f6f4;
+  --sheet:#fbfdfc;
+  --rule:#b8c5c0;
+  --soft:#e5ece9;
+  --real:#176052;
+  --generator:#983d32;
+  --discriminator:#344e68;
+  --warning:#7c5425;
+  --focus:#b66b1d;
+  --display:"Arial Narrow","Avenir Next Condensed","Helvetica Neue",Arial,sans-serif;
+  --body:Charter,"Iowan Old Style",Georgia,"Times New Roman",serif;
+  --utility:"Avenir Next","Segoe UI",Arial,sans-serif;
+  --mono:"SFMono-Regular",Consolas,"Liberation Mono",monospace;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--paper);color:var(--ink);font:18px/1.68 var(--body)}
+img,svg{display:block;max-width:100%}
+a{color:var(--discriminator);text-underline-offset:3px;text-decoration-thickness:1px}
+a:hover{text-decoration-thickness:2px}
+a:focus-visible,button:focus-visible,input:focus-visible,summary:focus-visible{outline:3px solid var(--focus);outline-offset:4px}
+.skip{position:absolute;left:1rem;top:-6rem;background:var(--ink);color:white;padding:.7rem 1rem;z-index:10;font:700 .85rem var(--utility)}
+.skip:focus{top:1rem}
+.page{width:min(1040px,calc(100% - 2.4rem));margin:auto}
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:1.2rem;padding:1.1rem 0;border-bottom:1px solid var(--rule);font:700 .78rem/1.2 var(--utility);letter-spacing:.045em;text-transform:uppercase}
+.topbar nav{display:flex;gap:1.2rem;flex-wrap:wrap;justify-content:flex-end}
+.topbar nav a{text-decoration:none;color:var(--muted)}
+.home{color:var(--ink);white-space:nowrap}
+.hero{padding:clamp(3.4rem,8vw,7rem) 0 2.5rem}
+.eyebrow,.label{font:700 .72rem/1.3 var(--utility);letter-spacing:.11em;text-transform:uppercase}
+.eyebrow{color:var(--discriminator)}
+h1,h2,h3{font-family:var(--display);line-height:1.05;margin-top:0}
+h1{font-size:clamp(3.15rem,9.5vw,7.2rem);max-width:940px;letter-spacing:-.055em;margin:.55rem 0 1.35rem}
+h1 .g{color:var(--generator)}
+h1 .d{color:var(--discriminator)}
+.lede{font-size:clamp(1.15rem,2.2vw,1.48rem);max-width:790px;color:#27332f}
+.byline{max-width:880px;color:var(--muted);font-size:.92rem;margin:1.8rem 0 0}
+.duel{display:grid;grid-template-columns:1fr auto 1fr;margin:3.2rem 0 0;border-top:2px solid var(--ink);border-bottom:2px solid var(--ink)}
+.duel article{padding:1.15rem 1.25rem}
+.duel article:first-child{text-align:right}
+.duel .exchange{display:grid;place-items:center;width:7rem;border-inline:1px solid var(--rule);font:700 .73rem/1.35 var(--utility);letter-spacing:.08em;text-transform:uppercase;text-align:center;color:var(--muted)}
+.duel h2{font-size:1.4rem;margin:0 0 .35rem}
+.duel p{font-size:.92rem;margin:0;color:var(--muted)}
+.route{margin:2.7rem 0 0;border-top:1px solid var(--rule)}
+.route-row{display:grid;grid-template-columns:8.5rem 1fr 2fr;gap:1rem;padding:.8rem 0;border-bottom:1px solid var(--rule);align-items:baseline}
+.route time{font:700 .72rem var(--mono);color:var(--generator)}
+.route strong{font-family:var(--utility);font-size:.9rem}
+.route span:last-child{color:var(--muted);font-size:.92rem}
+main{padding:1rem 0 5rem}
+section{margin:5.7rem 0}
+section>h2{font-size:clamp(2rem,5vw,3.75rem);letter-spacing:-.035em;margin-bottom:1.5rem;padding-top:.65rem;border-top:3px solid var(--ink)}
+.number{color:var(--generator);font-size:.78rem;letter-spacing:.1em;vertical-align:middle;margin-right:.5rem}
+h3{font-size:1.45rem;margin:2rem 0 .7rem}
+p{max-width:780px}
+.wide{max-width:none}
+.bridge{display:grid;grid-template-columns:1.2fr .8fr;gap:clamp(1.4rem,4vw,3rem);align-items:start}
+.analogy{border-left:5px solid var(--real);padding:.2rem 0 .2rem 1.25rem;color:#26332f}
+.analogy strong{font-family:var(--utility)}
+.failed{background:var(--sheet);border-block:1px solid var(--rule);padding:clamp(1.2rem,3vw,2rem)}
+.failed ol{margin-bottom:0}
+.failed li+li{margin-top:.7rem}
+.callout{margin:1.5rem 0;max-width:820px;border-left:4px solid var(--discriminator);background:var(--soft);padding:1rem 1.2rem}
+.callout.warning{border-color:var(--warning);background:#f1ebe2}
+.callout strong{font-family:var(--utility)}
+.symbols{width:100%;border-collapse:collapse;margin:1.5rem 0}
+.symbols th,.symbols td{padding:.85rem .8rem;border-bottom:1px solid var(--rule);text-align:left;vertical-align:top}
+.symbols th{font:700 .72rem var(--utility);letter-spacing:.09em;text-transform:uppercase;color:var(--muted)}
+.symbols td:first-child{font-family:var(--mono);white-space:nowrap;color:var(--discriminator)}
+.equation{max-width:920px;overflow-x:auto;margin:1.2rem 0;padding:1.05rem 1.2rem;background:#202a28;color:#f5f8f6;border-left:5px solid var(--generator);font:clamp(.78rem,2vw,.98rem)/1.8 var(--mono)}
+.equation .read{white-space:normal;color:#cbd7d2;font:400 .82rem/1.5 var(--utility);margin-top:.55rem}
+math{font-family:"STIX Two Math","Cambria Math","Times New Roman",serif;color:inherit}
+math[display="block"]{display:block;width:max-content;min-width:max-content;margin:.2rem auto;text-align:center}
+math mfrac{padding-inline:.12em}
+math mtable{margin-inline:auto}
+.math-display{max-width:100%;overflow-x:auto;padding:.15rem 0}
+.math-display math[display="block"]{font-size:1.03em}
+.equation math[display="block"]{font-size:1.08em}
+.equation .read{min-width:0}
+.mechanism{max-width:720px;margin:2rem auto;padding:1rem 0}
+figure{margin:2.1rem 0}
+figcaption{margin-top:.8rem;color:var(--muted);font:.86rem/1.5 var(--utility)}
+figcaption strong,.label{color:var(--discriminator)}
+.source-figure{background:var(--sheet);border:1px solid var(--rule);padding:clamp(.65rem,2vw,1.2rem)}
+.source-figure img{width:100%;height:auto}
+.source-figure.figure-one img{aspect-ratio:1500/470}
+.source-figure.figure-two img{aspect-ratio:1470/980}
+.steps{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--rule);border:1px solid var(--rule);padding:0;list-style:none;counter-reset:step}
+.steps li{counter-increment:step;background:var(--sheet);padding:1.25rem}
+.steps li::before{content:"Update " counter(step);display:block;margin-bottom:.45rem;color:var(--generator);font:700 .72rem var(--utility);letter-spacing:.1em;text-transform:uppercase}
+.steps strong{font-family:var(--utility)}
+.worked-grid{display:grid;grid-template-columns:1fr 1fr;gap:1.3rem;margin:2rem 0}
+.worked{background:var(--sheet);border-top:5px solid var(--real);padding:1.3rem}
+.worked:nth-child(2){border-color:var(--discriminator)}
+.worked h3{margin:.35rem 0 .7rem}
+.worked p{margin:.55rem 0}
+.worked .result-line{font:700 .9rem/1.5 var(--mono);color:var(--generator)}
+details{max-width:850px;margin:1rem 0;border-top:1px solid var(--rule);padding:.85rem 0}
+summary{cursor:pointer;font-family:var(--utility);font-weight:700}
+details p{margin:.8rem 0 0}
+.answer{border-left:4px solid var(--real);border-top:0;background:#e5efeb;padding:.9rem 1rem}
+.instrument{margin:2rem 0;background:var(--sheet);border-block:2px solid var(--ink);padding:clamp(1.2rem,3vw,2rem)}
+.instrument-head{display:flex;align-items:baseline;justify-content:space-between;gap:1rem;flex-wrap:wrap}
+.instrument h3{margin:0}
+.control{margin:1.3rem 0 1.5rem;max-width:720px}
+.control label{display:flex;justify-content:space-between;gap:1rem;font:700 .88rem var(--utility)}
+.control output{font-family:var(--mono);color:var(--generator)}
+input[type="range"]{width:100%;margin-top:.7rem;accent-color:var(--generator);min-height:2rem}
+.gradient-chart{max-width:760px}
+.gradient-row+.gradient-row{margin-top:1.35rem}
+.gradient-row p{margin:.35rem 0;font:700 .88rem/1.4 var(--utility)}
+.bar-line{display:grid;grid-template-columns:minmax(0,1fr) 4.5rem;gap:1rem;align-items:center}
+.bar-track{display:block;height:1.75rem;background:#dfe6e3}
+.bar-fill{display:block;height:100%}
+#sat-bar{width:5%;background:var(--discriminator)}
+#nonsat-bar{width:95%;background:var(--generator)}
+.bar-line output{font:1rem var(--mono)}
+.dynamic-result{max-width:760px;margin:.9rem 0 0;padding:.8rem 1rem;border-left:4px solid var(--generator);background:#edf1ef;font-size:.94rem}
+.static{color:var(--muted);font:.86rem/1.5 var(--utility)}
+.evidence-table{width:100%;border-collapse:collapse;margin:1.5rem 0;font-variant-numeric:tabular-nums}
+.evidence-table th,.evidence-table td{padding:.75rem;border-bottom:1px solid var(--rule);text-align:right}
+.evidence-table th:first-child,.evidence-table td:first-child{text-align:left}
+.evidence-table th{font:700 .72rem var(--utility);letter-spacing:.07em;text-transform:uppercase;color:var(--muted)}
+.evidence-table strong{color:var(--real)}
+.failure-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:1.1rem}
+.failure-grid article{border-top:4px solid var(--generator);background:var(--sheet);padding:1.15rem}
+.failure-grid h3{font-size:1.25rem;margin:0 0 .55rem}
+.failure-grid p{font-size:.94rem;margin:0}
+.recall{counter-reset:q}
+.recall details{counter-increment:q}
+.recall summary::before{content:"Q" counter(q) "  ";color:var(--generator);font-family:var(--mono)}
+.mental-map{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--rule);border:1px solid var(--rule)}
+.mental-map article{background:var(--sheet);padding:1.1rem}
+.mental-map h3{font-size:1.12rem;margin:0 0 .45rem}
+.mental-map p{font-size:.9rem;margin:0}
+.takeaway{margin-top:2.5rem;background:#21302c;color:#f5f8f6;border-left:7px solid var(--generator);padding:clamp(1.3rem,3vw,2.2rem)}
+.takeaway h2{font-size:clamp(2rem,5vw,3.4rem);margin:0 0 .7rem;color:#d7e6df}
+.takeaway p{font-size:1.15rem;margin:0}
+footer{border-top:3px solid var(--ink);padding:2rem 0 4rem;color:var(--muted);font:.9rem/1.55 var(--utility)}
+footer h2{font:700 1.25rem/1.2 var(--display);color:var(--ink)}
+footer li+li{margin-top:.45rem}
+@media(max-width:760px){
+  .topbar{align-items:flex-start;flex-direction:column}
+  .topbar nav{justify-content:flex-start;gap:.9rem}
+  .duel{grid-template-columns:1fr}
+  .duel article:first-child{text-align:left}
+  .duel .exchange{width:auto;min-height:3.2rem;border-inline:0;border-block:1px solid var(--rule)}
+  .route-row{grid-template-columns:7rem 1fr}
+  .route-row span:last-child{grid-column:1/-1}
+  .bridge,.worked-grid,.failure-grid,.mental-map{grid-template-columns:1fr}
+  .steps{grid-template-columns:1fr}
+  section{margin:4.2rem 0}
+  .symbols{font-size:.92rem}
+}
+@media(max-width:500px){
+  body{font-size:17px}
+  .page{width:min(100% - 1.25rem,1040px)}
+  .topbar nav{display:none}
+  .route-row{grid-template-columns:1fr}
+  .route-row span:last-child{grid-column:auto}
+  .symbols{display:block;overflow-x:auto}
+  .source-figure{padding:.35rem}
+  .mechanism{margin-inline:-.2rem}
+}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*::before,*::after{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<a class="skip" href="#lesson">Skip to lesson</a>
+<div class="page">
+<header class="topbar">
+  <a class="home" href="../index.html">&larr; Daily AI Paper Lab</a>
+  <nav aria-label="Lesson sections">
+    <a href="#need">Need</a>
+    <a href="#game">Game</a>
+    <a href="#gradient">Gradient</a>
+    <a href="#evidence">Evidence</a>
+    <a href="#recall">Recall</a>
+  </nav>
+</header>
+
+<header class="hero">
+  <p class="eyebrow">Generative modeling · Goodfellow et al. · NeurIPS 2014</p>
+  <h1><span class="g">Generate.</span> <span class="d">Discriminate.</span> Learn from the difference.</h1>
+  <p class="lede">A GAN turns an unsolved question - “what loss measures whether an image looks real?” - into a two-player game. One network proposes samples. A second network continually learns the mistakes worth pointing out.</p>
+  <p class="byline"><em>Generative Adversarial Nets</em> · Ian J. Goodfellow, Jean Pouget-Abadie, Mehdi Mirza, Bing Xu, David Warde-Farley, Sherjil Ozair, Aaron Courville, and Yoshua Bengio</p>
+  <div class="duel" aria-label="The two GAN roles">
+    <article>
+      <h2>Generator G</h2>
+      <p>Turns random latent seeds into candidate data.</p>
+    </article>
+    <div class="exchange">samples &rarr;<br>gradients &larr;</div>
+    <article>
+      <h2>Discriminator D</h2>
+      <p>Estimates whether each example came from data.</p>
+    </article>
+  </div>
+  <nav class="route" aria-label="Sixty-minute study route">
+    <div class="route-row"><time>0-10 min</time><strong>Need</strong><span>Why an adaptive comparison can replace an unavailable fixed target.</span></div>
+    <div class="route-row"><time>10-24 min</time><strong>Actors and game</strong><span>Name every distribution, trace one alternating update, and read the minimax objective.</span></div>
+    <div class="route-row"><time>24-41 min</time><strong>Consequences</strong><span>Calculate the optimal discriminator and see why distribution matching is the equilibrium.</span></div>
+    <div class="route-row"><time>41-51 min</time><strong>Gradient instrument</strong><span>Predict why the literal generator loss stalls, then inspect the practical replacement.</span></div>
+    <div class="route-row"><time>51-60 min</time><strong>Evidence and retrieval</strong><span>Read the original figures, bound the claims, diagnose failures, and recall the mechanism.</span></div>
+  </nav>
+</header>
+
+<main id="lesson">
+<section id="need">
+  <h2><span class="number">01</span>The missing target</h2>
+  <div class="bridge">
+    <div>
+      <p>A classifier receives an input and a label. A generator receives a random seed <em>z</em>, but there is no single “correct image” paired with that seed. The goal is instead distributional: generated samples should collectively occupy the same regions, with the same diversity, as real data.</p>
+      <p>This is the prerequisite bridge: a distribution is not its average. The average of many handwritten digits is a blur, even though the data distribution contains crisp digits. A useful generator must learn the many modes - different digits, strokes, poses, and textures - rather than one central prototype.</p>
+    </div>
+    <aside class="analogy">
+      <strong>Intuition: apprentice and examiner.</strong>
+      <p>An apprentice cannot improve from the instruction “make convincing art” alone. An examiner compares current work with the collection and names whatever difference is easiest to detect <em>now</em>. As the apprentice fixes one tell, the examiner must find another. GAN training makes that changing critique differentiable.</p>
+    </aside>
+  </div>
+  <div class="failed">
+    <h3>Why the obvious baselines fail</h3>
+    <ol>
+      <li><strong>Regress each seed toward an arbitrary real example.</strong> The seed has no natural partner. With a multimodal target, pointwise averaging can reward a blurry compromise instead of a valid mode.</li>
+      <li><strong>Write a fixed checklist of realism.</strong> A hand-designed loss can only penalize differences its author anticipated. It does not automatically discover the generator's newest failure.</li>
+      <li><strong>Contrast data against fixed noise.</strong> The paper notes that noise-contrastive estimation uses a fixed noise distribution; once that discrimination becomes easy, it no longer concentrates the test on the current generator. GANs make the negative distribution move with G.</li>
+    </ol>
+  </div>
+  <div class="callout"><strong>Causal move.</strong> If the desired loss cannot be written down, learn the loss-bearing test. D is not a permanent metric; it is an adaptive source classifier trained against the current G.</div>
+</section>
+
+<section id="actors">
+  <h2><span class="number">02</span>Name the actors before the game</h2>
+  <table class="symbols">
+    <thead><tr><th>Symbol</th><th>Role</th><th>What to keep distinct</th></tr></thead>
+    <tbody>
+      <tr><td><math aria-label="x sampled from p data"><mi>x</mi><mo>∼</mo><msub><mi>p</mi><mtext>data</mtext></msub></math></td><td>A genuine example drawn from the unknown data-generating distribution.</td><td>The dataset provides samples of p_data, not its density formula.</td></tr>
+      <tr><td><math aria-label="z sampled from p z"><mi>z</mi><mo>∼</mo><msub><mi>p</mi><mi>z</mi></msub></math></td><td>An easy latent noise source, such as a uniform or Gaussian distribution.</td><td>z is an input coordinate, not a corrupted real example.</td></tr>
+      <tr><td><math aria-label="G of z parameterized by theta g"><mi>G</mi><mo>(</mo><mi>z</mi><mo>;</mo><msub><mi>θ</mi><mi>g</mi></msub><mo>)</mo></math></td><td>The trainable mapping from latent space to data space.</td><td>G produces one sample; many seeds induce p_g.</td></tr>
+      <tr><td><math aria-label="p g"><msub><mi>p</mi><mi>g</mi></msub></math></td><td>The implicit distribution of samples produced by G.</td><td>We can sample it even when we cannot evaluate p_g(x).</td></tr>
+      <tr><td><math aria-label="D of x parameterized by theta d"><mi>D</mi><mo>(</mo><mi>x</mi><mo>;</mo><msub><mi>θ</mi><mi>d</mi></msub><mo>)</mo></math></td><td>The probability, under the current classifier, that x came from data rather than G.</td><td>It is a changing source judgment, not an absolute aesthetic score.</td></tr>
+      <tr><td><math aria-label="V of D and G"><mi>V</mi><mo>(</mo><mi>D</mi><mo>,</mo><mi>G</mi><mo>)</mo></math></td><td>The two-player value function.</td><td>D maximizes it; G minimizes it in the literal minimax game.</td></tr>
+    </tbody>
+  </table>
+  <div class="callout warning"><strong>Do not collapse sample and distribution.</strong> A single convincing image does not imply p_g = p_data. G can look good on one mode while missing most of the data distribution.</div>
+</section>
+
+<section id="game">
+  <h2><span class="number">03</span>Build the game from the desired behavior</h2>
+  <p>D should call real examples real and generated examples fake. G should change its samples so the current D calls them real. Those requirements become one value function:</p>
+  <div class="equation">
+    <math display="block" aria-label="The GAN minimax objective: minimize over G and maximize over D the expected log probability assigned to real data plus the expected log probability assigned to generated data being fake">
+      <mrow>
+        <munder><mo movablelimits="true">min</mo><mi>G</mi></munder>
+        <munder><mo movablelimits="true">max</mo><mi>D</mi></munder>
+        <mi>V</mi><mo>(</mo><mi>D</mi><mo>,</mo><mi>G</mi><mo>)</mo>
+        <mo>=</mo>
+        <msub><mi mathvariant="double-struck">E</mi><mrow><mi>x</mi><mo>∼</mo><msub><mi>p</mi><mtext>data</mtext></msub></mrow></msub>
+        <mo>[</mo><mi mathvariant="normal">log</mi><mi>D</mi><mo>(</mo><mi>x</mi><mo>)</mo><mo>]</mo>
+        <mo>+</mo>
+        <msub><mi mathvariant="double-struck">E</mi><mrow><mi>z</mi><mo>∼</mo><msub><mi>p</mi><mi>z</mi></msub></mrow></msub>
+        <mo>[</mo><mi mathvariant="normal">log</mi><mo>(</mo><mn>1</mn><mo>−</mo><mi>D</mi><mo>(</mo><mi>G</mi><mo>(</mo><mi>z</mi><mo>)</mo><mo>)</mo><mo>)</mo><mo>]</mo>
+      </mrow>
+    </math>
+    <span class="read">D raises both log terms by moving D(x) toward 1 and D(G(z)) toward 0. G can affect only the generated term; it tries to make D(G(z)) rise.</span>
+  </div>
+  <figure class="mechanism">
+    <svg viewBox="0 0 560 500" role="img" aria-labelledby="mechanism-title mechanism-desc">
+      <title id="mechanism-title">Alternating information flow in a GAN</title>
+      <desc id="mechanism-desc">Noise passes through the generator to make a fake sample. Real and fake samples enter the discriminator. During the generator step, gradients travel back through the discriminator to the generator while discriminator parameters stay fixed.</desc>
+      <defs>
+        <marker id="arrow-neutral" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 z" fill="#53615d"/></marker>
+        <marker id="arrow-grad" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 z" fill="#983d32"/></marker>
+      </defs>
+      <g font-family="Arial, sans-serif" fill="#18211f">
+        <rect x="22" y="46" width="122" height="72" fill="#e8edeb" stroke="#53615d" stroke-width="2"/>
+        <text x="83" y="77" text-anchor="middle" font-size="23" font-weight="700">noise z</text>
+        <text x="83" y="101" text-anchor="middle" font-size="17">z ~ p_z</text>
+        <rect x="218" y="46" width="132" height="72" fill="#f1e6e3" stroke="#983d32" stroke-width="3"/>
+        <text x="284" y="77" text-anchor="middle" font-size="23" font-weight="700">G</text>
+        <text x="284" y="101" text-anchor="middle" font-size="17">trainable</text>
+        <rect x="408" y="46" width="130" height="72" fill="#f1e6e3" stroke="#983d32" stroke-width="2"/>
+        <text x="473" y="77" text-anchor="middle" font-size="21" font-weight="700">fake x</text>
+        <text x="473" y="101" text-anchor="middle" font-size="17">G(z)</text>
+        <rect x="22" y="235" width="148" height="72" fill="#e2eeea" stroke="#176052" stroke-width="2"/>
+        <text x="96" y="266" text-anchor="middle" font-size="21" font-weight="700">real x</text>
+        <text x="96" y="290" text-anchor="middle" font-size="17">x ~ p_data</text>
+        <rect x="340" y="214" width="174" height="112" fill="#e6ebf0" stroke="#344e68" stroke-width="3"/>
+        <text x="427" y="255" text-anchor="middle" font-size="23" font-weight="700">D(sample)</text>
+        <text x="427" y="282" text-anchor="middle" font-size="17">probability real</text>
+        <text x="427" y="304" text-anchor="middle" font-size="15">trainable in D step</text>
+        <path d="M144 82 H218 M350 82 H408 M473 118 V185 Q473 205 457 214 M170 271 H340" fill="none" stroke="#53615d" stroke-width="3" marker-end="url(#arrow-neutral)"/>
+        <path d="M455 338 C430 432 286 444 282 132" fill="none" stroke="#983d32" stroke-width="4" stroke-dasharray="10 8" marker-end="url(#arrow-grad)"/>
+        <text x="300" y="477" text-anchor="middle" font-size="17" fill="#983d32">generator step: gradient returns; theta_d is fixed</text>
+      </g>
+    </svg>
+    <figcaption><strong>Lesson diagram.</strong> Samples flow toward D. On the generator step, the derivative flows back through D into G, but only theta_g is updated.</figcaption>
+  </figure>
+  <ol class="steps">
+    <li><strong>Improve D.</strong> Draw a minibatch of real x and latent z. Ascend the average of <math aria-label="log D of x plus log one minus D of G of z"><mi mathvariant="normal">log</mi><mi>D</mi><mo>(</mo><mi>x</mi><mo>)</mo><mo>+</mo><mi mathvariant="normal">log</mi><mo>(</mo><mn>1</mn><mo>−</mo><mi>D</mi><mo>(</mo><mi>G</mi><mo>(</mo><mi>z</mi><mo>)</mo><mo>)</mo><mo>)</mo></math>. The paper alternates k discriminator steps with each generator step and used k = 1 in its experiments.</li>
+    <li><strong>Improve G.</strong> Draw fresh z, hold theta_d fixed, and send the generator-loss gradient through D into theta_g. Then repeat against a newly updated discriminator.</li>
+  </ol>
+  <details class="answer">
+    <summary>Predict before revealing: if p_g exactly matches p_data, what probability should the best D output?</summary>
+    <p>One half everywhere the two distributions have support. Real and generated examples then have identical source distributions, so even the best source classifier can do no better than a fair guess.</p>
+  </details>
+</section>
+
+<section id="calculation-one">
+  <h2><span class="number">04</span>Work one discriminator update</h2>
+  <p>Suppose a minibatch has two real scores, D(x) = 0.80 and 0.60, and two generated scores, D(G(z)) = 0.30 and 0.10. D maximizes the paired average:</p>
+  <div class="equation">
+    <math display="block" aria-label="Worked discriminator objective calculation: J sub D equals the sum of four log terms divided by two, which is negative zero point five nine eight">
+      <mtable columnalign="right left" rowspacing=".45em">
+        <mtr>
+          <mtd><msub><mi>J</mi><mi>D</mi></msub></mtd>
+          <mtd><mo>=</mo><mfrac><mrow><mi mathvariant="normal">ln</mi><mn>.80</mn><mo>+</mo><mi mathvariant="normal">ln</mi><mn>.60</mn><mo>+</mo><mi mathvariant="normal">ln</mi><mo>(</mo><mn>1</mn><mo>−</mo><mn>.30</mn><mo>)</mo><mo>+</mo><mi mathvariant="normal">ln</mi><mo>(</mo><mn>1</mn><mo>−</mo><mn>.10</mn><mo>)</mo></mrow><mn>2</mn></mfrac></mtd>
+        </mtr>
+        <mtr>
+          <mtd></mtd>
+          <mtd><mo>=</mo><mfrac><mrow><mo>−</mo><mn>.223</mn><mo>−</mo><mn>.511</mn><mo>−</mo><mn>.357</mn><mo>−</mo><mn>.105</mn></mrow><mn>2</mn></mfrac></mtd>
+        </mtr>
+        <mtr><mtd></mtd><mtd><mo>=</mo><mo>−</mo><mn>0.598</mn></mtd></mtr>
+      </mtable>
+    </math>
+    <span class="read">The divisor is 2 because Algorithm 1 averages m paired real/fake contributions. D ascends this value toward 0, the maximum each correct log term could reach.</span>
+  </div>
+  <div class="worked-grid">
+    <article class="worked">
+      <span class="label">Real contribution</span>
+      <h3>Reward confident “real” calls</h3>
+      <p><math aria-label="log zero point eight plus log zero point six equals negative zero point seven three four"><mi mathvariant="normal">ln</mi><mn>.80</mn><mo>+</mo><mi mathvariant="normal">ln</mi><mn>.60</mn><mo>=</mo><mo>−</mo><mn>0.734</mn></math>. Increasing either real score makes this contribution less negative.</p>
+      <p class="result-line">target: <math aria-label="D of x approaches one"><mi>D</mi><mo>(</mo><mi>x</mi><mo>)</mo><mo>→</mo><mn>1</mn></math></p>
+    </article>
+    <article class="worked">
+      <span class="label">Generated contribution</span>
+      <h3>Reward confident “fake” calls</h3>
+      <p><math aria-label="log zero point seven plus log zero point nine equals negative zero point four six two"><mi mathvariant="normal">ln</mi><mn>.70</mn><mo>+</mo><mi mathvariant="normal">ln</mi><mn>.90</mn><mo>=</mo><mo>−</mo><mn>0.462</mn></math>. Decreasing either generated “real” score makes this contribution less negative.</p>
+      <p class="result-line">target: <math aria-label="D of G of z approaches zero"><mi>D</mi><mo>(</mo><mi>G</mi><mo>(</mo><mi>z</mi><mo>)</mo><mo>)</mo><mo>→</mo><mn>0</mn></math></p>
+    </article>
+  </div>
+  <div class="callout"><strong>Read signs, not vibes.</strong> A discriminator objective near 0 means easy, confident discrimination. The equilibrium value is lower, <math aria-label="negative log four"><mo>−</mo><mi mathvariant="normal">ln</mi><mn>4</mn></math>, because D must output one half when the distributions match.</div>
+</section>
+
+<section id="consequence">
+  <h2><span class="number">05</span>Freeze G and solve D</h2>
+  <p>At one location <math aria-label="x"><mi>x</mi></math>, let <math aria-label="a equals p data of x"><mi>a</mi><mo>=</mo><msub><mi>p</mi><mtext>data</mtext></msub><mo>(</mo><mi>x</mi><mo>)</mo></math>, <math aria-label="b equals p g of x"><mi>b</mi><mo>=</mo><msub><mi>p</mi><mi>g</mi></msub><mo>(</mo><mi>x</mi><mo>)</mo></math>, and <math aria-label="y equals D of x"><mi>y</mi><mo>=</mo><mi>D</mi><mo>(</mo><mi>x</mi><mo>)</mo></math>. The local contribution to D's objective is <math aria-label="a log y plus b log one minus y"><mi>a</mi><mi mathvariant="normal">ln</mi><mi>y</mi><mo>+</mo><mi>b</mi><mi mathvariant="normal">ln</mi><mo>(</mo><mn>1</mn><mo>−</mo><mi>y</mi><mo>)</mo></math>. Differentiate and set the result to zero:</p>
+  <div class="equation">
+    <math display="block" aria-label="Derivation of the optimal discriminator">
+      <mtable columnalign="right left" rowspacing=".5em">
+        <mtr>
+          <mtd><mfrac><mi>d</mi><mrow><mi>d</mi><mi>y</mi></mrow></mfrac><mo>[</mo><mi>a</mi><mi mathvariant="normal">ln</mi><mi>y</mi><mo>+</mo><mi>b</mi><mi mathvariant="normal">ln</mi><mo>(</mo><mn>1</mn><mo>−</mo><mi>y</mi><mo>)</mo><mo>]</mo></mtd>
+          <mtd><mo>=</mo><mfrac><mi>a</mi><mi>y</mi></mfrac><mo>−</mo><mfrac><mi>b</mi><mrow><mn>1</mn><mo>−</mo><mi>y</mi></mrow></mfrac><mo>=</mo><mn>0</mn></mtd>
+        </mtr>
+        <mtr>
+          <mtd><mi>a</mi><mo>(</mo><mn>1</mn><mo>−</mo><mi>y</mi><mo>)</mo></mtd>
+          <mtd><mo>=</mo><mi>b</mi><mi>y</mi><mspace width="1em"/><mo>⇒</mo><mspace width="1em"/><mi>y</mi><mo>=</mo><mfrac><mi>a</mi><mrow><mi>a</mi><mo>+</mo><mi>b</mi></mrow></mfrac></mtd>
+        </mtr>
+        <mtr>
+          <mtd><msup><mi>D</mi><mo>*</mo></msup><mo>(</mo><mi>x</mi><mo>)</mo></mtd>
+          <mtd><mo>=</mo><mfrac><mrow><msub><mi>p</mi><mtext>data</mtext></msub><mo>(</mo><mi>x</mi><mo>)</mo></mrow><mrow><msub><mi>p</mi><mtext>data</mtext></msub><mo>(</mo><mi>x</mi><mo>)</mo><mo>+</mo><msub><mi>p</mi><mi>g</mi></msub><mo>(</mo><mi>x</mi><mo>)</mo></mrow></mfrac></mtd>
+        </mtr>
+      </mtable>
+    </math>
+  </div>
+  <h3>Worked calculation: a two-bin world</h3>
+  <p>Let the data put probabilities <math aria-label="the row vector zero point seven five, zero point two five"><mrow><mo>[</mo><mtable columnspacing=".6em"><mtr><mtd><mn>0.75</mn></mtd><mtd><mn>0.25</mn></mtd></mtr></mtable><mo>]</mo></mrow></math> on locations <math aria-label="the row vector A, B"><mrow><mo>[</mo><mtable columnspacing=".6em"><mtr><mtd><mi>A</mi></mtd><mtd><mi>B</mi></mtd></mtr></mtable><mo>]</mo></mrow></math>, while G puts <math aria-label="the row vector zero point two five, zero point seven five"><mrow><mo>[</mo><mtable columnspacing=".6em"><mtr><mtd><mn>0.25</mn></mtd><mtd><mn>0.75</mn></mtd></mtr></mtable><mo>]</mo></mrow></math>. Then:</p>
+  <div class="worked-grid">
+    <article class="worked">
+      <span class="label">Optimal source test</span>
+      <h3>Calculate D*</h3>
+      <div class="math-display">
+        <math display="block" aria-label="D star of A equals zero point seven five divided by zero point seven five plus zero point two five, which equals zero point seven five">
+          <mtable columnalign="right left" rowspacing=".45em">
+            <mtr><mtd><msup><mi>D</mi><mo>*</mo></msup><mo>(</mo><mi>A</mi><mo>)</mo></mtd><mtd><mo>=</mo><mfrac><mn>.75</mn><mrow><mn>.75</mn><mo>+</mo><mn>.25</mn></mrow></mfrac><mo>=</mo><mn>.75</mn></mtd></mtr>
+            <mtr><mtd><msup><mi>D</mi><mo>*</mo></msup><mo>(</mo><mi>B</mi><mo>)</mo></mtd><mtd><mo>=</mo><mfrac><mn>.25</mn><mrow><mn>.25</mn><mo>+</mo><mn>.75</mn></mrow></mfrac><mo>=</mo><mn>.25</mn></mtd></mtr>
+          </mtable>
+        </math>
+      </div>
+      <p>D reports exactly where data is denser than G.</p>
+    </article>
+    <article class="worked">
+      <span class="label">Value under that test</span>
+      <h3>Calculate V(D*,G)</h3>
+      <div class="math-display">
+        <math display="block" aria-label="The value at the optimal discriminator is approximately negative one point one two five">
+          <mtable columnalign="right left" rowspacing=".45em">
+            <mtr><mtd><mi>V</mi><mo>(</mo><msup><mi>D</mi><mo>*</mo></msup><mo>,</mo><mi>G</mi><mo>)</mo></mtd><mtd><mo>=</mo><mn>.75</mn><mi mathvariant="normal">ln</mi><mn>.75</mn><mo>+</mo><mn>.25</mn><mi mathvariant="normal">ln</mi><mn>.25</mn></mtd></mtr>
+            <mtr><mtd></mtd><mtd><mspace width="1em"/><mo>+</mo><mn>.25</mn><mi mathvariant="normal">ln</mi><mn>.25</mn><mo>+</mo><mn>.75</mn><mi mathvariant="normal">ln</mi><mn>.75</mn></mtd></mtr>
+            <mtr><mtd></mtd><mtd><mo>≈</mo><mo>−</mo><mn>1.125</mn></mtd></mtr>
+          </mtable>
+        </math>
+      </div>
+    </article>
+  </div>
+  <p>If both distributions become <math aria-label="the row vector zero point five, zero point five"><mrow><mo>[</mo><mtable columnspacing=".6em"><mtr><mtd><mn>0.50</mn></mtd><mtd><mn>0.50</mn></mtd></mtr></mtable><mo>]</mo></mrow></math>, then <math aria-label="D star equals the row vector zero point five, zero point five"><msup><mi>D</mi><mo>*</mo></msup><mo>=</mo><mrow><mo>[</mo><mtable columnspacing=".6em"><mtr><mtd><mn>0.50</mn></mtd><mtd><mn>0.50</mn></mtd></mtr></mtable><mo>]</mo></mrow></math> and <math aria-label="V of D star and G equals two log zero point five equals negative log four equals negative one point three eight six"><mi>V</mi><mo>(</mo><msup><mi>D</mi><mo>*</mo></msup><mo>,</mo><mi>G</mi><mo>)</mo><mo>=</mo><mn>2</mn><mi mathvariant="normal">ln</mi><mn>.50</mn><mo>=</mo><mo>−</mo><mi mathvariant="normal">ln</mi><mn>4</mn><mo>=</mo><mo>−</mo><mn>1.386</mn></math>. G minimizes the value, so equality is better for G than -1.125.</p>
+  <div class="equation">
+    <math display="block" aria-label="The GAN value at the optimal discriminator equals negative log four plus twice the Jensen-Shannon divergence between the data and generator distributions">
+      <mtable columnalign="right left" rowspacing=".45em">
+        <mtr><mtd><mi>C</mi><mo>(</mo><mi>G</mi><mo>)</mo></mtd><mtd><mo>=</mo><munder><mo movablelimits="true">max</mo><mi>D</mi></munder><mi>V</mi><mo>(</mo><mi>D</mi><mo>,</mo><mi>G</mi><mo>)</mo></mtd></mtr>
+        <mtr><mtd></mtd><mtd><mo>=</mo><mo>−</mo><mi mathvariant="normal">ln</mi><mn>4</mn><mo>+</mo><mn>2</mn><mspace width=".25em"/><mi mathvariant="normal">JSD</mi><mo>(</mo><msub><mi>p</mi><mtext>data</mtext></msub><mo>∥</mo><msub><mi>p</mi><mi>g</mi></msub><mo>)</mo></mtd></mtr>
+      </mtable>
+    </math>
+    <span class="read">Because Jensen-Shannon divergence is nonnegative and is zero only when the distributions are equal, the non-parametric game has its unique global distributional optimum at p_g = p_data.</span>
+  </div>
+  <div class="callout warning"><strong>Scope the theorem.</strong> This conclusion assumes enough capacity and an optimal D at each generator step, and it reasons directly in distribution space. The paper explicitly notes that finite multilayer perceptrons and parameter optimization introduce critical points; the theorem is not a promise that every training run converges.</div>
+</section>
+
+<section id="gradient">
+  <h2><span class="number">06</span>The literal loss can silence the teacher</h2>
+  <p>Early in training, D can confidently reject poor samples. Let <math aria-label="a"><mi>a</mi></math> be D's pre-sigmoid logit for a generated sample and <math aria-label="p equals D of G of z equals sigmoid of a"><mi>p</mi><mo>=</mo><mi>D</mi><mo>(</mo><mi>G</mi><mo>(</mo><mi>z</mi><mo>)</mo><mo>)</mo><mo>=</mo><mi mathvariant="normal">sigmoid</mi><mo>(</mo><mi>a</mi><mo>)</mo></math>. The literal minimax generator loss is <math aria-label="log one minus p"><mi mathvariant="normal">log</mi><mo>(</mo><mn>1</mn><mo>−</mo><mi>p</mi><mo>)</mo></math>. Its gradient magnitude with respect to <math aria-label="a"><mi>a</mi></math> is <math aria-label="p"><mi>p</mi></math>, so when <math aria-label="p"><mi>p</mi></math> is almost zero the signal is almost zero too.</p>
+  <p>The paper therefore recommends training G to <em>maximize <math aria-label="log D of G of z"><mi mathvariant="normal">log</mi><mi>D</mi><mo>(</mo><mi>G</mi><mo>(</mo><mi>z</mi><mo>)</mo><mo>)</mo></math></em>, equivalently minimizing <math aria-label="negative log p"><mo>−</mo><mi mathvariant="normal">log</mi><mi>p</mi></math>. This non-saturating loss has gradient magnitude <math aria-label="one minus p"><mn>1</mn><mo>−</mo><mi>p</mi></math> with respect to <math aria-label="a"><mi>a</mi></math>. It has the same fixed point, but supplies a stronger early signal.</p>
+  <div class="instrument">
+    <div class="instrument-head">
+      <h3>Inspect the two generator gradients</h3>
+      <span class="label">Lesson diagram</span>
+    </div>
+    <p><strong>Predict before moving the control:</strong> at p = 0.05, which objective gives G the stronger logit-level gradient, and by what factor?</p>
+    <div class="control">
+      <label for="judge-score"><span>D's “real” probability for a fake sample</span><output id="judge-output" for="judge-score">0.05</output></label>
+      <input id="judge-score" type="range" min="0.01" max="0.99" step="0.01" value="0.05">
+    </div>
+    <div class="gradient-chart" role="img" aria-label="Two horizontal bars compare the literal minimax generator gradient magnitude p with the non-saturating magnitude one minus p. At the default probability 0.05, the non-saturating bar is much longer.">
+      <div class="gradient-row">
+        <p>literal minimax: <math aria-label="the absolute derivative of log one minus p with respect to a equals p"><mo>|</mo><mfrac><mrow><mi>d</mi><mspace width=".2em"/><mi mathvariant="normal">log</mi><mo>(</mo><mn>1</mn><mo>−</mo><mi>p</mi><mo>)</mo></mrow><mrow><mi>d</mi><mi>a</mi></mrow></mfrac><mo>|</mo><mo>=</mo><mi>p</mi></math></p>
+        <div class="bar-line"><span class="bar-track"><span class="bar-fill" id="sat-bar"></span></span><output id="sat-value">0.05</output></div>
+      </div>
+      <div class="gradient-row">
+        <p>non-saturating: <math aria-label="the absolute derivative of negative log p with respect to a equals one minus p"><mo>|</mo><mfrac><mrow><mi>d</mi><mspace width=".2em"/><mo>(</mo><mo>−</mo><mi mathvariant="normal">log</mi><mi>p</mi><mo>)</mo></mrow><mrow><mi>d</mi><mi>a</mi></mrow></mfrac><mo>|</mo><mo>=</mo><mn>1</mn><mo>−</mo><mi>p</mi></math></p>
+        <div class="bar-line"><span class="bar-track"><span class="bar-fill" id="nonsat-bar"></span></span><output id="nonsat-value">0.95</output></div>
+      </div>
+    </div>
+    <p id="gradient-result" class="dynamic-result" aria-live="polite">At p = 0.05, the non-saturating logit gradient is 0.95 versus 0.05: 19.0 times larger.</p>
+    <p class="static">Static reading: a highly confident early discriminator can nearly shut off the literal minimax signal. The non-saturating alternative reverses that conditioning. Gradients with respect to G's parameters also include the derivative chain through D and G, so these bars isolate only the loss-to-logit factor.</p>
+  </div>
+  <details class="answer">
+    <summary>Reveal the prediction</summary>
+    <p>The non-saturating objective. At p = .05, its factor is 1-.05 = .95, while the literal minimax factor is .05. The ratio is .95/.05 = 19. The generator gets a much stronger direction exactly when D is confidently rejecting its early samples.</p>
+  </details>
+</section>
+
+<section id="paper-figure-one">
+  <h2><span class="number">07</span>Read the paper's causal picture</h2>
+  <figure class="source-figure figure-one">
+    <img src="gan_figure_1_training_dynamics.png" width="1500" height="470" alt="Four panels from the original paper. A black dotted data density, green generated density, and blue dashed discriminator evolve from mismatch through a discriminator update and a generator update to matched distributions with a flat discriminator at one half.">
+    <figcaption><strong>Original paper Figure 1, PDF p. 3.</strong> Black dotted: p_data. Green solid: p_g. Blue dashed: D. Panel (a) starts near convergence; (b) improves D toward D*(x); (c) moves G(z) toward regions D judges more data-like; (d) shows the ideal equilibrium p_g = p_data and D(x) = 1/2. The crop is taken directly from the local source PDF.</figcaption>
+  </figure>
+  <p>The lower line is latent space z; the upper line is data space x. The slanted arrows show how G maps uniformly spaced latent coordinates into non-uniform data density. Where the mapping contracts, more z values land in a smaller x region and p_g becomes denser.</p>
+  <details class="answer">
+    <summary>Predict before revealing: in panel (b), has G already improved?</summary>
+    <p>No. Panel (b) isolates the discriminator's inner update for a fixed generator. The green p_g curve stays put while the blue D curve approaches the optimal density-ratio classifier. Panel (c) then shows the generator response.</p>
+  </details>
+</section>
+
+<section id="evidence">
+  <h2><span class="number">08</span>What the original evidence supports</h2>
+  <p>The experiments used MNIST, the Toronto Face Database (TFD), and CIFAR-10. G used mixtures of rectifier linear and sigmoid activations; D used maxout and dropout. The strongest lesson from this 2014 evidence is viability: a sample-only deep generator can be trained through an adversarial classifier using backpropagation, without Markov-chain sampling.</p>
+  <figure class="source-figure figure-two">
+    <img src="gan_figure_2_samples.png" width="1470" height="980" alt="Original GAN paper sample grids for MNIST digits, Toronto Face Database faces, and two CIFAR-10 models. In each row the rightmost yellow-outlined image is the nearest training example to the generated sample beside it.">
+    <figcaption><strong>Original paper Figure 2, PDF p. 6.</strong> (a) MNIST; (b) TFD; (c) CIFAR-10 with a fully connected model; (d) CIFAR-10 with a convolutional discriminator and deconvolutional generator. The authors report fair random draws rather than cherry-picked samples. The yellow-outlined rightmost column contains the nearest training example to the adjacent generated sample. This dedicated crop is taken directly from the local source PDF.</figcaption>
+  </figure>
+  <details class="answer">
+    <summary>Evidence check: what does the nearest-neighbor column establish - and what does it not establish?</summary>
+    <p>It offers a targeted check that the displayed generated sample is not a pixel-for-pixel copy of its nearest training example. It does not prove that the model never memorizes, that every latent seed yields a novel sample, or that the generated distribution covers all data modes.</p>
+  </details>
+  <h3>Table 1: Parzen-window log-likelihood estimates</h3>
+  <table class="evidence-table">
+    <thead><tr><th>Model</th><th>MNIST</th><th>TFD</th></tr></thead>
+    <tbody>
+      <tr><td>DBN</td><td>138 &plusmn; 2</td><td>1909 &plusmn; 66</td></tr>
+      <tr><td>Stacked CAE</td><td>121 &plusmn; 1.6</td><td><strong>2110 &plusmn; 50</strong></td></tr>
+      <tr><td>Deep GSN</td><td>214 &plusmn; 1.1</td><td>1890 &plusmn; 29</td></tr>
+      <tr><td>Adversarial nets</td><td><strong>225 &plusmn; 2</strong></td><td>2057 &plusmn; 26</td></tr>
+    </tbody>
+  </table>
+  <p class="static">Values transcribed from the original paper's Table 1, PDF p. 6. Higher is better for these reported estimates; bold marks the largest value in each column.</p>
+  <p class="wide">GANs have the highest reported MNIST estimate in this table, but not the highest TFD estimate. More importantly, the authors warn that the Parzen-window procedure has somewhat high variance and performs poorly in high-dimensional spaces. Treat the values as a period-specific comparison, not a definitive measure of perceptual quality or distribution coverage.</p>
+</section>
+
+<section id="limits">
+  <h2><span class="number">09</span>Failure modes follow from the mechanism</h2>
+  <div class="failure-grid">
+    <article><h3>Mode collapse</h3><p>Many z values can map to the same or a few x values. The paper calls the extreme “Helvetica scenario”: G loses diversity while exploiting what currently fools D.</p></article>
+    <article><h3>Player imbalance</h3><p>If D becomes too confident, the literal G objective saturates; if G is updated too much against a stale D, it can exploit an obsolete test. The two learning processes must stay synchronized.</p></article>
+    <article><h3>No explicit p_g(x)</h3><p>The model makes samples but does not provide a tractable density value. That is computationally attractive for sampling and awkward for likelihood-based evaluation.</p></article>
+    <article><h3>Theory-to-parameters gap</h3><p>The JSD result assumes idealized optimization in distribution space. Finite neural networks, limited capacity, stochastic gradients, and non-convex parameterization need not follow that path.</p></article>
+    <article><h3>An evaluation problem</h3><p>Visual samples can be cherry-picked, nearest neighbors are only a narrow memorization check, and the paper's Parzen estimator is unreliable in high dimensions.</p></article>
+    <article><h3>A moving objective</h3><p>G changes the data seen by D, while D changes the gradient seen by G. Standard loss curves are harder to interpret because one player's progress changes the other's task.</p></article>
+  </div>
+  <div class="callout"><strong>Diagnostic habit.</strong> When GAN training fails, ask three separate questions: Is D's signal informative? Is G receiving a usable gradient? Does p_g cover the modes of p_data? A few attractive samples answer only part of the third question.</div>
+</section>
+
+<section id="recall" class="recall">
+  <h2><span class="number">10</span>Active recall</h2>
+  <details><summary>Why can GANs train a generator without assigning a correct target image to each z?</summary><p>D learns a distribution-level source test from real and generated samples. Gradients through that test tell G how its current samples differ from data, so supervision is comparative rather than a per-seed target.</p></details>
+  <details><summary>What does D(x) mean?</summary><p>Under the current discriminator, it is the estimated probability that x came from the data distribution rather than the generator distribution. It is not a timeless realism score.</p></details>
+  <details><summary>For fixed G, what is the optimal discriminator?</summary><div class="math-display"><math display="block" aria-label="D star of x equals p data of x divided by p data of x plus p g of x"><msup><mi>D</mi><mo>*</mo></msup><mo>(</mo><mi>x</mi><mo>)</mo><mo>=</mo><mfrac><mrow><msub><mi>p</mi><mtext>data</mtext></msub><mo>(</mo><mi>x</mi><mo>)</mo></mrow><mrow><msub><mi>p</mi><mtext>data</mtext></msub><mo>(</mo><mi>x</mi><mo>)</mo><mo>+</mo><msub><mi>p</mi><mi>g</mi></msub><mo>(</mo><mi>x</mi><mo>)</mo></mrow></mfrac></math></div><p>It is one half where the two densities agree and moves toward one where data is denser.</p></details>
+  <details><summary>Why is p_g = p_data the ideal equilibrium?</summary><div class="math-display"><math display="block" aria-label="C of G equals negative log four plus two times the Jensen-Shannon divergence between p data and p g"><mi>C</mi><mo>(</mo><mi>G</mi><mo>)</mo><mo>=</mo><mo>−</mo><mi mathvariant="normal">ln</mi><mn>4</mn><mo>+</mo><mn>2</mn><mspace width=".25em"/><mi mathvariant="normal">JSD</mi><mo>(</mo><msub><mi>p</mi><mtext>data</mtext></msub><mo>∥</mo><msub><mi>p</mi><mi>g</mi></msub><mo>)</mo></math></div><p>Jensen-Shannon divergence is minimized at zero only when the distributions match; D then cannot distinguish their sources and outputs one half.</p></details>
+  <details><summary>Why use the non-saturating generator objective early in training?</summary><p>When D(G(z)) = p is near zero, the literal minimax logit-gradient factor is p and nearly vanishes. Minimizing -log p gives factor 1-p, a strong signal. The paper says the replacement has the same fixed point but stronger early gradients.</p></details>
+  <details><summary>Name two claims Figure 2 cannot establish by itself.</summary><p>It cannot establish full distribution coverage or absence of memorization across all samples. It also cannot establish that GAN samples are universally better than those from other models; the paper explicitly makes no such claim.</p></details>
+</section>
+
+<section id="map">
+  <h2>Connect it to your mental map</h2>
+  <div class="mental-map">
+    <article><h3>Contrast with variational autoencoders</h3><p>VAEs introduce an encoder and optimize a tractable evidence lower bound. The original GAN has no inference network and no explicit likelihood; it learns through a two-sample game.</p></article>
+    <article><h3>Link to classification</h3><p>The discriminator turns density mismatch into binary classification. At its optimum, its source probability encodes a density ratio between data and generator.</p></article>
+    <article><h3>Link to DQN's moving targets</h3><p>Both expose instability from a target that changes during learning. DQN slows a target network; GANs alternately update an opponent so its critique stays current.</p></article>
+  </div>
+  <div class="takeaway">
+    <h2>Takeaway</h2>
+    <p>A GAN does not begin with a formula for realism. It learns a differentiable test of the generator's current mistakes, then sends that test's gradient back to the generator. The power and the fragility come from the same source: the loss is another learner.</p>
+  </div>
+</section>
+</main>
+
+<footer>
+  <h2>Source and further exploration</h2>
+  <ul>
+    <li><a href="generative_adversarial_nets.pdf">Local source PDF: Goodfellow et al., <em>Generative Adversarial Nets</em></a></li>
+    <li><a href="https://arxiv.org/abs/1406.2661">arXiv record and version history</a></li>
+    <li><a href="https://papers.nips.cc/paper_files/paper/2014/hash/f033ed80deb0234979a61f95710dbe25-Abstract.html">NeurIPS 2014 proceedings record</a></li>
+    <li><a href="https://github.com/goodfeli/adversarial">Authors' code and hyperparameters repository cited by the paper</a></li>
+  </ul>
+</footer>
+</div>
+
+<script>
+(function(){
+  const input=document.getElementById('judge-score');
+  const output=document.getElementById('judge-output');
+  const satBar=document.getElementById('sat-bar');
+  const nonSatBar=document.getElementById('nonsat-bar');
+  const satValue=document.getElementById('sat-value');
+  const nonSatValue=document.getElementById('nonsat-value');
+  const result=document.getElementById('gradient-result');
+  function updateGradient(){
+    const p=Number(input.value);
+    const sat=p;
+    const nonSat=1-p;
+    const ratio=nonSat/sat;
+    output.value=p.toFixed(2);
+    satBar.style.width=(100*sat).toFixed(1)+'%';
+    nonSatBar.style.width=(100*nonSat).toFixed(1)+'%';
+    satValue.textContent=sat.toFixed(2);
+    nonSatValue.textContent=nonSat.toFixed(2);
+    if(Math.abs(sat-nonSat)<0.005){
+      result.textContent='At p = '+p.toFixed(2)+', both logit-gradient factors are '+sat.toFixed(2)+'.';
+    }else if(nonSat>sat){
+      result.textContent='At p = '+p.toFixed(2)+', the non-saturating logit gradient is '+nonSat.toFixed(2)+' versus '+sat.toFixed(2)+': '+ratio.toFixed(1)+' times larger.';
+    }else{
+      result.textContent='At p = '+p.toFixed(2)+', the literal minimax logit gradient is '+sat.toFixed(2)+' versus '+nonSat.toFixed(2)+': '+(sat/nonSat).toFixed(1)+' times larger. This is not the weak-gradient early-training regime.';
+    }
+  }
+  input.addEventListener('input',updateGradient);
+  updateGradient();
+})();
+</script>
+</body>
+</html>

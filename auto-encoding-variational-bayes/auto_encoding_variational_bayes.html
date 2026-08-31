@@ -1,0 +1,382 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <title>A Map You Can Sample - Auto-Encoding Variational Bayes</title>
+  <style>
+    :root {
+      --ink:#152538; --body:#2f3d46; --muted:#647078; --paper:#f7f8f4; --sheet:#fffefa;
+      --mist:#edf2f0; --grid:#d8e0dc; --rule:#cbd3cf; --sea:#285e69; --rust:#8a432f;
+      --violet:#635f7f; --gold:#805d18; --focus:#b56918; --code:#e9eeeb;
+    }
+    *{box-sizing:border-box} html{scroll-behavior:smooth}
+    body{margin:0;background:linear-gradient(90deg,transparent calc(50% - 490px),rgba(40,94,105,.07) calc(50% - 490px),rgba(40,94,105,.07) calc(50% - 489px),transparent calc(50% - 489px)),var(--paper);color:var(--body);font:18px/1.68 Georgia,"Times New Roman",serif}
+    a{color:var(--rust);text-underline-offset:.2em} a:hover{text-decoration-thickness:2px}
+    a:focus-visible,button:focus-visible,input:focus-visible,summary:focus-visible{outline:3px solid var(--focus);outline-offset:4px}
+    .page{width:min(100% - 40px,980px);margin:0 auto;padding:30px 0 84px}
+    .home,.eyebrow,.route-time,.kicker,th,.figure-label{font-family:Arial,Helvetica,sans-serif;font-weight:700;letter-spacing:.095em;text-transform:uppercase}
+    .home{font-size:.76rem;text-decoration:none}.home:hover{text-decoration:underline}
+    .hero{padding:72px 0 30px}.eyebrow{color:var(--sea);font-size:.72rem;margin:0 0 18px}
+    h1,h2,h3,h4{color:var(--ink);font-family:"Palatino Linotype",Palatino,"Book Antiqua",Georgia,serif;line-height:1.08;text-wrap:balance}
+    h1{max-width:900px;margin:0;font-size:clamp(3.15rem,8.3vw,6.8rem);letter-spacing:-.055em}
+    h1 .coordinate{color:var(--sea);font-style:italic;font-weight:400}
+    h2{margin:78px 0 20px;padding-top:18px;border-top:1px solid var(--rule);font-size:clamp(2rem,4.5vw,3.15rem);letter-spacing:-.035em}
+    h3{margin:34px 0 10px;font-size:1.48rem} h4{margin:0 0 8px;font-size:1.13rem}
+    p,li{max-width:780px} p{margin:14px 0}
+    .dek{max-width:760px;color:#40525d;font-size:clamp(1.15rem,2.5vw,1.42rem);line-height:1.5}
+    .byline{max-width:820px;color:var(--muted);font-size:.92rem}
+    code,.equation,.shape,output{font-family:"SFMono-Regular",Consolas,"Liberation Mono",monospace}
+    code{padding:.08em .24em;background:var(--code);color:var(--ink);overflow-wrap:anywhere}
+    .route{display:grid;grid-template-columns:repeat(4,1fr);margin:38px 0 48px;border-block:1px solid var(--rule)}
+    .route a{display:block;min-height:106px;padding:14px 17px 17px;border-right:1px solid var(--rule);color:var(--body);text-decoration:none}
+    .route a:last-child{border-right:0}.route a:hover{background:var(--mist)}
+    .route-time{display:block;margin-bottom:7px;color:var(--rust);font-size:.66rem}
+    .atlas{position:relative;margin:34px 0 0;padding:22px;border:1px solid var(--rule);background-color:var(--sheet);background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:36px 36px;overflow:hidden}
+    .atlas svg,figure svg{display:block;width:100%;height:auto}.scroll-note{display:none}
+    figcaption{margin-top:13px;color:var(--muted);font-size:.92rem;line-height:1.48}
+    .figure-label{display:inline-block;margin-right:.45em;color:var(--sea);font-size:.68rem}
+    .reading-note,.prediction,.worked,.scope{max-width:870px;margin:26px 0;padding:18px 22px;border-left:4px solid var(--sea);background:var(--mist)}
+    .prediction{border-left-color:var(--rust);background:#f6eee9}.scope{border-left-color:var(--gold);background:#f4f0e5}
+    .reading-note strong,.prediction strong,.scope strong{color:var(--ink)}
+    .bridge-grid,.two-col,.trace-grid{display:grid;grid-template-columns:1fr 1fr;gap:22px;max-width:900px;margin:24px 0}
+    .bridge-grid article,.two-col article{padding:20px;border-top:4px solid var(--violet);background:var(--sheet)}
+    .bridge-grid article:last-child,.two-col article:last-child{border-top-color:var(--rust)}
+    .kicker{display:block;margin-bottom:6px;color:var(--violet);font-size:.68rem}
+    .causal-chain{display:grid;grid-template-columns:repeat(5,1fr);gap:0;max-width:920px;margin:32px 0;counter-reset:chain}
+    .causal-chain div{position:relative;min-height:128px;padding:16px 15px;border-block:1px solid var(--rule);border-right:1px solid var(--rule);background:var(--sheet);font-size:.89rem}
+    .causal-chain div:first-child{border-left:1px solid var(--rule)}
+    .causal-chain div::before{counter-increment:chain;content:counter(chain);display:block;margin-bottom:8px;color:var(--sea);font:700 .72rem Arial,sans-serif}
+    .causal-chain div:not(:last-child)::after{content:"→";position:absolute;z-index:2;right:-13px;top:47px;width:25px;height:25px;border:1px solid var(--rule);border-radius:50%;background:var(--paper);color:var(--rust);font:700 17px/23px Arial,sans-serif;text-align:center}
+    table{width:100%;max-width:920px;border-collapse:collapse;margin:22px 0;background:var(--sheet)}
+    th,td{padding:12px 14px;border-bottom:1px solid var(--rule);text-align:left;vertical-align:top}
+    th{color:var(--muted);font-size:.67rem}td:first-child{color:var(--ink)}.shape{color:var(--sea);white-space:nowrap}
+    .equation{max-width:900px;margin:22px 0;padding:18px 22px;border-block:1px solid var(--rule);background:#e8eeec;color:var(--ink);font-size:clamp(.84rem,2.1vw,1.05rem);line-height:1.7;overflow-x:auto}
+    .equation math,.math-block math{display:block;width:max-content;max-width:none;margin:.15em auto;font:1.08em/1.45 "STIX Two Math","Cambria Math",serif}
+    .equation mfrac,.math-block mfrac{padding-inline:.12em}.equation mtable,.math-block mtable{column-gap:.35em;row-gap:.28em}
+    .math-block{max-width:100%;margin:.65em 0;padding:.22em 0;overflow-x:auto}.math-block math{margin-inline:auto;font-size:1rem}
+    .equation .annotation{display:block;margin-top:.45em;color:var(--muted);font-family:Georgia,serif;font-size:.9em;text-align:center}
+    .term-recon{color:var(--sea);font-weight:700}.term-kl{color:var(--rust);font-weight:700}
+    .elbo-ledger{max-width:920px;margin:28px 0;border:1px solid var(--rule);background:var(--sheet)}
+    .ledger-row{display:grid;grid-template-columns:170px 1fr;border-bottom:1px solid var(--rule)}.ledger-row:last-child{border-bottom:0}
+    .ledger-row strong{padding:14px 16px;color:var(--ink);border-right:1px solid var(--rule)}.ledger-row span{padding:14px 16px}
+    .trace-grid{align-items:start}.worked{margin:0;min-width:0;border:1px solid var(--rule);border-top:5px solid var(--sea);background:var(--sheet);padding:21px}
+    .worked:last-child{border-top-color:var(--rust)}.worked ol{margin:14px 0 0;padding-left:1.35em}.worked li{margin:10px 0}
+    .worked .total{margin-top:15px;padding-top:12px;border-top:1px solid var(--rule);color:var(--ink)}
+    .instrument{max-width:920px;margin:28px 0;padding:24px;border:1px solid var(--rule);background:var(--sheet)}
+    .instrument-head{display:grid;grid-template-columns:1fr auto;gap:18px;align-items:start}.instrument-head h3{margin-top:2px}
+    .instrument-tag{color:var(--sea);font:700 .68rem/1.4 Arial,sans-serif;letter-spacing:.09em;text-transform:uppercase}
+    .controls{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin:24px 0 18px}
+    .control label{display:flex;justify-content:space-between;gap:12px;color:var(--ink);font:700 .78rem/1.4 Arial,sans-serif}.control output{color:var(--rust)}
+    input[type=range]{width:100%;margin-top:10px;accent-color:var(--sea)}
+    .latent-line{position:relative;height:82px;margin:22px 0;border-bottom:2px solid var(--ink)}
+    .latent-line::before,.latent-line::after{position:absolute;bottom:-27px;color:var(--muted);font:.72rem Arial,sans-serif}
+    .latent-line::before{content:"-4";left:0}.latent-line::after{content:"+4";right:0}
+    .prior-band{position:absolute;left:32%;bottom:-1px;width:36%;height:46px;border-radius:50% 50% 0 0;background:rgba(99,95,127,.14);border:1px solid rgba(99,95,127,.45);border-bottom:0}
+    .sample-pin{position:absolute;left:57.5%;bottom:-8px;width:3px;height:64px;background:var(--rust);transform:translateX(-50%)}
+    .sample-pin::before{content:"z";position:absolute;top:-21px;left:-5px;color:var(--rust);font:italic 700 1rem Georgia,serif}
+    .readout{margin:28px 0 0;padding:16px 18px;border-left:4px solid var(--sea);background:var(--mist)}.readout p{margin:5px 0}
+    details{max-width:870px;padding:14px 0;border-bottom:1px solid var(--rule)}summary{cursor:pointer;color:var(--ink);font-weight:700}details p{margin-bottom:4px}
+    .source-figure{max-width:920px;margin:30px 0;padding:18px 0;border-block:1px solid var(--rule)}.source-figure img{display:block;width:100%;height:auto}
+    .misconceptions{max-width:900px;columns:2;column-gap:36px}.misconceptions details{break-inside:avoid}
+    .map-grid{display:grid;grid-template-columns:repeat(3,1fr);max-width:920px;border:1px solid var(--rule);background:var(--sheet)}
+    .map-grid article{min-width:0;padding:19px;border-right:1px solid var(--rule)}.map-grid article:last-child{border-right:0}
+    .takeaway{max-width:900px;padding-left:24px;border-left:6px solid var(--sea);color:var(--ink);font-size:1.24rem}
+    footer{margin-top:78px;padding-top:24px;border-top:3px solid var(--ink);color:var(--muted);font-size:.92rem}
+    footer h2{margin:0 0 12px;padding:0;border:0;font-size:1.55rem}footer li{margin:6px 0}
+    @media(max-width:760px){
+      body{font-size:17px;background:var(--paper)}.page{width:min(100% - 32px,980px)}.hero{padding-top:54px}h1{font-size:clamp(3rem,16vw,4.7rem)}
+      .route{grid-template-columns:1fr 1fr}.route a:nth-child(2){border-right:0}.route a:nth-child(-n+2){border-bottom:1px solid var(--rule)}
+      .bridge-grid,.two-col,.trace-grid,.map-grid{grid-template-columns:1fr}.map-grid article{border-right:0;border-bottom:1px solid var(--rule)}.map-grid article:last-child{border-bottom:0}
+      .causal-chain{grid-template-columns:1fr}.causal-chain div{min-height:0;border-left:1px solid var(--rule);border-top:0}.causal-chain div:first-child{border-top:1px solid var(--rule)}
+      .causal-chain div:not(:last-child)::after{content:"↓";top:auto;right:20px;bottom:-13px}.ledger-row{grid-template-columns:1fr}.ledger-row strong{border-right:0;border-bottom:1px solid var(--rule)}
+      .controls{grid-template-columns:1fr}.instrument-head{grid-template-columns:1fr}.misconceptions{columns:1}table{display:block;overflow-x:auto;font-size:.9rem}.atlas{padding:12px;overflow-x:auto}.atlas svg{min-width:720px}.scroll-note{display:block;margin:0 0 10px;color:var(--muted);font:700 .68rem/1.4 Arial,sans-serif;letter-spacing:.06em;text-transform:uppercase}
+    }
+    @media(max-width:460px){.route{grid-template-columns:1fr}.route a{min-height:auto;border-right:0;border-bottom:1px solid var(--rule)}.route a:last-child{border-bottom:0}.equation{padding:14px}}
+    @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*::before,*::after{scroll-behavior:auto!important;transition:none!important;animation:none!important}}
+  </style>
+</head>
+<body>
+  <main class="page">
+    <a class="home" href="../index.html">← Daily AI Paper Lab</a>
+    <header class="hero">
+      <p class="eyebrow">A one-hour active lesson in generative modeling</p>
+      <h1>A map you can <span class="coordinate">sample.</span></h1>
+      <p class="dek">A variational autoencoder turns isolated compressed codes into a probabilistic atlas: every observation gets a small cloud of plausible coordinates, while the decoder learns what nearby coordinates mean.</p>
+      <p class="byline"><cite>Auto-Encoding Variational Bayes</cite> - Diederik P. Kingma and Max Welling - ICLR 2014</p>
+      <nav class="route" aria-label="Study route">
+        <a href="#bridge"><span class="route-time">0-12 min</span>Cross the ordinary-autoencoder bridge</a>
+        <a href="#objective"><span class="route-time">12-28 min</span>Build the ELBO from the problem</a>
+        <a href="#traces"><span class="route-time">28-46 min</span>Run two complete numeric traces</a>
+        <a href="#evidence"><span class="route-time">46-60 min</span>Read evidence, diagnose, recall</a>
+      </nav>
+      <figure class="atlas">
+        <p class="scroll-note">Scroll horizontally to compare the full lesson diagram.</p>
+        <svg viewBox="0 0 920 430" role="img" aria-labelledby="atlas-title atlas-desc">
+          <title id="atlas-title">From isolated autoencoder codes to a navigable variational latent atlas</title>
+          <desc id="atlas-desc">On the left, three deterministic codes sit as isolated islands with uncertain gaps. On the right, three overlapping probability clouds occupy a shared coordinate field around a standard normal prior, with a smooth path through them to the decoder.</desc>
+          <defs>
+            <marker id="atlas-arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0 L8 4 L0 8 Z" fill="#152538"/></marker>
+            <radialGradient id="cloud-a"><stop offset="0" stop-color="#285e69" stop-opacity=".48"/><stop offset="1" stop-color="#285e69" stop-opacity=".04"/></radialGradient>
+            <radialGradient id="cloud-b"><stop offset="0" stop-color="#8a432f" stop-opacity=".42"/><stop offset="1" stop-color="#8a432f" stop-opacity=".04"/></radialGradient>
+          </defs>
+          <g font-family="Arial, sans-serif">
+            <text x="22" y="30" fill="#635f7f" font-size="13" font-weight="700" letter-spacing="1.5">ORDINARY AUTOENCODER</text>
+            <text x="528" y="30" fill="#285e69" font-size="13" font-weight="700" letter-spacing="1.5">VARIATIONAL AUTOENCODER</text>
+            <line x1="458" y1="12" x2="458" y2="392" stroke="#cbd3cf" stroke-dasharray="4 7"/>
+            <line x1="36" y1="345" x2="406" y2="345" stroke="#647078"/><line x1="84" y1="385" x2="84" y2="70" stroke="#647078"/>
+            <text x="270" y="368" fill="#647078" font-size="12">latent coordinate 1</text><text x="19" y="220" fill="#647078" font-size="12" transform="rotate(-90 19 220)">latent coordinate 2</text>
+            <path d="M120 278 C151 251 179 265 193 293 C206 320 178 335 139 327 C109 321 99 297 120 278Z" fill="#635f7f" fill-opacity=".22" stroke="#635f7f"/>
+            <path d="M247 105 C274 84 311 93 318 122 C326 151 295 168 260 157 C233 148 227 122 247 105Z" fill="#8a432f" fill-opacity=".18" stroke="#8a432f"/>
+            <path d="M304 248 C335 229 379 242 384 276 C389 311 351 324 318 307 C290 293 284 262 304 248Z" fill="#285e69" fill-opacity=".19" stroke="#285e69"/>
+            <circle cx="153" cy="298" r="5" fill="#635f7f"/><circle cx="278" cy="128" r="5" fill="#8a432f"/><circle cx="343" cy="278" r="5" fill="#285e69"/>
+            <path d="M165 275 C196 233 226 184 265 148" fill="none" stroke="#647078" stroke-dasharray="5 7"/><text x="167" y="228" fill="#8a432f" font-size="13">untrained gap?</text>
+            <line x1="528" y1="345" x2="886" y2="345" stroke="#647078"/><line x1="574" y1="385" x2="574" y2="70" stroke="#647078"/>
+            <text x="775" y="368" fill="#647078" font-size="12">shared prior coordinates</text>
+            <ellipse cx="716" cy="219" rx="135" ry="122" fill="none" stroke="#635f7f" stroke-dasharray="6 6"/>
+            <ellipse cx="673" cy="249" rx="88" ry="72" fill="url(#cloud-a)"/><ellipse cx="760" cy="176" rx="91" ry="76" fill="url(#cloud-b)"/><ellipse cx="751" cy="272" rx="85" ry="62" fill="url(#cloud-a)"/>
+            <circle cx="673" cy="249" r="5" fill="#285e69"/><circle cx="760" cy="176" r="5" fill="#8a432f"/><circle cx="751" cy="272" r="5" fill="#285e69"/>
+            <path d="M634 286 C670 252 706 222 760 176 C794 147 820 132 852 119" fill="none" stroke="#152538" stroke-width="2.5" marker-end="url(#atlas-arrow)"/>
+            <text x="590" y="95" fill="#635f7f" font-size="13">p(z) = N(0, I)</text><text x="785" y="110" fill="#152538" font-size="13">decode nearby z</text>
+            <text x="641" y="402" fill="#647078" font-size="13">clouds may overlap; the map remains sampleable</text>
+          </g>
+        </svg>
+        <figcaption><span class="figure-label">Lesson diagram.</span> The ordinary autoencoder can memorize useful addresses without learning the roads between them. The VAE asks every input to occupy a probability cloud on one shared map, so a prior sample has a better chance of landing somewhere the decoder understands.</figcaption>
+      </figure>
+    </header>
+
+    <section id="bridge">
+      <h2>1. Prerequisite bridge: from a codebook to an atlas</h2>
+      <p>An ordinary autoencoder already gives us two neural networks. An encoder compresses an observation <code>x &isin; R<sup>D</sup></code> into one code <code>h &isin; R<sup>J</sup></code>; a decoder maps that code back to a reconstruction <code>x&#770; &isin; R<sup>D</sup></code>. Training minimizes a reconstruction error such as squared error or binary cross-entropy.</p>
+      <div class="bridge-grid">
+        <article><span class="kicker">Ordinary autoencoder</span><h3>One input, one address</h3><p><code>x [D] &rarr; f(x) = h [J] &rarr; g(h) = x&#770; [D]</code></p><p>The decoder is trained on addresses the encoder visits. Nothing in reconstruction alone says that a random address, or a point between two addresses, should decode sensibly.</p></article>
+        <article><span class="kicker">Variational autoencoder</span><h3>One input, one cloud</h3><p><code>x [D] &rarr; (&mu;, &sigma;) [J] &rarr; z [J] &rarr; p<sub>&theta;</sub>(x|z)</code></p><p>The encoder describes plausible addresses, not a single point. A prior and a KL cost organize all those clouds into one coordinate system.</p></article>
+      </div>
+      <aside class="reading-note"><strong>Analogy - learning a city.</strong> A deterministic autoencoder can memorize a set of apartment addresses and the route back to each apartment. A generative model needs a city plan: draw an address from a known district and still find a plausible building. The VAE's prior defines the district; the encoder's clouds and the ELBO teach the street plan.</aside>
+      <div class="prediction"><strong>Predict before revealing.</strong> Two training images receive codes at <code>(-8, 3)</code> and <code>(12, -5)</code>. Reconstruction is excellent. Should you trust the decoder at <code>(2, -1)</code>?</div>
+      <details><summary>Reveal the answer</summary><p>No. Reconstruction only trained the decoder at codes produced by the encoder. Without a distributional constraint, the midpoint may lie in an unsupported gap. This is why "good compressor" does not automatically mean "sampleable generator."</p></details>
+    </section>
+
+    <section>
+      <h2>2. The paper's problem: reverse a hidden generative story</h2>
+      <p>The paper starts with a directed generative process. First draw an unobserved continuous cause <code>z &sim; p<sub>&theta;</sub>(z)</code>. Then draw an observation <code>x &sim; p<sub>&theta;</sub>(x|z)</code>. Running this story forward is easy. Learning from observed <code>x</code> requires the reverse question: which latent causes could have produced it?</p>
+      <div class="equation">
+        <math display="block" aria-label="The marginal likelihood p theta x is the integral over z of p theta z times p theta x given z"><mrow><msub><mi>p</mi><mi>&theta;</mi></msub><mo>(</mo><mi>x</mi><mo>)</mo><mo>=</mo><mo>&int;</mo><msub><mi>p</mi><mi>&theta;</mi></msub><mo>(</mo><mi>z</mi><mo>)</mo><msub><mi>p</mi><mi>&theta;</mi></msub><mo>(</mo><mi>x</mi><mo>|</mo><mi>z</mi><mo>)</mo><mi>d</mi><mi>z</mi></mrow></math>
+        <span class="annotation">The integral must consider every possible latent explanation.</span>
+      </div>
+      <p>For the nonlinear decoder the paper cares about, that integral and the true posterior <code>p<sub>&theta;</sub>(z|x)</code> can be intractable. Iterative inference or a sampling loop for every datapoint is also too costly for a large dataset. The paper therefore learns one recognition model <code>q<sub>&phi;</sub>(z|x)</code> that makes a fast posterior approximation for any input. Today we call this <em>amortized inference</em>: the shared encoder pays the inference cost once through learning rather than solving a fresh optimization problem for every example.</p>
+      <div class="two-col">
+        <article><span class="kicker">Baseline pressure</span><h3>Per-example inference</h3><p>Mean-field updates or MCMC can require an inner loop for every <code>x</code>. Monte Carlo EM is correspondingly difficult to scale to the full dataset in the paper's comparison.</p></article>
+        <article><span class="kicker">AEVB move</span><h3>Learn the inference rule</h3><p>A neural encoder predicts the approximate posterior parameters directly. A minibatch can then update both encoder <code>&phi;</code> and decoder <code>&theta;</code>.</p></article>
+      </div>
+      <div class="causal-chain" aria-label="Causal route through the AEVB method"><div>The true posterior is hard.</div><div>Approximate it with <code>q<sub>&phi;</sub>(z|x)</code>.</div><div>Optimize a lower bound on <code>log p<sub>&theta;</sub>(x)</code>.</div><div>Move noise outside the encoder parameters.</div><div>Backpropagate through a sampled latent code.</div></div>
+    </section>
+
+    <section>
+      <h2>3. Name every actor - and track every shape</h2>
+      <p>Keep the generative direction and inference direction separate. The decoder says how latent causes produce data; the encoder guesses latent causes after data has been observed.</p>
+      <table>
+        <thead><tr><th>Actor</th><th>Shape in one minibatch</th><th>Job</th></tr></thead>
+        <tbody>
+          <tr><td><code>X</code></td><td class="shape">[M, D]</td><td>A minibatch of <code>M</code> observations, each with <code>D</code> measured dimensions.</td></tr>
+          <tr><td><code>p(z) = N(0, I)</code></td><td class="shape">distribution over [J]</td><td>The agreed coordinate system from which generation begins.</td></tr>
+          <tr><td><code>q<sub>&phi;</sub>(z|x)</code></td><td class="shape">&mu;, log &sigma;<sup>2</sup>: [M, J]</td><td>The probabilistic encoder; it approximates the intractable true posterior.</td></tr>
+          <tr><td><code>&epsilon; &sim; N(0, I)</code></td><td class="shape">[M, J]</td><td>Parameter-free noise. It contributes randomness without hiding the gradient path.</td></tr>
+          <tr><td><code>z = &mu; + &sigma; &odot; &epsilon;</code></td><td class="shape">[M, J]</td><td>A sampled latent coordinate. The product is elementwise, so all three vectors share shape <code>[J]</code> per example.</td></tr>
+          <tr><td><code>p<sub>&theta;</sub>(x|z)</code></td><td class="shape">decoder parameters: [M, D]</td><td>A Bernoulli distribution for binary data or Gaussian distribution for real-valued data in the paper's example.</td></tr>
+          <tr><td><code>log p<sub>&theta;</sub>(x|z)</code></td><td class="shape">[M], then scalar</td><td>The reconstruction log-likelihood, not merely a picture-space distance with no probabilistic meaning.</td></tr>
+          <tr><td><code>D<sub>KL</sub>(q<sub>&phi;</sub> || p)</code></td><td class="shape">[M], then scalar</td><td>The price paid when an input's posterior cloud departs from the prior.</td></tr>
+        </tbody>
+      </table>
+      <aside class="reading-note"><strong>Implementation habit.</strong> Encoders usually emit <code>log &sigma;<sup>2</sup></code> rather than <code>&sigma;</code> directly. Exponentiation (often <code>&sigma; = exp(0.5 log &sigma;<sup>2</sup>)</code>) guarantees a positive standard deviation and avoids treating a negative network output as a scale.</aside>
+    </section>
+
+    <section id="objective">
+      <h2>4. Build the objective from the missing posterior</h2>
+      <p>Introduce any approximate posterior <code>q<sub>&phi;</sub>(z|x)</code>. The paper's Equation 1 decomposes the log evidence into a lower bound plus a non-negative gap:</p>
+      <div class="equation">
+        <math display="block" aria-label="log p theta x equals the ELBO plus KL divergence from q phi z given x to the true posterior p theta z given x"><mrow><mi mathvariant="normal">log</mi><msub><mi>p</mi><mi>&theta;</mi></msub><mo>(</mo><mi>x</mi><mo>)</mo><mo>=</mo><mi mathvariant="script">L</mi><mo>(</mo><mi>&theta;</mi><mo>,</mo><mi>&phi;</mi><mo>;</mo><mi>x</mi><mo>)</mo><mo>+</mo><msub><mi>D</mi><mrow><mi mathvariant="normal">KL</mi></mrow></msub><mo>(</mo><msub><mi>q</mi><mi>&phi;</mi></msub><mo>(</mo><mi>z</mi><mo>|</mo><mi>x</mi><mo>)</mo><mo>&parallel;</mo><msub><mi>p</mi><mi>&theta;</mi></msub><mo>(</mo><mi>z</mi><mo>|</mo><mi>x</mi><mo>)</mo><mo>)</mo></mrow></math>
+        <span class="annotation">Because KL divergence is never negative, L cannot exceed log p<sub>&theta;</sub>(x).</span>
+      </div>
+      <p>We cannot evaluate the gap because it contains the intractable true posterior. But we can maximize the lower bound itself. Rearranging the joint probability produces the paper's Equation 3, the form most closely associated with a VAE:</p>
+      <div class="equation">
+        <math display="block" aria-label="The ELBO is expected reconstruction log likelihood minus KL divergence from the approximate posterior to the prior"><mrow><mi mathvariant="script">L</mi><mo>(</mo><mi>&theta;</mi><mo>,</mo><mi>&phi;</mi><mo>;</mo><mi>x</mi><mo>)</mo><mo>=</mo><mstyle class="term-recon"><msub><mi>&#x1D53C;</mi><mrow><msub><mi>q</mi><mi>&phi;</mi></msub><mo>(</mo><mi>z</mi><mo>|</mo><mi>x</mi><mo>)</mo></mrow></msub><mo>[</mo><mi mathvariant="normal">log</mi><msub><mi>p</mi><mi>&theta;</mi></msub><mo>(</mo><mi>x</mi><mo>|</mo><mi>z</mi><mo>)</mo><mo>]</mo></mstyle><mo>-</mo><mstyle class="term-kl"><msub><mi>D</mi><mrow><mi mathvariant="normal">KL</mi></mrow></msub><mo>(</mo><msub><mi>q</mi><mi>&phi;</mi></msub><mo>(</mo><mi>z</mi><mo>|</mo><mi>x</mi><mo>)</mo><mo>&parallel;</mo><mi>p</mi><mo>(</mo><mi>z</mi><mo>)</mo><mo>)</mo></mstyle></mrow></math>
+      </div>
+      <div class="elbo-ledger">
+        <div class="ledger-row"><strong class="term-recon">Reconstruct</strong><span>Reward latent samples that let the decoder assign high likelihood to the observed <code>x</code>. This makes each cloud informative.</span></div>
+        <div class="ledger-row"><strong class="term-kl">Stay mappable</strong><span>Charge a cost when an approximate-posterior cloud moves, narrows, or stretches away from the prior. This keeps the collection of clouds usable as a shared map.</span></div>
+        <div class="ledger-row"><strong>Maximize together</strong><span>Reconstruction alone permits a private island for every example. KL alone makes all inputs use the same uninformative cloud. The ELBO trades useful information against a sampleable coordinate system.</span></div>
+      </div>
+      <p>For a diagonal Gaussian <code>q<sub>&phi;</sub>(z|x) = N(&mu;, diag(&sigma;<sup>2</sup>))</code> and standard-normal prior, the KL cost is analytic:</p>
+      <div class="equation">
+        <math display="block" aria-label="KL divergence equals one half the sum over latent dimensions of mu squared plus sigma squared minus log sigma squared minus one"><mrow><msub><mi>D</mi><mrow><mi mathvariant="normal">KL</mi></mrow></msub><mo>(</mo><mi>q</mi><mo>&parallel;</mo><mi>p</mi><mo>)</mo><mo>=</mo><mfrac><mn>1</mn><mn>2</mn></mfrac><munderover><mo>&sum;</mo><mrow><mi>j</mi><mo>=</mo><mn>1</mn></mrow><mi>J</mi></munderover><mo>(</mo><msubsup><mi>&mu;</mi><mi>j</mi><mn>2</mn></msubsup><mo>+</mo><msubsup><mi>&sigma;</mi><mi>j</mi><mn>2</mn></msubsup><mo>-</mo><mi mathvariant="normal">log</mi><msubsup><mi>&sigma;</mi><mi>j</mi><mn>2</mn></msubsup><mo>-</mo><mn>1</mn><mo>)</mo></mrow></math>
+      </div>
+      <div class="prediction"><strong>Predict before revealing.</strong> Which one-dimensional cloud has zero KL cost against <code>N(0,1)</code>: <code>(&mu;,&sigma;)=(0,1)</code>, <code>(2,1)</code>, or <code>(0,0.5)</code>?</div>
+      <details><summary>Reveal the calculation</summary><p><code>(0,1)</code> has zero cost because it matches the prior exactly. <code>(2,1)</code> costs <code>&frac12;(4+1-log 1-1)=2</code>. <code>(0,0.5)</code> costs about <code>0.318</code>: shrinking the cloud also encodes information and therefore departs from the unit prior.</p></details>
+    </section>
+
+    <section>
+      <h2>5. Move the dice outside the network</h2>
+      <p>The expected reconstruction term needs samples from <code>q<sub>&phi;</sub>(z|x)</code>. If we write only <code>z &sim; N(&mu;, &sigma;<sup>2</sup>)</code>, the sampling operation obscures how a change in the encoder parameters should change the sampled value. The paper's reparameterization writes the same random variable as deterministic arithmetic applied to fixed-source noise:</p>
+      <div class="equation">
+        <math display="block" aria-label="z equals mu plus sigma elementwise multiplied by epsilon, with epsilon sampled from a standard normal"><mrow><mi>&epsilon;</mi><mo>&sim;</mo><mi mathvariant="normal">N</mi><mo>(</mo><mn>0</mn><mo>,</mo><mi>I</mi><mo>)</mo><mo>,</mo><mspace width="2em"/><mi>z</mi><mo>=</mo><msub><mi>&mu;</mi><mi>&phi;</mi></msub><mo>(</mo><mi>x</mi><mo>)</mo><mo>+</mo><msub><mi>&sigma;</mi><mi>&phi;</mi></msub><mo>(</mo><mi>x</mi><mo>)</mo><mo>&odot;</mo><mi>&epsilon;</mi></mrow></math>
+        <span class="annotation">Randomness is still present, but it no longer depends on &phi;. For a fixed &epsilon; draw, z is differentiable with respect to &mu; and &sigma;.</span>
+      </div>
+      <p>Think of moving a dice roll to the calculator's input. Each update still sees a random roll, but once the roll is known, turning the <code>&mu;</code> and <code>&sigma;</code> knobs changes <code>z</code> through ordinary arithmetic. The reconstruction signal can therefore flow backward through the decoder, through <code>z</code>, and into the encoder.</p>
+      <figure class="atlas" style="margin-top:28px">
+        <p class="scroll-note">Scroll horizontally to follow the full lesson diagram.</p>
+        <svg viewBox="0 0 920 280" role="img" aria-labelledby="flow-title flow-desc">
+          <title id="flow-title">The differentiable VAE training path and tensor shapes</title>
+          <desc id="flow-desc">An input batch flows to an encoder producing mean and log variance, fixed-source noise combines with them to produce z, a decoder produces distribution parameters for x, and reconstruction plus KL form a scalar ELBO whose gradient reaches both networks.</desc>
+          <defs><marker id="flow-arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0 L8 4 L0 8 Z" fill="#152538"/></marker></defs>
+          <g font-family="Arial, sans-serif" text-anchor="middle">
+            <rect x="22" y="90" width="126" height="76" fill="#fffefa" stroke="#635f7f"/><text x="85" y="120" fill="#152538" font-size="17" font-weight="700">x</text><text x="85" y="144" fill="#647078" font-size="12">[M, D]</text>
+            <line x1="148" y1="128" x2="208" y2="128" stroke="#152538" stroke-width="2" marker-end="url(#flow-arrow)"/>
+            <rect x="216" y="66" width="166" height="124" fill="#edf2f0" stroke="#285e69"/><text x="299" y="101" fill="#152538" font-size="17" font-weight="700">encoder qφ</text><text x="299" y="132" fill="#285e69" font-size="14">μ [M,J]</text><text x="299" y="157" fill="#8a432f" font-size="14">log σ² [M,J]</text>
+            <line x1="382" y1="128" x2="454" y2="128" stroke="#152538" stroke-width="2" marker-end="url(#flow-arrow)"/><line x1="434" y1="36" x2="482" y2="98" stroke="#8a432f" stroke-width="2" marker-end="url(#flow-arrow)"/><text x="407" y="29" fill="#8a432f" font-size="13">ε [M,J]</text>
+            <circle cx="505" cy="128" r="52" fill="#f6eee9" stroke="#8a432f"/><text x="505" y="121" fill="#152538" font-size="17" font-weight="700">z=μ+σ⊙ε</text><text x="505" y="147" fill="#647078" font-size="12">[M, J]</text>
+            <line x1="557" y1="128" x2="623" y2="128" stroke="#152538" stroke-width="2" marker-end="url(#flow-arrow)"/>
+            <rect x="631" y="76" width="144" height="104" fill="#edf2f0" stroke="#285e69"/><text x="703" y="113" fill="#152538" font-size="17" font-weight="700">decoder pθ</text><text x="703" y="142" fill="#647078" font-size="12">outputs [M, D]</text>
+            <line x1="775" y1="128" x2="823" y2="128" stroke="#152538" stroke-width="2" marker-end="url(#flow-arrow)"/><rect x="831" y="85" width="70" height="86" fill="#fffefa" stroke="#635f7f"/><text x="866" y="119" fill="#152538" font-size="16" font-weight="700">ELBO</text><text x="866" y="145" fill="#647078" font-size="12">scalar</text>
+            <path d="M866 181 C850 245 304 258 299 200" fill="none" stroke="#285e69" stroke-width="2" stroke-dasharray="5 6" marker-end="url(#flow-arrow)"/><text x="582" y="246" fill="#285e69" font-size="13">gradient path through the sampled z</text>
+          </g>
+        </svg>
+        <figcaption><span class="figure-label">Lesson diagram.</span> Shape compatibility makes the trick concrete: <code>&mu;</code>, <code>&sigma;</code>, and <code>&epsilon;</code> all have latent shape <code>[M,J]</code>; the ELBO becomes one scalar whose gradient reaches both parameter sets.</figcaption>
+      </figure>
+    </section>
+
+    <section id="traces">
+      <h2>6. Two complete worked traces</h2>
+      <p>These are lesson-only arithmetic examples, not measurements reported by the paper. Each follows one binary observation through reparameterization, reconstruction likelihood, KL, and the final ELBO. For a Bernoulli decoder and binary vector <code>x</code>, reconstruction is:</p>
+      <div class="math-block"><math display="block" aria-label="Sum over data dimensions of x d log y d plus one minus x d times log one minus y d"><mrow><munderover><mo>&sum;</mo><mrow><mi>d</mi><mo>=</mo><mn>1</mn></mrow><mi>D</mi></munderover><mo>[</mo><msub><mi>x</mi><mi>d</mi></msub><mi mathvariant="normal">log</mi><msub><mi>y</mi><mi>d</mi></msub><mo>+</mo><mo>(</mo><mn>1</mn><mo>-</mo><msub><mi>x</mi><mi>d</mi></msub><mo>)</mo><mi mathvariant="normal">log</mi><mo>(</mo><mn>1</mn><mo>-</mo><msub><mi>y</mi><mi>d</mi></msub><mo>)</mo><mo>]</mo></mrow></math></div>
+      <div class="trace-grid">
+        <article class="worked">
+          <span class="kicker">Worked trace A - modest information</span><h3>One stochastic pass, end to end</h3>
+          <p>Let the observation, encoder outputs, and noise draw be:</p>
+          <div class="math-block"><math display="block" aria-label="x is the row vector one zero one; mu is zero point two negative zero point one; sigma is zero point eight one point two; epsilon is zero point five negative one"><mtable columnalign="right left" rowspacing=".35em"><mtr><mtd><mi>x</mi><mo>=</mo></mtd><mtd><mo>[</mo><mtable columnspacing=".5em"><mtr><mtd><mn>1</mn></mtd><mtd><mn>0</mn></mtd><mtd><mn>1</mn></mtd></mtr></mtable><mo>]</mo></mtd></mtr><mtr><mtd><mi>&mu;</mi><mo>=</mo></mtd><mtd><mo>[</mo><mtable columnspacing=".5em"><mtr><mtd><mn>0.2</mn></mtd><mtd><mo>-</mo><mn>0.1</mn></mtd></mtr></mtable><mo>]</mo></mtd></mtr><mtr><mtd><mi>&sigma;</mi><mo>=</mo></mtd><mtd><mo>[</mo><mtable columnspacing=".5em"><mtr><mtd><mn>0.8</mn></mtd><mtd><mn>1.2</mn></mtd></mtr></mtable><mo>]</mo></mtd></mtr><mtr><mtd><mi>&epsilon;</mi><mo>=</mo></mtd><mtd><mo>[</mo><mtable columnspacing=".5em"><mtr><mtd><mn>0.5</mn></mtd><mtd><mo>-</mo><mn>1.0</mn></mtd></mtr></mtable><mo>]</mo></mtd></mtr></mtable></math></div>
+          <ol>
+            <li><strong>Reparameterize:</strong><div class="math-block"><math display="block" aria-label="z equals vector zero point two plus zero point eight times zero point five, negative zero point one plus one point two times negative one, which equals zero point six negative one point three"><mtable columnalign="right left" rowspacing=".35em"><mtr><mtd><mi>z</mi><mo>=</mo></mtd><mtd><mo>[</mo><mtable columnspacing=".5em"><mtr><mtd><mn>0.2</mn><mo>+</mo><mn>0.8</mn><mo>(</mo><mn>0.5</mn><mo>)</mo></mtd><mtd><mo>-</mo><mn>0.1</mn><mo>+</mo><mn>1.2</mn><mo>(</mo><mo>-</mo><mn>1</mn><mo>)</mo></mtd></mtr></mtable><mo>]</mo></mtd></mtr><mtr><mtd><mo>=</mo></mtd><mtd><mo>[</mo><mtable columnspacing=".5em"><mtr><mtd><mn>0.6</mn></mtd><mtd><mo>-</mo><mn>1.3</mn></mtd></mtr></mtable><mo>]</mo></mtd></mtr></mtable></math></div></li>
+            <li><strong>Decode:</strong> suppose the decoder outputs Bernoulli probabilities:<div class="math-block"><math display="block" aria-label="y is the row vector zero point eight zero point three zero point six five"><mrow><mi>y</mi><mo>=</mo><mo>[</mo><mtable columnspacing=".5em"><mtr><mtd><mn>0.80</mn></mtd><mtd><mn>0.30</mn></mtd><mtd><mn>0.65</mn></mtd></mtr></mtable><mo>]</mo></mrow></math></div></li>
+            <li><strong>Reconstruct:</strong><div class="math-block"><math display="block" aria-label="log zero point eight plus log one minus zero point three plus log zero point six five equals negative one point zero one one"><mtable columnalign="right left" rowspacing=".35em"><mtr><mtd><mi mathvariant="normal">log</mi><msub><mi>p</mi><mi>&theta;</mi></msub><mo>(</mo><mi>x</mi><mo>|</mo><mi>z</mi><mo>)</mo><mo>=</mo></mtd><mtd><mi mathvariant="normal">log</mi><mn>0.80</mn><mo>+</mo><mi mathvariant="normal">log</mi><mo>(</mo><mn>1</mn><mo>-</mo><mn>0.30</mn><mo>)</mo><mo>+</mo><mi mathvariant="normal">log</mi><mn>0.65</mn></mtd></mtr><mtr><mtd><mo>=</mo></mtd><mtd><mo>-</mo><mn>0.223</mn><mo>-</mo><mn>0.357</mn><mo>-</mo><mn>0.431</mn></mtd></mtr><mtr><mtd><mo>=</mo></mtd><mtd><mo>-</mo><mn>1.011</mn></mtd></mtr></mtable></math></div></li>
+            <li><strong>KL dimension 1:</strong><div class="math-block"><math display="block" aria-label="one half times zero point two squared plus zero point eight squared minus log zero point eight squared minus one equals zero point zero six three"><mrow><mfrac><mn>1</mn><mn>2</mn></mfrac><mo>(</mo><msup><mn>0.2</mn><mn>2</mn></msup><mo>+</mo><msup><mn>0.8</mn><mn>2</mn></msup><mo>-</mo><mi mathvariant="normal">log</mi><msup><mn>0.8</mn><mn>2</mn></msup><mo>-</mo><mn>1</mn><mo>)</mo><mo>=</mo><mn>0.063</mn></mrow></math></div></li>
+            <li><strong>KL dimension 2:</strong><div class="math-block"><math display="block" aria-label="one half times negative zero point one squared plus one point two squared minus log one point two squared minus one equals zero point zero four three"><mrow><mfrac><mn>1</mn><mn>2</mn></mfrac><mo>(</mo><msup><mrow><mo>(</mo><mo>-</mo><mn>0.1</mn><mo>)</mo></mrow><mn>2</mn></msup><mo>+</mo><msup><mn>1.2</mn><mn>2</mn></msup><mo>-</mo><mi mathvariant="normal">log</mi><msup><mn>1.2</mn><mn>2</mn></msup><mo>-</mo><mn>1</mn><mo>)</mo><mo>=</mo><mn>0.043</mn></mrow></math></div> Total KL is <code>0.106</code>.</li>
+          </ol>
+          <div class="total"><strong>ELBO:</strong><div class="math-block"><math display="block" aria-label="negative one point zero one one minus zero point one zero six equals negative one point one one seven"><mrow><mo>-</mo><mn>1.011</mn><mo>-</mo><mn>0.106</mn><mo>=</mo><mo>-</mo><mn>1.117</mn></mrow></math></div> Maximization prefers a less negative value.</div>
+        </article>
+        <article class="worked">
+          <span class="kicker">Worked trace B - information earns its cost</span><h3>A sharper cloud reconstructs better</h3>
+          <p>Use the same observation, but let the encoder outputs and noise draw be:</p>
+          <div class="math-block"><math display="block" aria-label="x is the row vector one zero one; mu is one negative zero point five; sigma is zero point five zero point seven; epsilon is negative zero point four one"><mtable columnalign="right left" rowspacing=".35em"><mtr><mtd><mi>x</mi><mo>=</mo></mtd><mtd><mo>[</mo><mtable columnspacing=".5em"><mtr><mtd><mn>1</mn></mtd><mtd><mn>0</mn></mtd><mtd><mn>1</mn></mtd></mtr></mtable><mo>]</mo></mtd></mtr><mtr><mtd><mi>&mu;</mi><mo>=</mo></mtd><mtd><mo>[</mo><mtable columnspacing=".5em"><mtr><mtd><mn>1.0</mn></mtd><mtd><mo>-</mo><mn>0.5</mn></mtd></mtr></mtable><mo>]</mo></mtd></mtr><mtr><mtd><mi>&sigma;</mi><mo>=</mo></mtd><mtd><mo>[</mo><mtable columnspacing=".5em"><mtr><mtd><mn>0.5</mn></mtd><mtd><mn>0.7</mn></mtd></mtr></mtable><mo>]</mo></mtd></mtr><mtr><mtd><mi>&epsilon;</mi><mo>=</mo></mtd><mtd><mo>[</mo><mtable columnspacing=".5em"><mtr><mtd><mo>-</mo><mn>0.4</mn></mtd><mtd><mn>1.0</mn></mtd></mtr></mtable><mo>]</mo></mtd></mtr></mtable></math></div>
+          <ol>
+            <li><strong>Reparameterize:</strong><div class="math-block"><math display="block" aria-label="z equals vector one plus zero point five times negative zero point four, negative zero point five plus zero point seven times one, which equals zero point eight zero point two"><mtable columnalign="right left" rowspacing=".35em"><mtr><mtd><mi>z</mi><mo>=</mo></mtd><mtd><mo>[</mo><mtable columnspacing=".5em"><mtr><mtd><mn>1</mn><mo>+</mo><mn>0.5</mn><mo>(</mo><mo>-</mo><mn>0.4</mn><mo>)</mo></mtd><mtd><mo>-</mo><mn>0.5</mn><mo>+</mo><mn>0.7</mn><mo>(</mo><mn>1</mn><mo>)</mo></mtd></mtr></mtable><mo>]</mo></mtd></mtr><mtr><mtd><mo>=</mo></mtd><mtd><mo>[</mo><mtable columnspacing=".5em"><mtr><mtd><mn>0.8</mn></mtd><mtd><mn>0.2</mn></mtd></mtr></mtable><mo>]</mo></mtd></mtr></mtable></math></div></li>
+            <li><strong>Decode:</strong> suppose this code yields:<div class="math-block"><math display="block" aria-label="y is the row vector zero point nine two zero point zero eight zero point eight eight"><mrow><mi>y</mi><mo>=</mo><mo>[</mo><mtable columnspacing=".5em"><mtr><mtd><mn>0.92</mn></mtd><mtd><mn>0.08</mn></mtd><mtd><mn>0.88</mn></mtd></mtr></mtable><mo>]</mo></mrow></math></div></li>
+            <li><strong>Reconstruct:</strong><div class="math-block"><math display="block" aria-label="log zero point nine two plus log one minus zero point zero eight plus log zero point eight eight equals negative zero point two nine five"><mtable columnalign="right left" rowspacing=".35em"><mtr><mtd><mi mathvariant="normal">log</mi><msub><mi>p</mi><mi>&theta;</mi></msub><mo>(</mo><mi>x</mi><mo>|</mo><mi>z</mi><mo>)</mo><mo>=</mo></mtd><mtd><mi mathvariant="normal">log</mi><mn>0.92</mn><mo>+</mo><mi mathvariant="normal">log</mi><mo>(</mo><mn>1</mn><mo>-</mo><mn>0.08</mn><mo>)</mo><mo>+</mo><mi mathvariant="normal">log</mi><mn>0.88</mn></mtd></mtr><mtr><mtd><mo>=</mo></mtd><mtd><mo>-</mo><mn>0.083</mn><mo>-</mo><mn>0.083</mn><mo>-</mo><mn>0.128</mn></mtd></mtr><mtr><mtd><mo>=</mo></mtd><mtd><mo>-</mo><mn>0.295</mn></mtd></mtr></mtable></math></div></li>
+            <li><strong>KL dimension 1:</strong><div class="math-block"><math display="block" aria-label="one half times one squared plus zero point five squared minus log zero point five squared minus one equals zero point eight one eight"><mrow><mfrac><mn>1</mn><mn>2</mn></mfrac><mo>(</mo><msup><mn>1</mn><mn>2</mn></msup><mo>+</mo><msup><mn>0.5</mn><mn>2</mn></msup><mo>-</mo><mi mathvariant="normal">log</mi><msup><mn>0.5</mn><mn>2</mn></msup><mo>-</mo><mn>1</mn><mo>)</mo><mo>=</mo><mn>0.818</mn></mrow></math></div></li>
+            <li><strong>KL dimension 2:</strong><div class="math-block"><math display="block" aria-label="one half times negative zero point five squared plus zero point seven squared minus log zero point seven squared minus one equals zero point two two seven"><mrow><mfrac><mn>1</mn><mn>2</mn></mfrac><mo>(</mo><msup><mrow><mo>(</mo><mo>-</mo><mn>0.5</mn><mo>)</mo></mrow><mn>2</mn></msup><mo>+</mo><msup><mn>0.7</mn><mn>2</mn></msup><mo>-</mo><mi mathvariant="normal">log</mi><msup><mn>0.7</mn><mn>2</mn></msup><mo>-</mo><mn>1</mn><mo>)</mo><mo>=</mo><mn>0.227</mn></mrow></math></div> Total KL is <code>1.045</code>.</li>
+          </ol>
+          <div class="total"><strong>ELBO:</strong><div class="math-block"><math display="block" aria-label="negative zero point two nine five minus one point zero four five equals negative one point three four zero"><mrow><mo>-</mo><mn>0.295</mn><mo>-</mo><mn>1.045</mn><mo>=</mo><mo>-</mo><mn>1.340</mn></mrow></math></div> Despite a much larger KL bill, this beats a prior-like cloud with:</div>
+          <div class="math-block"><math display="block" aria-label="mu zero zero, sigma one one, decoder probabilities zero point five five zero point four five zero point five five, reconstruction three log zero point five five equals negative one point seven nine three, and KL zero"><mtable columnalign="right left" rowspacing=".35em"><mtr><mtd><mi>&mu;</mi><mo>=</mo></mtd><mtd><mo>[</mo><mtable columnspacing=".5em"><mtr><mtd><mn>0</mn></mtd><mtd><mn>0</mn></mtd></mtr></mtable><mo>]</mo></mtd></mtr><mtr><mtd><mi>&sigma;</mi><mo>=</mo></mtd><mtd><mo>[</mo><mtable columnspacing=".5em"><mtr><mtd><mn>1</mn></mtd><mtd><mn>1</mn></mtd></mtr></mtable><mo>]</mo></mtd></mtr><mtr><mtd><mi>y</mi><mo>=</mo></mtd><mtd><mo>[</mo><mtable columnspacing=".5em"><mtr><mtd><mn>0.55</mn></mtd><mtd><mn>0.45</mn></mtd><mtd><mn>0.55</mn></mtd></mtr></mtable><mo>]</mo></mtd></mtr><mtr><mtd><mi mathvariant="normal">reconstruction</mi><mo>=</mo></mtd><mtd><mn>3</mn><mi mathvariant="normal">log</mi><mn>0.55</mn><mo>=</mo><mo>-</mo><mn>1.793</mn></mtd></mtr><mtr><mtd><mi mathvariant="normal">KL</mi><mo>=</mo></mtd><mtd><mn>0</mn></mtd></mtr></mtable></math></div>
+        </article>
+      </div>
+      <aside class="reading-note"><strong>What the comparison teaches.</strong> Trace B does not beat Trace A; their lesson-only decoder outputs differ, and Trace A's ELBO is higher. The final comparison in Trace B is instead against a deliberately uninformative prior-like candidate. This is the correct ELBO question: does the reconstruction improvement justify the KL information cost?</aside>
+      <h3>Interactive instrument: hold the noise draw still</h3>
+      <p>Before moving a control, predict what happens when <code>&sigma;</code> shrinks while <code>&mu;</code> and <code>&epsilon;</code> stay fixed. The sample moves toward <code>&mu;</code>, but the KL penalty generally rises as the cloud becomes narrower than the unit prior.</p>
+      <div class="instrument" aria-labelledby="instrument-title">
+        <div class="instrument-head"><div><span class="instrument-tag">Lesson diagram and calculator</span><h3 id="instrument-title">One-dimensional reparameterization trace</h3></div><span class="shape">x=1, p(x=1|z)=sigmoid(1.8z)</span></div>
+        <div class="controls">
+          <div class="control"><label for="mu">Mean &mu; <output id="mu-out" for="mu">0.20</output></label><input id="mu" type="range" min="-2" max="2" step="0.05" value="0.2"></div>
+          <div class="control"><label for="sigma">Scale &sigma; <output id="sigma-out" for="sigma">0.80</output></label><input id="sigma" type="range" min="0.2" max="1.8" step="0.05" value="0.8"></div>
+          <div class="control"><label for="epsilon">Fixed noise &epsilon; <output id="epsilon-out" for="epsilon">0.50</output></label><input id="epsilon" type="range" min="-2.5" max="2.5" step="0.05" value="0.5"></div>
+        </div>
+        <div class="latent-line" aria-hidden="true"><div class="prior-band"></div><div class="sample-pin" id="sample-pin"></div></div>
+        <div class="readout" id="instrument-readout" aria-live="polite"><p><strong>Sample:</strong> z = 0.20 + 0.80(0.50) = 0.60.</p><p><strong>Terms:</strong> reconstruction log-likelihood = -0.292; KL = 0.063; ELBO = -0.356.</p></div>
+        <p class="byline">Static reading at the default: the fixed noise draw places <code>z</code> at <code>0.60</code>. The decoder assigns <code>x=1</code> probability about <code>0.746</code>; subtracting the KL cost gives an ELBO near <code>-0.356</code>.</p>
+      </div>
+      <details><summary>Reveal the prediction</summary><p>With the default <code>&mu;=0.2</code> and <code>&epsilon;=0.5</code>, reducing <code>&sigma;</code> from <code>0.8</code> to <code>0.3</code> moves <code>z</code> from <code>0.60</code> to <code>0.35</code>. In this fixed illustrative decoder, reconstruction gets worse and KL rises sharply because a narrow posterior carries more information than <code>N(0,1)</code>. The ELBO falls. Other decoders can give different reconstruction changes; the KL direction is the durable lesson.</p></details>
+    </section>
+
+    <section>
+      <h2>7. The minibatch algorithm is now ordinary</h2>
+      <p>Once the expectation is reparameterized, AEVB looks like a familiar stochastic training loop. The paper's Algorithm 1 uses minibatches of <code>M=100</code> and one latent sample per datapoint (<code>L=1</code>) in its experiments:</p>
+      <ol><li>Draw a minibatch <code>X<sub>M</sub></code>.</li><li>Encode each input into <code>&mu;</code> and <code>&sigma;</code>.</li><li>Draw standard-normal <code>&epsilon;</code> and form <code>z=&mu;+&sigma;&odot;&epsilon;</code>.</li><li>Decode <code>z</code> and estimate the reconstruction term.</li><li>Compute the analytic Gaussian KL term.</li><li>Differentiate the minibatch ELBO with respect to both <code>&theta;</code> and <code>&phi;</code>, then update them with a stochastic optimizer.</li></ol>
+      <aside class="scope"><strong>Do not overgeneralize <code>L=1</code>.</strong> The authors report that one sample per datapoint worked when the minibatch was sufficiently large in their experiments. That is an empirical setting, not a theorem that one sample is always enough.</aside>
+    </section>
+
+    <section id="evidence">
+      <h2>8. Read the original evidence at the right scale</h2>
+      <p>The paper evaluates on MNIST and Frey Face using simple multilayer perceptron encoders and decoders. Its Figure 2 compares AEVB with wake-sleep across several latent dimensions and reports that AEVB converged considerably faster and reached a better variational lower bound in every displayed setting. Figure 3 adds Monte Carlo EM for low-dimensional MNIST; the paper notes that Monte Carlo EM is not an online method and cannot be efficiently applied to full MNIST.</p>
+      <figure class="source-figure">
+        <img src="original_figure_4_latent_manifolds.png" width="1563" height="1021" alt="Original Figure 4 from the AEVB paper. A grid of decoded Frey Face images changes gradually across two latent coordinates on the left; a denser grid of decoded MNIST digits changes gradually among digit styles and classes on the right.">
+        <figcaption><span class="figure-label">Original paper figure</span> Figure 4 (paper p. 10). The authors linearly spaced points on a unit square, transformed each coordinate through the inverse Gaussian CDF to obtain latent values, and decoded each value with <code>p<sub>&theta;</sub>(x|z)</code>. Read rows and columns as latent traversals: nearby coordinates tend to decode to nearby-looking faces or digits. This is qualitative evidence of a navigable two-dimensional manifold, not proof that every coordinate has an independent human meaning.</figcaption>
+      </figure>
+      <div class="two-col">
+        <article><span class="kicker">What the evidence supports</span><p>The estimator enabled joint stochastic training of a probabilistic encoder and decoder, optimized the displayed lower bounds more effectively than wake-sleep, and produced interpretable two-dimensional decoded traversals on these datasets.</p></article>
+        <article><span class="kicker">What it does not establish</span><p>It does not show modern image fidelity, guaranteed disentanglement, a universally smooth latent space, or superiority to every later generative model. Figure 4 is a selected low-dimensional visualization.</p></article>
+      </div>
+    </section>
+
+    <section>
+      <h2>9. Limits and misconception diagnostics</h2>
+      <p>The paper's central estimator assumes continuous latent variables that can be expressed through a differentiable transformation of parameter-free noise. The diagonal-Gaussian posterior used in its VAE example is a simplifying modeling choice; it can be too rigid when the true posterior is multimodal or strongly correlated.</p>
+      <div class="misconceptions">
+        <details><summary>"A VAE is an autoencoder with noise added."</summary><p>Incomplete. The defining package is a generative model, a probabilistic encoder, a prior, the ELBO, and reparameterized stochastic optimization. Noise alone does not organize a sampleable latent space.</p></details>
+        <details><summary>"The KL term makes every input equal to N(0,1)."</summary><p>No. It charges for deviation on each datapoint, while reconstruction rewards informative deviations. The aggregate result is a trade-off, not identical posteriors for all inputs.</p></details>
+        <details><summary>"Reparameterization removes randomness."</summary><p>No. It relocates randomness to <code>&epsilon;</code>. The sample remains random across draws; the path from encoder outputs to that sample becomes differentiable for a fixed draw.</p></details>
+        <details><summary>"The ELBO is the exact log-likelihood."</summary><p>No. The gap is <code>D<sub>KL</sub>(q<sub>&phi;</sub>(z|x) || p<sub>&theta;</sub>(z|x))</code>. The bound is tight only when the approximate posterior matches the true posterior.</p></details>
+        <details><summary>"Reconstruction always means mean squared error."</summary><p>No. It is a log-likelihood under the chosen decoder distribution. The paper uses Bernoulli outputs for binary data and Gaussian outputs for real-valued data.</p></details>
+        <details><summary>"A smooth grid proves disentangled factors."</summary><p>No. Smooth local changes are compatible with entangled coordinates. The original paper does not claim that each latent dimension independently names a human concept.</p></details>
+      </div>
+      <aside class="scope"><strong>Historical scope.</strong> Wake-sleep can also handle discrete latent variables, which the paper identifies as an advantage. AEVB's showcased path is for continuous latent variables, early image benchmarks, and shallow MLPs. Later work extends or changes each of those choices.</aside>
+    </section>
+
+    <section>
+      <h2>10. Active recall - answers included</h2>
+      <details><summary>Why can an ordinary autoencoder reconstruct well but sample poorly?</summary><p>Its decoder is trained only on codes produced by its encoder. Reconstruction alone does not constrain arbitrary latent points or gaps between codes to represent plausible data.</p></details>
+      <details><summary>What are the two terms of the ELBO, in plain language?</summary><p>An expected reconstruction log-likelihood asks whether sampled latent codes explain the observation; a KL cost asks how far the approximate posterior moves from the prior. The ELBO is reconstruction minus that cost.</p></details>
+      <details><summary>What exactly does the encoder output in the Gaussian example?</summary><p>One mean and one scale (often represented as log variance) for each of <code>J</code> latent dimensions. It parameterizes a distribution rather than emitting the final random sample directly.</p></details>
+      <details><summary>Why does z=&mu;+&sigma;&odot;&epsilon; help gradients?</summary><p>The noise distribution no longer depends on encoder parameters. For a fixed <code>&epsilon;</code>, <code>z</code> is differentiable with respect to <code>&mu;</code> and <code>&sigma;</code>, so reconstruction gradients can reach the encoder.</p></details>
+      <details><summary>What does Figure 4 show, and what does it not show?</summary><p>It shows that nearby points on selected two-dimensional latent grids decode into gradually changing faces and digits. It does not prove disentanglement, uniform sample quality, or modern image fidelity.</p></details>
+    </section>
+
+    <section>
+      <h2>Connect it to your mental map</h2>
+      <div class="map-grid">
+        <article><span class="kicker">GANs</span><h3>Same entrance, different training signal</h3><p>Both can begin with a latent draw and end with a generated sample. A GAN learns through an adversarial discriminator; a VAE learns an explicit likelihood lower bound and also provides an encoder for approximate inference.</p></article>
+        <article><span class="kicker">Adam</span><h3>Estimator before optimizer</h3><p>Reparameterization makes a usable stochastic gradient estimator available. Adam can then scale and accumulate those gradients; it does not solve the latent-variable inference problem itself.</p></article>
+        <article><span class="kicker">DPO</span><h3>KL appears, but plays another role</h3><p>Both lessons use KL to control departure from a reference distribution. In AEVB, each approximate posterior is compared with a latent prior; in DPO, a trainable policy is regularized relative to a reference policy. The objects and objectives are different.</p></article>
+      </div>
+    </section>
+
+    <section>
+      <h2>Takeaway</h2>
+      <p class="takeaway">A VAE is a learned probabilistic atlas. The encoder places each observation as a cloud on a shared prior map; the decoder learns what coordinates mean. The ELBO makes information pay rent through KL, and reparameterization keeps the sampled route differentiable enough to train with ordinary stochastic gradients.</p>
+    </section>
+
+    <footer>
+      <h2>Source and further exploration</h2>
+      <ul>
+        <li><a href="auto_encoding_variational_bayes.pdf">Local paper PDF - Kingma and Welling, <cite>Auto-Encoding Variational Bayes</cite></a></li>
+        <li><a href="https://arxiv.org/abs/1312.6114">Canonical arXiv record and version history</a></li>
+      </ul>
+    </footer>
+  </main>
+  <script>
+    (() => {
+      const mu=document.getElementById('mu'),sigma=document.getElementById('sigma'),epsilon=document.getElementById('epsilon');
+      const muOut=document.getElementById('mu-out'),sigmaOut=document.getElementById('sigma-out'),epsilonOut=document.getElementById('epsilon-out');
+      const pin=document.getElementById('sample-pin'),readout=document.getElementById('instrument-readout');
+      const fixed=value=>Number(value).toFixed(2);
+      const update=()=>{
+        const m=Number(mu.value),s=Number(sigma.value),e=Number(epsilon.value),z=m+s*e;
+        const probability=1/(1+Math.exp(-1.8*z)),reconstruction=Math.log(probability);
+        const kl=.5*(m*m+s*s-Math.log(s*s)-1),elbo=reconstruction-kl;
+        const clamped=Math.max(-4,Math.min(4,z)),left=((clamped+4)/8)*100;
+        muOut.textContent=fixed(m);sigmaOut.textContent=fixed(s);epsilonOut.textContent=fixed(e);pin.style.left=`${left}%`;
+        readout.innerHTML=`<p><strong>Sample:</strong> z = ${fixed(m)} + ${fixed(s)}(${fixed(e)}) = ${fixed(z)}.</p><p><strong>Terms:</strong> reconstruction log-likelihood = ${fixed(reconstruction)}; KL = ${fixed(kl)}; ELBO = ${fixed(elbo)}.</p>`;
+      };
+      [mu,sigma,epsilon].forEach(control=>control.addEventListener('input',update));update();
+    })();
+  </script>
+</body>
+</html>

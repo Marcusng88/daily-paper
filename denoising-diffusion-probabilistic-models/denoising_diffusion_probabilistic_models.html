@@ -1,0 +1,681 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="A one-hour university lesson on Denoising Diffusion Probabilistic Models by Ho, Jain, and Abbeel.">
+  <title>Denoising Diffusion Probabilistic Models — a one-hour lesson</title>
+  <style>
+    :root {
+      --paper: #eeece4;
+      --paper-lit: #faf9f4;
+      --ink: #17212a;
+      --muted: #5a646b;
+      --rule: #aeb2af;
+      --darkroom: #101920;
+      --darkroom-2: #1d2a33;
+      --silver: #cbd4d6;
+      --forward: #a85e3b;
+      --forward-soft: #f1ded2;
+      --reverse: #286379;
+      --reverse-soft: #dbe8eb;
+      --focus: #d5a43c;
+      --serif: Baskerville, "Iowan Old Style", "Palatino Linotype", "Times New Roman", serif;
+      --sans: "Avenir Next", "Gill Sans", "Helvetica Neue", Arial, sans-serif;
+      --mono: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body { margin: 0; color: var(--ink); background: var(--paper); font: 18px/1.68 var(--serif); }
+    a { color: var(--reverse); text-underline-offset: .18em; }
+    a:hover { color: var(--forward); }
+    a:focus-visible, button:focus-visible, input:focus-visible, summary:focus-visible {
+      outline: 3px solid var(--focus);
+      outline-offset: 4px;
+    }
+    .wrap { width: min(1060px, calc(100% - 42px)); margin-inline: auto; }
+    .reading { max-width: 760px; }
+    .home {
+      display: inline-block;
+      margin: 22px 0 36px;
+      color: var(--ink);
+      text-decoration: none;
+      font: 700 .74rem/1 var(--sans);
+      letter-spacing: .06em;
+      text-transform: uppercase;
+    }
+    .darkroom {
+      position: relative;
+      overflow: hidden;
+      color: #f5f6f2;
+      background: var(--darkroom);
+      border-top: 9px solid #090f14;
+      border-bottom: 1px solid #53636d;
+    }
+    .darkroom::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      opacity: .2;
+      background-image:
+        radial-gradient(circle at 17% 21%, #fff 0 1px, transparent 1.5px),
+        radial-gradient(circle at 77% 63%, #fff 0 1px, transparent 1.5px);
+      background-size: 31px 37px, 43px 47px;
+    }
+    .hero {
+      position: relative;
+      z-index: 1;
+      display: grid;
+      grid-template-columns: minmax(0, 1.25fr) minmax(250px, .75fr);
+      gap: clamp(34px, 7vw, 86px);
+      align-items: end;
+      padding: 62px 0 46px;
+    }
+    .kicker, .section-label, .frame-label, .route-time, .micro-label {
+      font: 700 .7rem/1.3 var(--sans);
+      letter-spacing: .11em;
+      text-transform: uppercase;
+    }
+    .kicker { color: #e2ad89; }
+    h1, h2, h3, h4 { margin: 0; line-height: 1.09; }
+    h1 { max-width: 12ch; margin-top: 14px; font-size: clamp(3.2rem, 8vw, 6.7rem); font-weight: 400; letter-spacing: -.055em; }
+    h2 { max-width: 24ch; font-size: clamp(2rem, 4.6vw, 3.55rem); font-weight: 400; letter-spacing: -.035em; }
+    h3 { margin-top: 28px; font-size: 1.35rem; }
+    h4 { margin-top: 18px; font: 700 1rem/1.3 var(--sans); }
+    .dek { max-width: 41rem; margin: 24px 0 0; color: var(--silver); font-size: 1.2rem; }
+    .hero-note { padding: 18px 0 4px 22px; border-left: 4px solid var(--forward); color: var(--silver); }
+    .hero-note strong { display: block; margin-bottom: 8px; color: #efbc98; font-family: var(--sans); }
+    .byline { margin: 20px 0 0; color: #aebbc0; font-size: .86rem; }
+    .contact-figure { position: relative; z-index: 1; margin: 0 auto; padding-bottom: 44px; }
+    .contact-sheet { display: grid; grid-template-columns: repeat(8, 1fr); gap: 7px; }
+    .contact-frame { position: relative; aspect-ratio: 1; overflow: hidden; border: 1px solid #71808a; background: #d4d6d1; }
+    .contact-frame::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse at 52% 54%, #263d49 0 15%, #75909b 16% 32%, #d7c8ad 33% 51%, transparent 52%);
+      filter: blur(var(--blur));
+      opacity: var(--signal);
+    }
+    .contact-frame::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background-image:
+        repeating-linear-gradient(17deg, transparent 0 3px, rgba(255,255,255,.58) 3px 4px),
+        repeating-linear-gradient(101deg, rgba(15,27,36,.52) 0 2px, transparent 2px 5px);
+      opacity: var(--noise);
+      mix-blend-mode: hard-light;
+    }
+    .contact-frame:nth-child(1) { --signal: .03; --noise: .98; --blur: 20px; }
+    .contact-frame:nth-child(2) { --signal: .08; --noise: .88; --blur: 18px; }
+    .contact-frame:nth-child(3) { --signal: .16; --noise: .74; --blur: 15px; }
+    .contact-frame:nth-child(4) { --signal: .3; --noise: .58; --blur: 12px; }
+    .contact-frame:nth-child(5) { --signal: .48; --noise: .42; --blur: 8px; }
+    .contact-frame:nth-child(6) { --signal: .68; --noise: .28; --blur: 5px; }
+    .contact-frame:nth-child(7) { --signal: .84; --noise: .15; --blur: 2px; }
+    .contact-frame:nth-child(8) { --signal: 1; --noise: .04; --blur: 0; }
+    .contact-frame span { position: absolute; z-index: 2; left: 6px; bottom: 5px; color: #fff; font: 700 .61rem var(--mono); text-shadow: 0 1px 3px #000; }
+    .contact-figure figcaption { color: #aebbc0; }
+
+    main { padding: 16px 0 80px; }
+    section { padding: 58px 0; border-bottom: 1px solid var(--rule); }
+    .section-label { display: block; margin-bottom: 14px; color: var(--forward); }
+    p, ul, ol { max-width: 49rem; }
+    .lead { max-width: 48rem; font-size: 1.18rem; }
+    .route { display: grid; grid-template-columns: repeat(7, 1fr); margin: 28px 0 0; padding: 0; list-style: none; border-top: 4px solid var(--ink); }
+    .route li { min-height: 110px; padding: 13px 11px; border-right: 1px solid var(--rule); border-bottom: 1px solid var(--ink); font: .78rem/1.43 var(--sans); }
+    .route li:last-child { border-right: 0; }
+    .route-time { display: block; margin-bottom: 8px; color: var(--reverse); }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 34px; margin-top: 30px; }
+    .grid-2 > * { min-width: 0; }
+    .bridge { padding-top: 15px; border-top: 4px solid var(--reverse); }
+    .bridge:nth-child(even) { border-top-color: var(--forward); }
+    .analogy { margin: 29px 0; padding: 18px 20px; background: var(--paper-lit); border-left: 4px solid var(--forward); }
+    .analogy strong { font-family: var(--sans); }
+    .spine { margin: 30px 0 0; padding: 0; list-style: none; counter-reset: spine; }
+    .spine li { position: relative; max-width: 49rem; margin-left: 17px; padding: 0 0 21px 32px; border-left: 2px solid var(--rule); }
+    .spine li:last-child { border-left-color: transparent; }
+    .spine li::before {
+      counter-increment: spine;
+      content: counter(spine);
+      position: absolute;
+      left: -17px;
+      top: -2px;
+      display: grid;
+      width: 32px;
+      height: 32px;
+      place-items: center;
+      color: #fff;
+      background: var(--darkroom-2);
+      border-radius: 50%;
+      font: 700 .72rem var(--sans);
+    }
+    .spine strong { font-family: var(--sans); color: var(--reverse); }
+    table { width: 100%; margin-top: 26px; border-collapse: collapse; }
+    th, td { padding: 11px 9px; text-align: left; vertical-align: top; border-bottom: 1px solid var(--rule); }
+    th { color: var(--muted); font: 700 .72rem/1.35 var(--sans); letter-spacing: .05em; text-transform: uppercase; }
+    .symbols th:nth-child(1) { width: 17%; }
+    .symbols th:nth-child(3) { width: 24%; }
+    .symbols td:first-child { color: var(--reverse); font-family: var(--mono); font-size: .88rem; }
+    .equation {
+      max-width: 100%;
+      margin: 24px 0;
+      padding: 18px 10px;
+      overflow-x: auto;
+      border-top: 1px solid var(--rule);
+      border-bottom: 1px solid var(--rule);
+      text-align: center;
+    }
+    .equation math {
+      width: max-content;
+      min-width: min-content;
+      margin: 0 auto;
+      color: var(--ink);
+      font-family: "STIX Two Math", "Cambria Math", "Times New Roman", serif;
+      font-size: 1.08rem;
+      line-height: 1.5;
+    }
+    .equation math mtable { row-gap: .55em; column-gap: .35em; }
+    .inline-math {
+      white-space: nowrap;
+      font-family: "STIX Two Math", "Cambria Math", "Times New Roman", serif;
+      font-size: 1.02em;
+    }
+    .instrument h3 { max-width: 100%; overflow-x: auto; }
+    .instrument h3 math { width: max-content; margin-inline: auto; color: inherit; font-size: 1.05em; }
+    .step { max-width: 49rem; margin: 22px 0; padding-left: 18px; border-left: 3px solid var(--reverse); }
+    .step strong { color: var(--reverse); font-family: var(--sans); }
+    .worked { margin: 32px 0 0; padding: 26px; background: var(--paper-lit); border-top: 4px solid var(--reverse); }
+    .worked .micro-label { color: var(--reverse); }
+    .worked h3 { margin-top: 8px; }
+    .worked-rust { border-top-color: var(--forward); }
+    .worked-rust .micro-label { color: var(--forward); }
+    .aside { max-width: 49rem; padding: 15px 0 15px 19px; border-left: 3px solid var(--forward); color: var(--muted); }
+    figure { margin: 36px 0; }
+    figure img, figure svg { display: block; width: 100%; height: auto; }
+    figure svg { background: var(--paper-lit); border: 1px solid var(--rule); }
+    figcaption { max-width: 51rem; margin-top: 11px; color: var(--muted); font-size: .89rem; }
+    .caption-label { color: var(--ink); font-family: var(--sans); font-weight: 700; }
+    .prediction { max-width: 49rem; margin: 25px 0; padding: 15px 18px; background: var(--forward-soft); border-left: 4px solid var(--forward); }
+    details { max-width: 49rem; padding: 14px 0; border-bottom: 1px solid var(--rule); }
+    summary { cursor: pointer; font-weight: 700; }
+    details p { margin: 9px 0 2px; }
+    .instrument { margin: 34px 0; padding: 28px; color: #f3f5f2; background: var(--darkroom); border-bottom: 7px solid var(--reverse); }
+    .instrument p { color: var(--silver); }
+    .instrument h3 { margin-top: 0; }
+    .instrument .micro-label { color: #e7b18d; }
+    .control { display: grid; grid-template-columns: 175px 1fr 82px; gap: 18px; align-items: center; margin: 25px 0 30px; font-family: var(--sans); }
+    input[type="range"] { width: 100%; accent-color: #79b1c4; }
+    output { color: #a9d5e3; font: 700 .83rem var(--mono); }
+    .mix-lines { display: grid; gap: 16px; }
+    .mix-row { display: grid; grid-template-columns: 178px 1fr 66px; gap: 14px; align-items: center; }
+    .mix-row label, .mix-row span { font: .76rem var(--mono); }
+    .meter { height: 16px; background: #37444c; border-bottom: 1px solid #8b9ba4; }
+    .meter-fill { display: block; height: 100%; width: 0; transition: width .24s ease; }
+    #signal-fill { background: #79b1c4; }
+    #noise-fill { background: #d79068; }
+    .frame-strip { display: grid; grid-template-columns: repeat(6, 1fr); gap: 7px; margin-top: 27px; }
+    .mini-frame { height: 38px; border: 1px solid #5b6972; background: #293640; opacity: .42; }
+    .mini-frame.active { opacity: 1; border-color: #e7c395; box-shadow: inset 0 -5px #e7c395; }
+    .static-reading { font-size: .91rem; }
+    .algorithm { margin-top: 28px; padding: 24px; background: var(--paper-lit); border: 1px solid var(--rule); }
+    .algorithm ol { margin-bottom: 0; }
+    .algorithm li { padding: 4px 0 4px 7px; }
+    .source-figure { padding: 13px; background: #fff; border: 1px solid var(--rule); }
+    .source-figure img { image-rendering: auto; }
+    .figure-reading { display: grid; grid-template-columns: repeat(3, 1fr); gap: 22px; margin-top: 22px; }
+    .figure-reading div { padding-top: 13px; border-top: 3px solid var(--rule); }
+    .figure-reading div:nth-child(1) { border-color: var(--forward); }
+    .figure-reading div:nth-child(3) { border-color: var(--reverse); }
+    .figure-reading strong { display: block; font-family: var(--sans); }
+    .evidence-table td:first-child { width: 30%; font-family: var(--mono); font-size: .86rem; }
+    .scope-note { margin: 24px 0 0; padding: 17px 19px; background: var(--reverse-soft); border-left: 4px solid var(--reverse); }
+    .limits { padding-top: 16px; border-top: 4px solid var(--forward); }
+    .recall { display: grid; grid-template-columns: 1fr 1fr; column-gap: 34px; }
+    .mental-map { padding: 30px; background: var(--paper-lit); border: 1px solid var(--rule); }
+    footer { padding: 44px 0 64px; color: var(--muted); }
+    footer h2 { font-size: 1.65rem; }
+    footer ul { padding-left: 1.15em; }
+
+    @media (max-width: 840px) {
+      .route { grid-template-columns: repeat(4, 1fr); }
+      .route li:nth-child(4) { border-right: 0; }
+      .route li:nth-child(n+5) { border-top: 1px solid var(--rule); }
+    }
+    @media (max-width: 700px) {
+      body { font-size: 17px; }
+      .wrap { width: min(100% - 30px, 1060px); }
+      .hero, .grid-2, .recall { grid-template-columns: 1fr; }
+      .hero-note { margin-top: 7px; }
+      .contact-sheet { grid-template-columns: repeat(4, 1fr); }
+      .route { grid-template-columns: repeat(2, 1fr); }
+      .route li:nth-child(even) { border-right: 0; }
+      .route li:nth-child(n+3) { border-top: 1px solid var(--rule); }
+      .control { grid-template-columns: 1fr 66px; }
+      .control label { grid-column: 1 / -1; }
+      .mix-row { grid-template-columns: 125px 1fr 52px; }
+      .instrument, .worked, .mental-map { padding: 21px 16px; }
+      .figure-reading { grid-template-columns: 1fr; gap: 10px; }
+      .symbols th:nth-child(3) { width: auto; }
+      th, td { padding-inline: 6px; }
+    }
+    @media (max-width: 440px) {
+      .symbols { font-size: .78rem; }
+      .contact-sheet { gap: 4px; }
+      .frame-strip { gap: 4px; }
+      .mini-frame { height: 30px; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+      .meter-fill { transition: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap"><a class="home" href="../index.html">← Daily AI Paper Lab</a></div>
+
+  <header class="darkroom">
+    <div class="wrap hero">
+      <div>
+        <p class="kicker">Generative modelling · noise-time · NeurIPS 2020</p>
+        <h1>Generation begins in the dark.</h1>
+        <p class="dek">Destroy an image with a known sequence of tiny Gaussian errors. Then learn the conditional route back. DDPM turns one difficult act of invention into one thousand local corrections.</p>
+        <p class="byline"><em>Denoising Diffusion Probabilistic Models</em> · Jonathan Ho, Ajay Jain, Pieter Abbeel</p>
+      </div>
+      <aside class="hero-note">
+        <strong>The reversal to remember</strong>
+        The forward process supplies tractable noisy examples and their exact noise. The learned reverse process turns that supervision into a generator.
+      </aside>
+    </div>
+    <figure class="wrap contact-figure">
+      <div class="contact-sheet" aria-label="Conceptual reverse sequence from Gaussian noise to a legible image">
+        <div class="contact-frame"><span>x₁₀₀₀</span></div>
+        <div class="contact-frame"><span>x₈₅₀</span></div>
+        <div class="contact-frame"><span>x₇₀₀</span></div>
+        <div class="contact-frame"><span>x₅₅₀</span></div>
+        <div class="contact-frame"><span>x₄₀₀</span></div>
+        <div class="contact-frame"><span>x₂₅₀</span></div>
+        <div class="contact-frame"><span>x₁₀₀</span></div>
+        <div class="contact-frame"><span>x₀</span></div>
+      </div>
+      <figcaption><span class="caption-label">Lesson diagram.</span> A darkroom contact sheet for the reverse chain. It is conceptual; the paper’s measured progressive samples appear in Section 11.</figcaption>
+    </figure>
+  </header>
+
+  <main class="wrap">
+    <section aria-labelledby="route-title">
+      <span class="section-label">One-hour route</span>
+      <h2 id="route-title">Follow one image into noise and all the way back.</h2>
+      <ol class="route">
+        <li><span class="route-time">0–6 min</span>Frame the modelling problem</li>
+        <li><span class="route-time">6–13 min</span>Build the probability bridge</li>
+        <li><span class="route-time">13–22 min</span>Name actors, symbols, shapes</li>
+        <li><span class="route-time">22–33 min</span>Derive forward and reverse</li>
+        <li><span class="route-time">33–44 min</span>Work two numerical traces</li>
+        <li><span class="route-time">44–52 min</span>Read objective and evidence</li>
+        <li><span class="route-time">52–60 min</span>Diagnose, recall, connect</li>
+      </ol>
+      <p class="lead"><strong>Learning target.</strong> At minute 60, you should be able to derive a noisy sample, explain why predicting noise parameterizes the reverse mean, execute one reverse step, distinguish the true variational bound from <em>L</em><sub>simple</sub>, and interpret Figure 6 without calling it one-shot generation.</p>
+    </section>
+
+    <section aria-labelledby="problem-title">
+      <span class="section-label">1 · The problem</span>
+      <h2 id="problem-title">A useful generator must turn a simple distribution into a complicated one.</h2>
+      <p>A natural image distribution is sharply structured and multimodal; a standard Gaussian is simple to sample. A one-step map from one to the other must discover global layout, object identity, texture, and pixel detail at once. Earlier diffusion models supplied a likelihood-based route, but the paper notes that high-quality image synthesis had not yet been demonstrated with them.</p>
+      <p>Ho, Jain, and Abbeel ask how to make the journey locally learnable. Their answer is to design the destructive path first. If every forward corruption step is known, small, and Gaussian, then learning can focus on reversing local damage rather than inventing a global transformation from scratch.</p>
+      <div class="analogy"><strong>Darkroom analogy.</strong> Imagine photographing the same print after repeatedly fogging the film. You control every exposure, so you know exactly how much structure should remain at each time. A restorer learns from pairs of fogged and clean evidence. Generation begins from a fully fogged plate and applies the learned restoration repeatedly. The analogy is useful because it separates the <em>known damage process</em> from the <em>learned restoration process</em>; unlike a real darkroom, the reverse step is probabilistic and neural.</div>
+    </section>
+
+    <section aria-labelledby="baseline-title">
+      <span class="section-label">2 · From baseline to DDPM</span>
+      <h2 id="baseline-title">Do not ask one network to solve the whole trip in one jump.</h2>
+      <div class="grid-2">
+        <article class="bridge">
+          <h3>Direct global generation</h3>
+          <p>Start with random noise and produce a sample through one global generator. The learning signal must shape the entire transformation at once.</p>
+        </article>
+        <article class="bridge">
+          <h3>Diffusion’s local route</h3>
+          <p>Fix a Markov chain that gradually destroys data. Learn Gaussian reverse conditionals that estimate the distribution of the previous state from the current noisy state and its time.</p>
+        </article>
+      </div>
+      <p>The paper also tests a more specific baseline inside the diffusion family: predict the tractable posterior mean <span aria-label="mu tilde t">μ̃<sub>t</sub></span> directly. Its proposed parameterization predicts the added noise ε instead. Both can represent the reverse mean, but ε-prediction pairs especially well with the simplified objective and gives the paper’s best samples.</p>
+      <div class="scope-note"><strong>The paper’s contribution is not merely “add noise, then remove it.”</strong> The causal chain is: choose a tractable forward process; derive the exact posterior when clean data is known; parameterize the learned reverse mean through a noise predictor; then simplify the weighted variational term into an executable denoising loss.</div>
+    </section>
+
+    <section aria-labelledby="bridge-title">
+      <span class="section-label">3 · Prerequisite bridge</span>
+      <h2 id="bridge-title">Four probability ideas make the mechanism readable.</h2>
+      <div class="grid-2">
+        <article class="bridge"><h3>A Gaussian is mean plus scaled noise</h3><p>If <math class="inline-math" aria-label="y is distributed as a Gaussian with mean mu and covariance sigma squared I"><mi>y</mi><mo>∼</mo><mi mathvariant="normal">N</mi><mo>(</mo><mi>μ</mi><mo>,</mo><msup><mi>σ</mi><mn>2</mn></msup><mi>I</mi><mo>)</mo></math>, write <math class="inline-math" aria-label="y equals mu plus sigma epsilon"><mi>y</mi><mo>=</mo><mi>μ</mi><mo>+</mo><mi>σ</mi><mi>ε</mi></math> with <math class="inline-math" aria-label="epsilon is distributed as a standard Gaussian"><mi>ε</mi><mo>∼</mo><mi mathvariant="normal">N</mi><mo>(</mo><mn>0</mn><mo>,</mo><mi>I</mi><mo>)</mo></math>. This reparameterization exposes which part is predictable and which part is sampled.</p></article>
+        <article class="bridge"><h3>Markov means local dependence</h3><p>The next state depends only on the current state. Forward diffusion uses <math class="inline-math" aria-label="q of x t given x t minus one"><mi>q</mi><mo>(</mo><msub><mi>x</mi><mi>t</mi></msub><mo>|</mo><msub><mi>x</mi><mrow><mi>t</mi><mo>−</mo><mn>1</mn></mrow></msub><mo>)</mo></math>; generation learns <math class="inline-math" aria-label="p theta of x t minus one given x t"><msub><mi>p</mi><mi>θ</mi></msub><mo>(</mo><msub><mi>x</mi><mrow><mi>t</mi><mo>−</mo><mn>1</mn></mrow></msub><mo>|</mo><msub><mi>x</mi><mi>t</mi></msub><mo>)</mo></math>.</p></article>
+        <article class="bridge"><h3>Conditioning can make inference easy</h3><p><math class="inline-math" aria-label="q of x t minus one given x t"><mi>q</mi><mo>(</mo><msub><mi>x</mi><mrow><mi>t</mi><mo>−</mo><mn>1</mn></mrow></msub><mo>|</mo><msub><mi>x</mi><mi>t</mi></msub><mo>)</mo></math> is generally unknown, but <math class="inline-math" aria-label="q of x t minus one given x t and x zero"><mi>q</mi><mo>(</mo><msub><mi>x</mi><mrow><mi>t</mi><mo>−</mo><mn>1</mn></mrow></msub><mo>|</mo><msub><mi>x</mi><mi>t</mi></msub><mo>,</mo><msub><mi>x</mi><mn>0</mn></msub><mo>)</mo></math> is a Gaussian with a closed-form mean and variance. Training knows x<sub>0</sub>.</p></article>
+        <article class="bridge"><h3>KL turns fitting into Gaussian regression</h3><p>With fixed reverse variance, the KL between the tractable posterior and learned Gaussian reduces, up to constants and weights, to squared error between their means.</p></article>
+      </div>
+      <p class="lead"><strong>Self-supervision is already present.</strong> We choose the forward noise ε used to create x<sub>t</sub>. The model therefore gets an exact target without class labels or manual annotation.</p>
+    </section>
+
+    <section aria-labelledby="actors-title">
+      <span class="section-label">4 · Actors, symbols, and shapes</span>
+      <h2 id="actors-title">Name every player before the derivation.</h2>
+      <table class="symbols">
+        <thead><tr><th>Symbol</th><th>Role</th><th>Typical image-batch shape</th></tr></thead>
+        <tbody>
+          <tr><td>x₀</td><td>Clean data sample drawn from q(x<sub>0</sub>).</td><td>B × C × H × W</td></tr>
+          <tr><td>xₜ</td><td>The same sample after t forward corruption steps.</td><td>B × C × H × W</td></tr>
+          <tr><td>βₜ</td><td>Known variance added at forward step t; the paper fixes a linear schedule.</td><td>scalar per t, broadcast</td></tr>
+          <tr><td>αₜ, ᾱₜ</td><td><math class="inline-math" aria-label="alpha t equals one minus beta t"><msub><mi>α</mi><mi>t</mi></msub><mo>=</mo><mn>1</mn><mo>−</mo><msub><mi>β</mi><mi>t</mi></msub></math>; <math class="inline-math" aria-label="alpha bar t equals the product from s equals one to t of alpha s"><msub><mover><mi>α</mi><mo>¯</mo></mover><mi>t</mi></msub><mo>=</mo><munderover><mo>∏</mo><mrow><mi>s</mi><mo>=</mo><mn>1</mn></mrow><mi>t</mi></munderover><msub><mi>α</mi><mi>s</mi></msub></math> is cumulative signal retention.</td><td>scalar per t, broadcast</td></tr>
+          <tr><td>ε</td><td>Standard Gaussian noise used to create a training example x<sub>t</sub>; it is the known target.</td><td>B × C × H × W</td></tr>
+          <tr><td>εθ(xₜ,t)</td><td>Timestep-conditioned network prediction of ε.</td><td>B × C × H × W</td></tr>
+          <tr><td>μθ(xₜ,t)</td><td>Mean of the learned reverse Gaussian, computed from x<sub>t</sub> and ε<sub>θ</sub>.</td><td>B × C × H × W</td></tr>
+          <tr><td>z</td><td>Fresh Gaussian noise added while sampling a reverse step; z=0 at t=1.</td><td>B × C × H × W</td></tr>
+          <tr><td>q</td><td>Fixed forward/corruption distribution and training posterior.</td><td>distribution, not a tensor</td></tr>
+          <tr><td>pθ</td><td>Learned reverse/generative Markov chain.</td><td>distribution, not a tensor</td></tr>
+        </tbody>
+      </table>
+      <aside class="aside"><strong>Keep ε and z separate.</strong> ε is the corruption target presented to the denoiser during training. z supplies the residual stochasticity of a reverse transition during sampling. Reusing one name for both hides two different jobs.</aside>
+      <figure>
+        <svg viewBox="0 0 1040 370" role="img" aria-labelledby="chain-title chain-desc">
+          <title id="chain-title">Forward corruption and learned reverse diffusion with shapes</title>
+          <desc id="chain-desc">A rust forward path maps clean image x zero through noisy x t to near Gaussian x T. A blue reverse path uses the timestep-conditioned noise predictor to move from x T toward x zero. Every state and predicted noise has batch by channel by height by width shape.</desc>
+          <defs><marker id="arrow-rust" markerWidth="8" markerHeight="8" refX="7" refY="3" orient="auto"><path d="M0 0L0 6L7 3z" fill="#a85e3b"/></marker><marker id="arrow-blue" markerWidth="8" markerHeight="8" refX="7" refY="3" orient="auto"><path d="M0 0L0 6L7 3z" fill="#286379"/></marker></defs>
+          <style>.n{fill:#faf9f4;stroke:#17212a;stroke-width:2}.tx{font:21px Baskerville,serif;fill:#17212a}.sm{font:13px ui-monospace,monospace;fill:#5a646b}.f{fill:none;stroke:#a85e3b;stroke-width:3;marker-end:url(#arrow-rust)}.r{fill:none;stroke:#286379;stroke-width:3;marker-end:url(#arrow-blue)}.box{fill:#dbe8eb;stroke:#286379;stroke-width:2}</style>
+          <text class="sm" x="55" y="38" fill="#a85e3b">KNOWN FORWARD q — ADD SMALL GAUSSIAN NOISE</text>
+          <circle class="n" cx="118" cy="154" r="53"/><text class="tx" x="98" y="160">x₀</text><text class="sm" x="73" y="229">clean data</text>
+          <circle class="n" cx="385" cy="154" r="53"/><text class="tx" x="364" y="160">xₜ</text><text class="sm" x="338" y="229">partly noisy</text>
+          <circle class="n" cx="652" cy="154" r="53"/><text class="tx" x="629" y="160">xT</text><text class="sm" x="613" y="229">near N(0,I)</text>
+          <path class="f" d="M173 132L328 132"/><path class="f" d="M440 132L595 132"/><text class="sm" x="206" y="108">q(xₜ|xₜ₋₁)</text><text class="sm" x="472" y="108">repeat to T</text>
+          <path class="r" d="M596 178L441 178"/><path class="r" d="M329 178L174 178"/><text class="sm" x="477" y="206">pθ reverse</text><text class="sm" x="210" y="206">pθ reverse</text>
+          <rect class="box" x="764" y="91" width="229" height="126"/><text class="tx" x="810" y="135">εθ(xₜ,t)</text><text class="sm" x="796" y="165">predict B×C×H×W</text><text class="sm" x="792" y="190">parameterize μθ</text><path class="r" d="M764 154L709 154"/>
+          <line x1="118" y1="272" x2="652" y2="272" stroke="#aeb2af" stroke-width="1"/><text class="sm" x="166" y="300">all latent states keep the image shape B×C×H×W</text><text class="sm" x="169" y="329">time changes noise level, not spatial dimensionality</text>
+        </svg>
+        <figcaption><span class="caption-label">Lesson diagram.</span> The spatial tensor shape stays fixed while the signal-to-noise ratio changes. Rust denotes the known q process; blue denotes the learned p<sub>θ</sub> process.</figcaption>
+      </figure>
+    </section>
+
+    <section aria-labelledby="spine-title">
+      <span class="section-label">5 · The causal spine</span>
+      <h2 id="spine-title">Start with the behavior we want, then make its target executable.</h2>
+      <ol class="spine">
+        <li><strong>Define a simple endpoint.</strong> Choose q so repeated small corruptions make x<sub>T</sub> almost standard Gaussian.</li>
+        <li><strong>Ask for local reversal.</strong> Model p<sub>θ</sub>(x<sub>t−1</sub>|x<sub>t</sub>) as a Gaussian with learned mean and fixed time-dependent variance.</li>
+        <li><strong>Reveal the supervised target.</strong> During training, x<sub>0</sub> is known, making q(x<sub>t−1</sub>|x<sub>t</sub>,x<sub>0</sub>) tractable.</li>
+        <li><strong>Reparameterize the target mean.</strong> Express x<sub>t</sub> through x<sub>0</sub> and sampled ε; the posterior mean becomes a formula that requires predicting ε.</li>
+        <li><strong>Turn Gaussian fitting into regression.</strong> The variational KL term becomes a weighted squared error ‖ε−ε<sub>θ</sub>‖².</li>
+        <li><strong>Simplify the weights.</strong> Uniformly sample t and minimize unweighted noise MSE. This is <em>L</em><sub>simple</sub>, the objective behind the best sample quality in the paper.</li>
+        <li><strong>Run the learned chain.</strong> Sample x<sub>T</sub>∼N(0,I), then apply the reverse update for t=T,…,1.</li>
+      </ol>
+    </section>
+
+    <section aria-labelledby="forward-title">
+      <span class="section-label">6 · Forward mechanism</span>
+      <h2 id="forward-title">Many small Gaussian steps collapse into one direct draw.</h2>
+      <p>At one step, retain most of x<sub>t−1</sub> and add isotropic Gaussian noise with variance β<sub>t</sub>:</p>
+      <div class="equation">
+        <math display="block" aria-label="q of x t given x t minus one equals a Gaussian with mean square root one minus beta t times x t minus one and variance beta t I">
+          <mrow><mi>q</mi><mo>(</mo><msub><mi>x</mi><mi>t</mi></msub><mo>|</mo><msub><mi>x</mi><mrow><mi>t</mi><mo>−</mo><mn>1</mn></mrow></msub><mo>)</mo><mo>=</mo><mi mathvariant="normal">N</mi><mo>(</mo><msqrt><mrow><mn>1</mn><mo>−</mo><msub><mi>β</mi><mi>t</mi></msub></mrow></msqrt><msub><mi>x</mi><mrow><mi>t</mi><mo>−</mo><mn>1</mn></mrow></msub><mo>,</mo><msub><mi>β</mi><mi>t</mi></msub><mi>I</mi><mo>)</mo></mrow>
+        </math>
+      </div>
+      <p>Define <math class="inline-math" aria-label="alpha t equals one minus beta t"><msub><mi>α</mi><mi>t</mi></msub><mo>=</mo><mn>1</mn><mo>−</mo><msub><mi>β</mi><mi>t</mi></msub></math> and <math class="inline-math" aria-label="alpha bar t equals the product from s equals one to t of alpha s"><msub><mover><mi>α</mi><mo>¯</mo></mover><mi>t</mi></msub><mo>=</mo><munderover><mo>∏</mo><mrow><mi>s</mi><mo>=</mo><mn>1</mn></mrow><mi>t</mi></munderover><msub><mi>α</mi><mi>s</mi></msub></math>. Gaussian composition gives the crucial shortcut:</p>
+      <div class="equation">
+        <math display="block" aria-label="q of x t given x zero is a Gaussian with mean square root alpha bar t x zero and variance one minus alpha bar t I; equivalently x t equals square root alpha bar t x zero plus square root one minus alpha bar t epsilon">
+          <mtable columnalign="right center left" rowspacing="0.8em">
+            <mtr><mtd><mi>q</mi><mo>(</mo><msub><mi>x</mi><mi>t</mi></msub><mo>|</mo><msub><mi>x</mi><mn>0</mn></msub><mo>)</mo></mtd><mtd><mo>=</mo></mtd><mtd><mi mathvariant="normal">N</mi><mo>(</mo><msqrt><msub><mover><mi>α</mi><mo>¯</mo></mover><mi>t</mi></msub></msqrt><msub><mi>x</mi><mn>0</mn></msub><mo>,</mo><mrow><mo>(</mo><mn>1</mn><mo>−</mo><msub><mover><mi>α</mi><mo>¯</mo></mover><mi>t</mi></msub><mo>)</mo><mi>I</mi></mrow><mo>)</mo></mtd></mtr>
+            <mtr><mtd><msub><mi>x</mi><mi>t</mi></msub></mtd><mtd><mo>=</mo></mtd><mtd><msqrt><msub><mover><mi>α</mi><mo>¯</mo></mover><mi>t</mi></msub></msqrt><msub><mi>x</mi><mn>0</mn></msub><mo>+</mo><msqrt><mrow><mn>1</mn><mo>−</mo><msub><mover><mi>α</mi><mo>¯</mo></mover><mi>t</mi></msub></mrow></msqrt><mi>ε</mi><mo>,</mo><mspace width=".6em"/><mi>ε</mi><mo>∼</mo><mi mathvariant="normal">N</mi><mo>(</mo><mn>0</mn><mo>,</mo><mi>I</mi><mo>)</mo></mtd></mtr>
+          </mtable>
+        </math>
+      </div>
+      <p>This equation is more than notation. It lets training choose any t uniformly and create x<sub>t</sub> in one operation. No training example needs to traverse all preceding forward steps.</p>
+
+      <article class="worked worked-rust">
+        <span class="micro-label">Worked trace A · direct corruption</span>
+        <h3>Compress two forward steps into one scalar calculation.</h3>
+        <div class="step"><strong>Choose a toy schedule.</strong> Let x<sub>0</sub>=2, β<sub>1</sub>=0.1, and β<sub>2</sub>=0.2. Then α<sub>1</sub>=0.9, α<sub>2</sub>=0.8, and ᾱ<sub>2</sub>=0.9×0.8=0.72.</div>
+        <div class="step"><strong>Read the two coefficients.</strong> <math class="inline-math" aria-label="square root alpha bar two equals square root point seven two, approximately point eight four nine"><msqrt><msub><mover><mi>α</mi><mo>¯</mo></mover><mn>2</mn></msub></msqrt><mo>=</mo><msqrt><mn>0.72</mn></msqrt><mo>≈</mo><mn>0.849</mn></math> retains signal. <math class="inline-math" aria-label="square root one minus alpha bar two equals square root point two eight, approximately point five two nine"><msqrt><mrow><mn>1</mn><mo>−</mo><msub><mover><mi>α</mi><mo>¯</mo></mover><mn>2</mn></msub></mrow></msqrt><mo>=</mo><msqrt><mn>0.28</mn></msqrt><mo>≈</mo><mn>0.529</mn></math> scales noise.</div>
+        <div class="step"><strong>Use a known noise draw.</strong> For ε=0.5:</div>
+        <div class="equation">
+          <math display="block" aria-label="x two equals square root point seven two times two plus square root point two eight times point five, approximately one point nine six two">
+            <mtable columnalign="right center left"><mtr><mtd><msub><mi>x</mi><mn>2</mn></msub></mtd><mtd><mo>=</mo></mtd><mtd><msqrt><mn>0.72</mn></msqrt><mo>(</mo><mn>2</mn><mo>)</mo><mo>+</mo><msqrt><mn>0.28</mn></msqrt><mo>(</mo><mn>0.5</mn><mo>)</mo></mtd></mtr><mtr><mtd/><mtd><mo>≈</mo></mtd><mtd><mn>1.962</mn></mtd></mtr></mtable>
+          </math>
+        </div>
+        <p>The target is not “recover whatever corruption happened.” The training code knows that ε=0.5 because it sampled it.</p>
+      </article>
+    </section>
+
+    <section aria-labelledby="instrument-title">
+      <span class="section-label">7 · Noise-time instrument</span>
+      <h2 id="instrument-title">Move through the paper’s schedule and inspect what survives.</h2>
+      <p>The paper uses T=1000 and β<sub>t</sub> increasing linearly from 10<sup>−4</sup> to 0.02. The instrument computes ᾱ<sub>t</sub> from that schedule, rather than using an illustrative replacement.</p>
+      <div class="prediction"><strong>Predict before moving the control.</strong> At t=600, which coefficient exceeds 0.9: the clean-signal coefficient or the sampled-noise coefficient?<details><summary>Reveal the answer</summary><p>The sampled-noise coefficient. For this schedule, <math class="inline-math" aria-label="alpha bar six hundred is approximately point zero two five eight eight"><msub><mover><mi>α</mi><mo>¯</mo></mover><mn>600</mn></msub><mo>≈</mo><mn>0.02588</mn></math>, so <math class="inline-math" aria-label="square root alpha bar six hundred is approximately point one six one"><msqrt><msub><mover><mi>α</mi><mo>¯</mo></mover><mn>600</mn></msub></msqrt><mo>≈</mo><mn>0.161</mn></math> while <math class="inline-math" aria-label="square root one minus alpha bar six hundred is approximately point nine eight seven"><msqrt><mrow><mn>1</mn><mo>−</mo><msub><mover><mi>α</mi><mo>¯</mo></mover><mn>600</mn></msub></mrow></msqrt><mo>≈</mo><mn>0.987</mn></math>.</p></details></div>
+      <div class="instrument">
+        <span class="micro-label">Lesson diagram · coefficient instrument</span>
+        <h3><math display="block" aria-label="x t equals square root alpha bar t x zero plus square root one minus alpha bar t epsilon"><msub><mi>x</mi><mi>t</mi></msub><mo>=</mo><msqrt><msub><mover><mi>α</mi><mo>¯</mo></mover><mi>t</mi></msub></msqrt><msub><mi>x</mi><mn>0</mn></msub><mo>+</mo><msqrt><mrow><mn>1</mn><mo>−</mo><msub><mover><mi>α</mi><mo>¯</mo></mover><mi>t</mi></msub></mrow></msqrt><mi>ε</mi></math></h3>
+        <div class="control"><label for="time-step">Selected timestep</label><input id="time-step" type="range" min="0" max="1000" step="50" value="600" aria-describedby="schedule-note"><output id="time-value" for="time-step">t = 600</output></div>
+        <div class="mix-lines">
+          <div class="mix-row"><label>signal √ᾱₜ</label><span class="meter"><span class="meter-fill" id="signal-fill"></span></span><span id="signal-value">0.161</span></div>
+          <div class="mix-row"><label>noise √(1−ᾱₜ)</label><span class="meter"><span class="meter-fill" id="noise-fill"></span></span><span id="noise-value">0.987</span></div>
+        </div>
+        <div class="frame-strip" aria-label="Six reference regions along noise-time"><span class="mini-frame"></span><span class="mini-frame"></span><span class="mini-frame"></span><span class="mini-frame active"></span><span class="mini-frame"></span><span class="mini-frame"></span></div>
+        <p id="mixture-reading" aria-live="polite">At t=600, ᾱt≈0.02588. The clean-signal coefficient is 0.161 and the sampled-noise coefficient is 0.987.</p>
+        <p id="schedule-note" class="static-reading"><strong>Static reading:</strong> the default t=600 is already noise-dominated. At t=0 the coefficients are 1 and 0; by t=1000 they are approximately 0.006 and 1.000.</p>
+      </div>
+    </section>
+
+    <section aria-labelledby="reverse-title">
+      <span class="section-label">8 · Reverse mechanism</span>
+      <h2 id="reverse-title">Conditioning on the clean image exposes the ideal local return.</h2>
+      <p>Training can calculate the forward posterior because it knows x<sub>0</sub>. The posterior is Gaussian:</p>
+      <div class="equation">
+        <math display="block" aria-label="q of x t minus one given x t and x zero is a Gaussian with posterior mean mu tilde t and posterior variance beta tilde t I">
+          <mtable columnalign="right center left" rowspacing="0.8em">
+            <mtr><mtd><mi>q</mi><mo>(</mo><msub><mi>x</mi><mrow><mi>t</mi><mo>−</mo><mn>1</mn></mrow></msub><mo>|</mo><msub><mi>x</mi><mi>t</mi></msub><mo>,</mo><msub><mi>x</mi><mn>0</mn></msub><mo>)</mo></mtd><mtd><mo>=</mo></mtd><mtd><mi mathvariant="normal">N</mi><mo>(</mo><msub><mover><mi>μ</mi><mo>~</mo></mover><mi>t</mi></msub><mo>(</mo><msub><mi>x</mi><mi>t</mi></msub><mo>,</mo><msub><mi>x</mi><mn>0</mn></msub><mo>)</mo><mo>,</mo><msub><mover><mi>β</mi><mo>~</mo></mover><mi>t</mi></msub><mi>I</mi><mo>)</mo></mtd></mtr>
+            <mtr><mtd><msub><mover><mi>μ</mi><mo>~</mo></mover><mi>t</mi></msub></mtd><mtd><mo>=</mo></mtd><mtd><mfrac><mrow><msqrt><msub><mover><mi>α</mi><mo>¯</mo></mover><mrow><mi>t</mi><mo>−</mo><mn>1</mn></mrow></msub></msqrt><msub><mi>β</mi><mi>t</mi></msub></mrow><mrow><mn>1</mn><mo>−</mo><msub><mover><mi>α</mi><mo>¯</mo></mover><mi>t</mi></msub></mrow></mfrac><msub><mi>x</mi><mn>0</mn></msub><mo>+</mo><mfrac><mrow><msqrt><msub><mi>α</mi><mi>t</mi></msub></msqrt><mo>(</mo><mn>1</mn><mo>−</mo><msub><mover><mi>α</mi><mo>¯</mo></mover><mrow><mi>t</mi><mo>−</mo><mn>1</mn></mrow></msub><mo>)</mo></mrow><mrow><mn>1</mn><mo>−</mo><msub><mover><mi>α</mi><mo>¯</mo></mover><mi>t</mi></msub></mrow></mfrac><msub><mi>x</mi><mi>t</mi></msub></mtd></mtr>
+            <mtr><mtd><msub><mover><mi>β</mi><mo>~</mo></mover><mi>t</mi></msub></mtd><mtd><mo>=</mo></mtd><mtd><mfrac><mrow><mn>1</mn><mo>−</mo><msub><mover><mi>α</mi><mo>¯</mo></mover><mrow><mi>t</mi><mo>−</mo><mn>1</mn></mrow></msub></mrow><mrow><mn>1</mn><mo>−</mo><msub><mover><mi>α</mi><mo>¯</mo></mover><mi>t</mi></msub></mrow></mfrac><msub><mi>β</mi><mi>t</mi></msub></mtd></mtr>
+          </mtable>
+        </math>
+      </div>
+      <p>Now substitute:</p>
+      <div class="equation"><math display="block" aria-label="x zero equals x t minus square root one minus alpha bar t epsilon, divided by square root alpha bar t"><msub><mi>x</mi><mn>0</mn></msub><mo>=</mo><mfrac><mrow><msub><mi>x</mi><mi>t</mi></msub><mo>−</mo><msqrt><mrow><mn>1</mn><mo>−</mo><msub><mover><mi>α</mi><mo>¯</mo></mover><mi>t</mi></msub></mrow></msqrt><mi>ε</mi></mrow><msqrt><msub><mover><mi>α</mi><mo>¯</mo></mover><mi>t</mi></msub></msqrt></mfrac></math></div>
+      <p>The same mean can be written using ε, so a network that predicts ε also parameterizes the reverse mean:</p>
+      <div class="equation">
+        <math display="block" aria-label="mu theta of x t and t equals one over square root alpha t times x t minus beta t over square root one minus alpha bar t times epsilon theta of x t and t">
+          <msub><mi>μ</mi><mi>θ</mi></msub><mo>(</mo><msub><mi>x</mi><mi>t</mi></msub><mo>,</mo><mi>t</mi><mo>)</mo><mo>=</mo><mfrac><mn>1</mn><msqrt><msub><mi>α</mi><mi>t</mi></msub></msqrt></mfrac><mo>[</mo><msub><mi>x</mi><mi>t</mi></msub><mo>−</mo><mfrac><msub><mi>β</mi><mi>t</mi></msub><msqrt><mrow><mn>1</mn><mo>−</mo><msub><mover><mi>α</mi><mo>¯</mo></mover><mi>t</mi></msub></mrow></msqrt></mfrac><msub><mi>ε</mi><mi>θ</mi></msub><mo>(</mo><msub><mi>x</mi><mi>t</mi></msub><mo>,</mo><mi>t</mi><mo>)</mo><mo>]</mo>
+        </math>
+      </div>
+      <p>The reverse sample adds the chosen reverse standard deviation σ<sub>t</sub> times fresh z:</p>
+      <div class="equation">
+        <math display="block" aria-label="x t minus one equals mu theta of x t and t plus sigma t z, where z is standard Gaussian for t greater than one and zero for t equal to one">
+          <mtable columnalign="right center left"><mtr><mtd><msub><mi>x</mi><mrow><mi>t</mi><mo>−</mo><mn>1</mn></mrow></msub></mtd><mtd><mo>=</mo></mtd><mtd><msub><mi>μ</mi><mi>θ</mi></msub><mo>(</mo><msub><mi>x</mi><mi>t</mi></msub><mo>,</mo><mi>t</mi><mo>)</mo><mo>+</mo><msub><mi>σ</mi><mi>t</mi></msub><mi>z</mi></mtd></mtr><mtr><mtd><mi>z</mi></mtd><mtd><mo>∼</mo></mtd><mtd><mo>{</mo><mtable columnalign="left left"><mtr><mtd><mi mathvariant="normal">N</mi><mo>(</mo><mn>0</mn><mo>,</mo><mi>I</mi><mo>)</mo></mtd><mtd><mtext>if </mtext><mi>t</mi><mo>&gt;</mo><mn>1</mn></mtd></mtr><mtr><mtd><mn>0</mn></mtd><mtd><mtext>if </mtext><mi>t</mi><mo>=</mo><mn>1</mn></mtd></mtr></mtable></mtd></mtr></mtable>
+        </math>
+      </div>
+      <div class="prediction"><strong>Predict before calculating.</strong> If ε<sub>θ</sub> exactly equals the corruption ε in the toy example, must x<sub>t−1</sub> equal x<sub>0</sub>?<details><summary>Reveal the answer</summary><p>No. The prediction gives the correct reverse <em>mean</em> for the local transition. At t&gt;1, σ<sub>t</sub>z keeps that transition stochastic, and x<sub>t−1</sub> is an intermediate state rather than the clean endpoint.</p></details></div>
+      <article class="worked">
+        <span class="micro-label">Worked trace B · one reverse step</span>
+        <h3>Use an exact noise prediction, then keep the stochastic term.</h3>
+        <p>Reuse x<sub>2</sub>≈1.9616, α<sub>2</sub>=0.8, ᾱ<sub>2</sub>=0.72, β<sub>2</sub>=0.2, and ε<sub>θ</sub>=0.5.</p>
+        <div class="step"><strong>Compute the reverse mean.</strong></div><div class="equation"><math display="block" aria-label="mu theta equals one over square root point eight times the quantity one point nine six one six minus point two over square root point two eight times point five, approximately one point nine eight one nine"><mtable columnalign="right center left"><mtr><mtd><msub><mi>μ</mi><mi>θ</mi></msub></mtd><mtd><mo>=</mo></mtd><mtd><mfrac><mn>1</mn><msqrt><mn>0.8</mn></msqrt></mfrac><mo>[</mo><mn>1.9616</mn><mo>−</mo><mfrac><mn>0.2</mn><msqrt><mn>0.28</mn></msqrt></mfrac><mo>(</mo><mn>0.5</mn><mo>)</mo><mo>]</mo></mtd></mtr><mtr><mtd/><mtd><mo>≈</mo></mtd><mtd><mn>1.9819</mn></mtd></mtr></mtable></math></div>
+        <div class="step"><strong>Compute the posterior variance choice.</strong></div>
+        <div class="equation"><math display="block" aria-label="beta tilde two equals the fraction one minus point nine over one minus point seven two times point two, approximately point zero seven one four three; sigma two equals square root beta tilde two, approximately point two six seven three"><mtable columnalign="right center left"><mtr><mtd><msub><mover><mi>β</mi><mo>~</mo></mover><mn>2</mn></msub></mtd><mtd><mo>=</mo></mtd><mtd><mfrac><mrow><mn>1</mn><mo>−</mo><mn>0.9</mn></mrow><mrow><mn>1</mn><mo>−</mo><mn>0.72</mn></mrow></mfrac><mo>(</mo><mn>0.2</mn><mo>)</mo><mo>≈</mo><mn>0.07143</mn></mtd></mtr><mtr><mtd><msub><mi>σ</mi><mn>2</mn></msub></mtd><mtd><mo>=</mo></mtd><mtd><msqrt><msub><mover><mi>β</mi><mo>~</mo></mover><mn>2</mn></msub></msqrt><mo>≈</mo><mn>0.2673</mn></mtd></mtr></mtable></math></div>
+        <div class="step"><strong>Draw sampling noise.</strong> If z=−0.3, then x<sub>1</sub>=1.9819+0.2673(−0.3)≈1.9017.</div>
+        <p>The exact ε prediction recovered the correct posterior mean, not a deterministic clean sample. This is why “the network removes all noise in one pass” is the wrong mental model.</p>
+      </article>
+    </section>
+
+    <section aria-labelledby="objective-title">
+      <span class="section-label">9 · From variational inference to one loss</span>
+      <h2 id="objective-title">Gaussian fitting becomes noise regression, then the paper changes the weighting.</h2>
+      <p>The negative log-likelihood variational bound decomposes into an endpoint prior term, Gaussian reverse-transition KL terms, and a decoder term:</p>
+      <div class="equation">
+        <math display="block" aria-label="L equals L T plus the sum from t equals two to T of L t minus one plus L zero">
+          <mi>L</mi><mo>=</mo><msub><mi>L</mi><mi>T</mi></msub><mo>+</mo><munderover><mo>∑</mo><mrow><mi>t</mi><mo>=</mo><mn>2</mn></mrow><mi>T</mi></munderover><msub><mi>L</mi><mrow><mi>t</mi><mo>−</mo><mn>1</mn></mrow></msub><mo>+</mo><msub><mi>L</mi><mn>0</mn></msub>
+        </math>
+      </div>
+      <p>For fixed σ<sub>t</sub><sup>2</sup>I and the ε parameterization, each intermediate KL term is, up to a θ-independent constant:</p>
+      <div class="equation">
+        <math display="block" aria-label="L t minus one minus C equals the expectation of beta t squared divided by two sigma t squared alpha t times one minus alpha bar t, multiplied by the squared norm of epsilon minus epsilon theta of x t and t">
+          <msub><mi>L</mi><mrow><mi>t</mi><mo>−</mo><mn>1</mn></mrow></msub><mo>−</mo><mi>C</mi><mo>=</mo><mi mathvariant="double-struck">E</mi><mo>[</mo><mfrac><msup><msub><mi>β</mi><mi>t</mi></msub><mn>2</mn></msup><mrow><mn>2</mn><msup><msub><mi>σ</mi><mi>t</mi></msub><mn>2</mn></msup><msub><mi>α</mi><mi>t</mi></msub><mo>(</mo><mn>1</mn><mo>−</mo><msub><mover><mi>α</mi><mo>¯</mo></mover><mi>t</mi></msub><mo>)</mo></mrow></mfrac><mo>·</mo><msup><mrow><mo>‖</mo><mi>ε</mi><mo>−</mo><msub><mi>ε</mi><mi>θ</mi></msub><mo>(</mo><msub><mi>x</mi><mi>t</mi></msub><mo>,</mo><mi>t</mi><mo>)</mo><mo>‖</mo></mrow><mn>2</mn></msup><mo>]</mo>
+        </math>
+      </div>
+      <p>This equation supplies the bridge: variational inference has become weighted noise-prediction regression. The simplified objective deliberately drops that timestep-dependent coefficient:</p>
+      <div class="equation">
+        <math display="block" aria-label="L simple equals the expectation over t, x zero, and epsilon of the squared norm of epsilon minus epsilon theta of square root alpha bar t x zero plus square root one minus alpha bar t epsilon, and t">
+          <msub><mi>L</mi><mtext>simple</mtext></msub><mo>=</mo><msub><mi mathvariant="double-struck">E</mi><mrow><mi>t</mi><mo>,</mo><msub><mi>x</mi><mn>0</mn></msub><mo>,</mo><mi>ε</mi></mrow></msub><mo>[</mo><msup><mrow><mo>‖</mo><mi>ε</mi><mo>−</mo><msub><mi>ε</mi><mi>θ</mi></msub><mo>(</mo><msqrt><msub><mover><mi>α</mi><mo>¯</mo></mover><mi>t</mi></msub></msqrt><msub><mi>x</mi><mn>0</mn></msub><mo>+</mo><msqrt><mrow><mn>1</mn><mo>−</mo><msub><mover><mi>α</mi><mo>¯</mo></mover><mi>t</mi></msub></mrow></msqrt><mi>ε</mi><mo>,</mo><mi>t</mi><mo>)</mo><mo>‖</mo></mrow><mn>2</mn></msup><mo>]</mo>
+        </math>
+      </div>
+      <p><em>L</em><sub>simple</sub> is therefore not the unchanged likelihood bound. The paper describes it as a weighted variational bound that emphasizes different reconstruction aspects. In its schedule, it down-weights small-t terms relative to the standard bound, letting learning focus more on harder, noisier denoising tasks.</p>
+      <article class="worked worked-rust">
+        <span class="micro-label">Worked derivation C · objective meaning</span>
+        <h3>Read one pixel’s contribution instead of treating the norm as magic.</h3>
+        <p>Suppose one sampled corruption component is ε=0.50 and the network predicts 0.40. Its unweighted contribution is (0.50−0.40)²=0.01. If another component has ε=−1.20 and prediction −0.70, its contribution is (−0.50)²=0.25. The second error contributes 25 times as much to <em>L</em><sub>simple</sub>.</p>
+        <p>The gradient with respect to a predicted component is 2(ε<sub>θ</sub>−ε): it points directly toward the known corruption. The expectation simply repeats this correction over images, timesteps, and Gaussian draws.</p>
+      </article>
+      <div class="grid-2">
+        <div class="algorithm"><span class="micro-label">Training · paper Algorithm 1</span><ol><li>Sample clean x<sub>0</sub>.</li><li>Sample t uniformly from {1,…,T}.</li><li>Sample ε∼N(0,I).</li><li>Build x<sub>t</sub> directly.</li><li>Descend the gradient of <math class="inline-math" aria-label="the squared norm of epsilon minus epsilon theta of x t and t"><msup><mrow><mo>‖</mo><mi>ε</mi><mo>−</mo><msub><mi>ε</mi><mi>θ</mi></msub><mo>(</mo><msub><mi>x</mi><mi>t</mi></msub><mo>,</mo><mi>t</mi><mo>)</mo><mo>‖</mo></mrow><mn>2</mn></msup></math>.</li></ol></div>
+        <div class="algorithm"><span class="micro-label">Sampling · paper Algorithm 2</span><ol><li>Sample x<sub>T</sub>∼N(0,I).</li><li>For t=T,…,1, predict ε<sub>θ</sub>(x<sub>t</sub>,t).</li><li>Compute μ<sub>θ</sub>(x<sub>t</sub>,t).</li><li>Sample x<sub>t−1</sub>=μ<sub>θ</sub>+σ<sub>t</sub>z; use z=0 at t=1.</li><li>Return x<sub>0</sub>.</li></ol></div>
+      </div>
+    </section>
+
+    <section aria-labelledby="implementation-title">
+      <span class="section-label">10 · What runs inside εθ</span>
+      <h2 id="implementation-title">The probabilistic process specifies the job; a time-aware U-Net performs it.</h2>
+      <p>On page 5, the paper reports a U-Net backbone similar to an unmasked PixelCNN++, with group normalization throughout. The same parameters are shared across timesteps. A Transformer-style sinusoidal position embedding tells the network t, and self-attention is used at the 16×16 feature-map resolution.</p>
+      <figure>
+        <svg viewBox="0 0 1040 390" role="img" aria-labelledby="unet-title unet-desc">
+          <title id="unet-title">Time-conditioned U-Net used as the DDPM noise predictor</title><desc id="unet-desc">A noisy image and sinusoidal timestep embedding enter a U-Net. The encoder reduces spatial scale, a 16 by 16 stage includes self-attention, and the decoder returns a noise tensor with the same shape as the image. Skip connections carry corresponding encoder features to the decoder.</desc>
+          <defs><marker id="u-arrow" markerWidth="8" markerHeight="8" refX="7" refY="3" orient="auto"><path d="M0 0L0 6L7 3z" fill="#286379"/></marker></defs>
+          <style>.ub{fill:#faf9f4;stroke:#17212a;stroke-width:2}.ua{fill:#dbe8eb;stroke:#286379;stroke-width:2}.ut{font:19px Baskerville,serif;fill:#17212a}.us{font:12px ui-monospace,monospace;fill:#5a646b}.ul{fill:none;stroke:#286379;stroke-width:2.5;marker-end:url(#u-arrow)}.skip{fill:none;stroke:#a85e3b;stroke-width:2;stroke-dasharray:7 5}</style>
+          <rect class="ub" x="34" y="143" width="128" height="86"/><text class="ut" x="73" y="178">xₜ</text><text class="us" x="53" y="205">B×C×H×W</text>
+          <rect class="ub" x="34" y="274" width="128" height="66"/><text class="ut" x="76" y="302">t</text><text class="us" x="46" y="326">sinusoidal</text>
+          <rect class="ub" x="230" y="118" width="137" height="137"/><text class="ut" x="264" y="175">encode</text><text class="us" x="251" y="202">downsample</text><text class="us" x="250" y="225">group norm</text>
+          <rect class="ua" x="449" y="137" width="145" height="99"/><text class="ut" x="478" y="177">16×16</text><text class="us" x="467" y="205">self-attention</text>
+          <rect class="ub" x="676" y="118" width="137" height="137"/><text class="ut" x="710" y="175">decode</text><text class="us" x="702" y="202">upsample</text><text class="us" x="696" y="225">group norm</text>
+          <rect class="ub" x="878" y="143" width="128" height="86"/><text class="ut" x="904" y="178">εθ</text><text class="us" x="896" y="205">B×C×H×W</text>
+          <path class="ul" d="M162 186L223 186"/><path class="ul" d="M367 186L442 186"/><path class="ul" d="M594 186L669 186"/><path class="ul" d="M813 186L871 186"/><path class="ul" d="M162 306C231 306 205 236 230 230"/>
+          <path class="skip" d="M299 109C299 42 744 42 744 109"/><text class="us" x="465" y="58" fill="#a85e3b">U-Net skip features</text><text class="us" x="342" y="303">same θ is reused for every t</text><text class="us" x="335" y="331">time embedding changes the requested noise level</text>
+        </svg>
+        <figcaption><span class="caption-label">Lesson diagram.</span> A source-grounded architecture map, not a layer-for-layer blueprint. The paper specifies the U-Net family, group normalization, shared time parameters, sinusoidal timestep embeddings, and self-attention at 16×16; detailed channel counts are outside this figure.</figcaption>
+      </figure>
+      <div class="prediction"><strong>Prediction.</strong> If t were withheld while the same x<sub>t</sub> value could occur at different noise levels, would the denoiser know which reverse calibration to use?<details><summary>Reveal the answer</summary><p>Not reliably. The coefficients in the reverse mean depend on t, and the meaning of a pixel pattern changes with signal-to-noise level. The timestep embedding disambiguates the requested denoising regime.</p></details></div>
+    </section>
+
+    <section aria-labelledby="evidence-title">
+      <span class="section-label">11 · Original-paper evidence</span>
+      <h2 id="evidence-title">Figure 6 shows a prediction becoming legible before it becomes detailed.</h2>
+      <figure class="source-figure">
+        <img src="paper_figure_6.png" width="1540" height="330" loading="lazy" alt="Original DDPM paper Figure 6. Four rows of unconditional CIFAR-10 progressive generations move from colored noise on the left through coarse silhouettes in the middle to recognizable images such as an airplane, animal, bird, and frog on the right.">
+        <figcaption><span class="caption-label">Original paper, Figure 6 (PDF page 7).</span> Unconditional CIFAR-10 progressive generation, showing x̂<sub>0</sub> over reverse-process time from left to right. The authors’ caption identifies these as progressive estimates, and the text states that large-scale features appear first and details last.</figcaption>
+      </figure>
+      <div class="figure-reading" aria-label="Three-stage reading of Figure 6"><div><strong>Read the left.</strong> The current latent is still near the high-noise end. The derived x̂<sub>0</sub> estimates are unstable and texture-like.</div><div><strong>Read the middle.</strong> Broad color fields, orientation, and silhouettes settle before object-specific texture.</div><div><strong>Read the right.</strong> Fine contours and local detail sharpen as the reverse chain approaches x<sub>0</sub>.</div></div>
+      <div class="scope-note"><strong>What Figure 6 does not show.</strong> Its columns are not independent one-shot generations, and the network is not directly outputting a final image at each column. During one reverse trajectory, the authors calculate:
+        <div class="equation"><math display="block" aria-label="x hat zero equals x t minus square root one minus alpha bar t times epsilon theta of x t, divided by square root alpha bar t"><msub><mover><mi>x</mi><mo>^</mo></mover><mn>0</mn></msub><mo>=</mo><mfrac><mrow><msub><mi>x</mi><mi>t</mi></msub><mo>−</mo><msqrt><mrow><mn>1</mn><mo>−</mo><msub><mover><mi>α</mi><mo>¯</mo></mover><mi>t</mi></msub></mrow></msqrt><msub><mi>ε</mi><mi>θ</mi></msub><mo>(</mo><msub><mi>x</mi><mi>t</mi></msub><mo>)</mo></mrow><msqrt><msub><mover><mi>α</mi><mo>¯</mo></mover><mi>t</mi></msub></msqrt></mfrac></math></div>
+        from the current x<sub>t</sub>.</div>
+      <h3>Objective ablation: sample quality and likelihood pull differently</h3>
+      <table class="evidence-table"><thead><tr><th>Unconditional CIFAR-10 setting</th><th>IS</th><th>FID</th><th>NLL test (train), bits/dim</th></tr></thead><tbody><tr><td>True bound L, ε-prediction, fixed isotropic Σ</td><td>7.67 ± 0.13</td><td>13.51</td><td>≤ 3.70 (3.69)</td></tr><tr><td>L<sub>simple</sub>, ε-prediction</td><td>9.46 ± 0.11</td><td>3.17</td><td>≤ 3.75 (3.72)</td></tr></tbody></table>
+      <p><strong>Source: paper Tables 1 and 2, PDF page 5.</strong> Lower FID and higher IS favor <em>L</em><sub>simple</sub> for sample quality, while the true variational bound gives the better codelength. The paper computes its headline FID 3.17 against the CIFAR-10 training set; against the test set it reports FID 5.24.</p>
+      <details class="prediction"><summary>Interpretation exercise: does FID 3.17 prove the model has the best likelihood?</summary><p>No. The same table reports a better NLL for the model trained on the true bound. FID, Inception Score, and NLL measure different properties; the paper explicitly notes that its likelihoods are not competitive with other likelihood-based models.</p></details>
+    </section>
+
+    <section aria-labelledby="limits-title">
+      <span class="section-label">12 · Misconceptions, assumptions, and limits</span>
+      <h2 id="limits-title">Do not let the word “denoising” erase the modelling choices.</h2>
+      <div class="grid-2">
+        <div>
+          <details><summary>“The forward process is learned.”</summary><p>Not in the reported implementation. The formulation allows β<sub>t</sub> to be learned by reparameterization, but the experiments fix a linear schedule from 10<sup>−4</sup> to 0.02.</p></details>
+          <details><summary>“The network predicts x₀ in one pass.”</summary><p>No. The selected parameterization predicts ε at a specified t. The reverse mean follows from that prediction, and generation applies 1000 successive reverse transitions.</p></details>
+          <details><summary>“Lsimple is exactly the negative log-likelihood bound.”</summary><p>No. It drops the timestep-dependent weighting from the intermediate variational terms. The paper calls it a weighted variational bound and observes different sample-quality and codelength behavior.</p></details>
+          <details><summary>“εθ is literally the score with no conversion.”</summary><p>No. The paper establishes a connection to denoising score matching, but ε-prediction is related to the score by a noise-level-dependent scale. Treating them as numerically identical hides that scale.</p></details>
+          <details><summary>“xT is mathematically independent of x₀.”</summary><p>It is designed to be extremely close to N(0,I), not asserted to be exactly independent at finite T. The paper reports L<sub>T</sub>≈10<sup>−5</sup> bits per dimension for its schedule.</p></details>
+        </div>
+        <div class="limits"><h3>Boundaries of the 2020 result</h3><ul><li><strong>Sampling cost:</strong> T=1000 requires 1000 denoiser evaluations per sample.</li><li><strong>Likelihood trade-off:</strong> the best-looking samples come from an objective with worse reported codelength than the true-bound model.</li><li><strong>Metric scope:</strong> FID and Inception Score are dataset- and feature-dependent summaries, not complete measures of fidelity or diversity.</li><li><strong>Experimental scope:</strong> the headline evidence concerns unconditional CIFAR-10 plus 256×256 CelebA-HQ and LSUN experiments under this architecture and schedule.</li><li><strong>Societal scope:</strong> the paper warns that generative models can amplify dataset bias and malicious image creation.</li></ul></div>
+      </div>
+    </section>
+
+    <section aria-labelledby="recall-title">
+      <span class="section-label">Active recall</span>
+      <h2 id="recall-title">Rebuild the paper from eight answers.</h2>
+      <div class="recall">
+        <details><summary>What does βₜ control?</summary><p>The variance of the Gaussian noise added at forward step t; α<sub>t</sub>=1−β<sub>t</sub> is the one-step signal-retention factor.</p></details>
+        <details><summary>What does ᾱₜ control?</summary><p>Cumulative signal retention from x<sub>0</sub> to x<sub>t</sub>. √ᾱ<sub>t</sub> multiplies x<sub>0</sub>, while √(1−ᾱ<sub>t</sub>) multiplies ε.</p></details>
+        <details><summary>Why can training jump directly to xₜ?</summary><p>Composing the Gaussian forward transitions yields the closed-form q(x<sub>t</sub>|x<sub>0</sub>), so x<sub>t</sub> can be sampled with one ε draw.</p></details>
+        <details><summary>Why is q(xₜ₋₁|xₜ,x₀) useful?</summary><p>It is a tractable Gaussian target for the learned reverse transition because training knows x<sub>0</sub>.</p></details>
+        <details><summary>How does ε-prediction define μθ?</summary><p>Substitute the predicted noise into:</p><div class="equation"><math display="block" aria-label="mu theta equals one over square root alpha t times x t minus beta t over square root one minus alpha bar t times epsilon theta of x t and t"><msub><mi>μ</mi><mi>θ</mi></msub><mo>=</mo><mfrac><mn>1</mn><msqrt><msub><mi>α</mi><mi>t</mi></msub></msqrt></mfrac><mo>[</mo><msub><mi>x</mi><mi>t</mi></msub><mo>−</mo><mfrac><msub><mi>β</mi><mi>t</mi></msub><msqrt><mrow><mn>1</mn><mo>−</mo><msub><mover><mi>α</mi><mo>¯</mo></mover><mi>t</mi></msub></mrow></msqrt></mfrac><msub><mi>ε</mi><mi>θ</mi></msub><mo>(</mo><msub><mi>x</mi><mi>t</mi></msub><mo>,</mo><mi>t</mi><mo>)</mo><mo>]</mo></math></div></details>
+        <details><summary>How do ε and z differ?</summary><p>ε creates a noisy training input and is its regression target. z is newly sampled noise used in a stochastic reverse transition, with z=0 at t=1.</p></details>
+        <details><summary>What changed from L to Lsimple?</summary><p><em>L</em><sub>simple</sub> removed the timestep-dependent coefficient on the ε-prediction squared error and samples t uniformly.</p></details>
+        <details><summary>What is the precise Figure 6 lesson?</summary><p>Along one reverse sampling trajectory, the inferred clean-image estimate acquires large-scale structure before fine detail. The columns are progressive x̂<sub>0</sub> estimates, not independent samples.</p></details>
+      </div>
+    </section>
+
+    <section aria-labelledby="map-title">
+      <span class="section-label">Connect it to your mental map</span>
+      <div class="mental-map">
+        <h2 id="map-title">DDPM joins variational inference, residual correction, and self-supervision.</h2>
+        <p><strong>From the VAE lesson:</strong> both optimize a variational bound with latent variables, but DDPM fixes a long encoder-like corruption chain whose latents have the same dimensionality as the image. <strong>From ResNet:</strong> generation becomes repeated local correction rather than one monolithic transformation. <strong>From Transformer:</strong> sinusoidal position embeddings are repurposed as noise-time coordinates inside the U-Net. <strong>From GANs:</strong> DDPM replaces an adversarial game with a known-noise regression target; this brings likelihood accounting but, in the original paper, a much longer sampling path.</p>
+        <p>The new branch in your map is <strong>score-based generative modelling</strong>: predict how to move a noisy point toward regions of higher data density, across many noise scales. DDPM reaches that branch through a finite variational Markov chain and an ε parameterization.</p>
+      </div>
+    </section>
+
+    <section aria-labelledby="takeaway-title">
+      <span class="section-label">Takeaway</span>
+      <h2 id="takeaway-title">Generation can be learned by undoing a mistake whose distribution we designed.</h2>
+      <p class="lead">Native intuition: choose a forward corruption that is easy to sample and easy to reason about; use clean data to reveal the ideal local reverse target; predict the exact noise you added; and compose those local corrections from Gaussian noise back to data. When you meet a diffusion model, ask four things: what forward process is fixed, what the network predicts, how the training terms are weighted, and how many reverse steps sampling must pay for.</p>
+    </section>
+  </main>
+
+  <footer class="wrap">
+    <h2>Source and further exploration</h2>
+    <ul>
+      <li><a href="denoising_diffusion_probabilistic_models.pdf">Local PDF: Ho, Jain, and Abbeel, <em>Denoising Diffusion Probabilistic Models</em></a></li>
+      <li><a href="https://proceedings.neurips.cc/paper/2020/hash/4c5bcfec8584af0d967f1ab10179ca4b-Abstract.html">NeurIPS 2020 canonical paper record</a></li>
+      <li><a href="https://arxiv.org/abs/2006.11239">arXiv record and version history</a></li>
+      <li><a href="https://github.com/hojonathanho/diffusion">Authors’ reference implementation</a></li>
+    </ul>
+  </footer>
+
+  <script>
+    (() => {
+      const timeStep = document.querySelector('#time-step');
+      const timeValue = document.querySelector('#time-value');
+      const signalFill = document.querySelector('#signal-fill');
+      const noiseFill = document.querySelector('#noise-fill');
+      const signalValue = document.querySelector('#signal-value');
+      const noiseValue = document.querySelector('#noise-value');
+      const mixtureReading = document.querySelector('#mixture-reading');
+      const frames = Array.from(document.querySelectorAll('.mini-frame'));
+      const required = [timeStep, timeValue, signalFill, noiseFill, signalValue, noiseValue, mixtureReading];
+      if (required.some((element) => !element)) return;
+      const totalSteps = 1000;
+      const betaStart = 1e-4;
+      const betaEnd = 0.02;
+      function alphaBarAt(t) {
+        let alphaBar = 1;
+        for (let step = 1; step <= t; step += 1) {
+          const beta = betaStart + (betaEnd - betaStart) * (step - 1) / (totalSteps - 1);
+          alphaBar *= 1 - beta;
+        }
+        return alphaBar;
+      }
+      function renderTime() {
+        const t = Number(timeStep.value);
+        const alphaBar = alphaBarAt(t);
+        const signal = Math.sqrt(alphaBar);
+        const noise = Math.sqrt(1 - alphaBar);
+        timeValue.value = `t = ${t}`;
+        signalFill.style.width = `${(signal * 100).toFixed(2)}%`;
+        noiseFill.style.width = `${(noise * 100).toFixed(2)}%`;
+        signalFill.parentElement?.setAttribute('aria-label', `Clean-signal coefficient ${signal.toFixed(3)}`);
+        noiseFill.parentElement?.setAttribute('aria-label', `Sampled-noise coefficient ${noise.toFixed(3)}`);
+        signalValue.textContent = signal.toFixed(3);
+        noiseValue.textContent = noise.toFixed(3);
+        mixtureReading.textContent = `At t=${t}, ᾱt≈${alphaBar.toFixed(5)}. The clean-signal coefficient is ${signal.toFixed(3)} and the sampled-noise coefficient is ${noise.toFixed(3)}.`;
+        const activeIndex = Math.min(frames.length - 1, Math.round((t / totalSteps) * (frames.length - 1)));
+        frames.forEach((frame, index) => frame.classList.toggle('active', index === activeIndex));
+      }
+      timeStep.addEventListener('input', renderTime);
+      renderTime();
+    })();
+  </script>
+</body>
+</html>

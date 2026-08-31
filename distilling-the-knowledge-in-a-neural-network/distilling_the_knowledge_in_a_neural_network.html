@@ -1,0 +1,635 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Distilling the Knowledge in a Neural Network</title>
+  <style>
+    :root {
+      --paper: #eef2f4;
+      --paper-bright: #f9fbfb;
+      --ink: #16222c;
+      --muted: #52616d;
+      --rule: #aebbc3;
+      --teacher: #183f60;
+      --teacher-pale: #d8e5ec;
+      --student: #8a4038;
+      --student-pale: #eadbd8;
+      --focus: #b46b16;
+      --serif: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+      --sans: "Avenir Next", Avenir, "Helvetica Neue", Arial, sans-serif;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      color: var(--ink);
+      background:
+        linear-gradient(90deg, transparent 0 7.4vw, rgba(24,63,96,.08) 7.4vw 7.5vw, transparent 7.5vw),
+        var(--paper);
+      font: 18px/1.7 var(--serif);
+    }
+    a { color: var(--teacher); text-underline-offset: .18em; }
+    a:hover { color: var(--student); }
+    a:focus-visible, button:focus-visible, input:focus-visible, summary:focus-visible {
+      outline: 3px solid var(--focus);
+      outline-offset: 4px;
+    }
+    .shell { width: min(1060px, calc(100% - 42px)); margin: 0 auto; }
+    .home {
+      display: inline-block;
+      margin: 22px 0 58px;
+      text-decoration: none;
+      font: 700 .77rem/1 var(--sans);
+      letter-spacing: .045em;
+    }
+    .mast {
+      display: grid;
+      grid-template-columns: minmax(0, 1.35fr) minmax(250px, .65fr);
+      gap: 5vw;
+      align-items: end;
+      padding-bottom: 54px;
+      border-bottom: 3px double var(--ink);
+    }
+    .kicker, .section-mark, .minute, .role-label {
+      font: 700 .72rem/1.35 var(--sans);
+      letter-spacing: .1em;
+      text-transform: uppercase;
+    }
+    .kicker { color: var(--student); }
+    h1, h2, h3 { margin: 0; font-weight: 500; line-height: 1.08; }
+    h1 { margin-top: 14px; max-width: 15ch; font-size: clamp(3.1rem, 7.5vw, 6.7rem); letter-spacing: -.055em; }
+    h2 { max-width: 22ch; font-size: clamp(2rem, 4.2vw, 3.55rem); letter-spacing: -.035em; }
+    h3 { font-size: 1.28rem; }
+    .dek { margin: 25px 0 0; max-width: 42rem; font-size: 1.25rem; color: var(--muted); }
+    .byline { margin: 22px 0 0; max-width: 48rem; color: var(--muted); font-size: .92rem; }
+    .margin-thesis {
+      padding: 18px 0 4px 22px;
+      border-left: 4px solid var(--student);
+      font-size: 1.02rem;
+    }
+    .margin-thesis strong { display: block; margin-bottom: 8px; color: var(--student); font-family: var(--sans); }
+    main { padding: 26px 0 84px; }
+    section { padding: 54px 0; border-bottom: 1px solid var(--rule); }
+    .section-mark { display: block; margin-bottom: 14px; color: var(--student); }
+    .lead { max-width: 47rem; font-size: 1.18rem; }
+    .compass { margin: 26px 0; padding: 18px 20px; max-width: 48rem; background: var(--paper-bright); border-left: 4px solid var(--focus); }
+    .compass strong { color: var(--teacher); font-family: var(--sans); }
+    p, ul, ol { max-width: 48rem; }
+    .route {
+      display: grid;
+      grid-template-columns: repeat(6, minmax(0, 1fr));
+      gap: 0;
+      margin: 20px 0 0;
+      padding: 0;
+      list-style: none;
+      border-top: 1px solid var(--ink);
+      border-bottom: 1px solid var(--ink);
+    }
+    .route li { min-height: 96px; padding: 13px 11px; border-right: 1px solid var(--rule); font: .8rem/1.45 var(--sans); }
+    .route li:last-child { border-right: 0; }
+    .minute { display: block; margin-bottom: 9px; color: var(--teacher); }
+    .bridge {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 34px;
+      margin-top: 30px;
+    }
+    .bridge article { padding-top: 16px; border-top: 4px solid var(--teacher); }
+    .bridge article:last-child { border-color: var(--student); }
+    .bridge p { margin-bottom: 0; }
+    .proof-sheet {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      margin: 30px 0;
+      background: var(--paper-bright);
+      border: 1px solid var(--rule);
+    }
+    .proof-sheet > div { padding: 23px 25px; }
+    .proof-sheet > div + div { border-left: 1px solid var(--rule); }
+    .role-label { display: block; margin-bottom: 13px; }
+    .teacher .role-label { color: var(--teacher); }
+    .student .role-label { color: var(--student); }
+    .formula {
+      margin: 25px 0;
+      padding: 18px 0;
+      overflow-x: auto;
+      border-top: 1px solid var(--rule);
+      border-bottom: 1px solid var(--rule);
+      font: .94rem/1.65 var(--mono);
+    }
+    .formula math {
+      display: block;
+      width: max-content;
+      min-width: max-content;
+      margin: 0 auto;
+      color: inherit;
+      font-family: "STIX Two Math", "Cambria Math", "Times New Roman", serif;
+      font-size: 1.08rem;
+    }
+    .formula mtable { margin: 0 auto; }
+    .math-inline {
+      display: inline-block;
+      vertical-align: -.16em;
+      color: inherit;
+      font-family: "STIX Two Math", "Cambria Math", "Times New Roman", serif;
+    }
+    .formula .teacher-ink { color: var(--teacher); }
+    .formula .student-ink { color: var(--student); }
+    .causal-chain {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      margin: 30px 0;
+      border: 1px solid var(--rule);
+      background: var(--paper-bright);
+    }
+    .causal-chain div { position: relative; min-height: 122px; padding: 18px 20px; border-right: 1px solid var(--rule); }
+    .causal-chain div:last-child { border-right: 0; }
+    .causal-chain div:not(:last-child)::after { content: "\2192"; position: absolute; right: -13px; top: 40px; z-index: 2; padding: 0 4px; background: var(--paper-bright); color: var(--student); font: 700 1.3rem var(--sans); }
+    .causal-chain strong { display: block; margin-bottom: 8px; color: var(--teacher); font-family: var(--sans); font-size: .88rem; }
+    .causal-chain span { font-size: .9rem; line-height: 1.45; }
+    .notation { width: 100%; margin-top: 24px; border-collapse: collapse; }
+    .notation th, .notation td { padding: 10px 8px; text-align: left; vertical-align: top; border-bottom: 1px solid var(--rule); }
+    .notation th { width: 16%; color: var(--teacher); font: 700 .78rem var(--mono); }
+    .notation td { font-size: .95rem; }
+    .notation td:last-child { color: var(--muted); }
+    .shape { white-space: nowrap; color: var(--student); font: .84rem var(--mono); }
+    figure { margin: 34px 0; }
+    figure img, figure svg { display: block; width: 100%; height: auto; }
+    figure svg { background: var(--paper-bright); border: 1px solid var(--rule); }
+    figcaption { max-width: 48rem; margin-top: 11px; color: var(--muted); font-size: .91rem; }
+    .diagram-scroll { overflow-x: auto; }
+    .diagram-scroll:focus-visible { outline: 3px solid var(--focus); outline-offset: 3px; }
+    .instrument {
+      margin: 34px 0;
+      padding: 28px;
+      background: var(--paper-bright);
+      border-top: 5px solid var(--teacher);
+      border-bottom: 1px solid var(--rule);
+    }
+    .instrument h3 { margin-bottom: 8px; }
+    .control-line {
+      display: grid;
+      grid-template-columns: 180px 1fr 84px;
+      gap: 18px;
+      align-items: center;
+      margin: 24px 0 30px;
+      font-family: var(--sans);
+    }
+    input[type="range"] { width: 100%; accent-color: var(--teacher); }
+    output { font: 700 .9rem var(--mono); color: var(--teacher); }
+    .bars { display: grid; gap: 12px; }
+    .prob-row { display: grid; grid-template-columns: 74px 1fr 60px; gap: 13px; align-items: center; }
+    .prob-label, .prob-value { font: .78rem var(--mono); }
+    .track { position: relative; height: 18px; background: var(--teacher-pale); border-bottom: 1px solid var(--teacher); }
+    .fill { height: 100%; width: 0; background: var(--teacher); transition: width .24s ease; }
+    .prediction { margin: 28px 0 8px; padding: 16px 18px; border-left: 4px solid var(--student); background: var(--student-pale); }
+    .answer { margin: 18px 0; padding: 14px 18px; background: var(--teacher-pale); border-left: 4px solid var(--teacher); }
+    .question { margin: 24px 0 10px; padding-left: 18px; border-left: 4px solid var(--student); font-weight: 700; }
+    details { max-width: 48rem; padding: 13px 0; border-bottom: 1px solid var(--rule); }
+    summary { cursor: pointer; font-weight: 700; }
+    details p { margin: 10px 0 2px; }
+    .worked {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 17rem;
+      gap: 42px;
+      align-items: start;
+      margin-top: 28px;
+    }
+    .annotation { padding: 15px 0 15px 18px; border-left: 3px solid var(--student); color: var(--muted); font-size: .94rem; }
+    .step { margin: 24px 0; padding-left: 18px; border-left: 3px solid var(--teacher); }
+    .step strong { color: var(--teacher); font-family: var(--sans); }
+    .step .formula { margin: 12px 0 0; padding: 12px 0; }
+    .calculation {
+      margin: 30px 0;
+      padding: 24px 26px;
+      background: var(--paper-bright);
+      border-top: 4px solid var(--teacher);
+      border-bottom: 1px solid var(--rule);
+    }
+    .calculation h3 { margin-bottom: 16px; }
+    .calculation .formula { margin: 16px 0; }
+    .gradient-table { width: 100%; border-collapse: collapse; margin: 20px 0; font: .82rem/1.45 var(--mono); }
+    .gradient-table th, .gradient-table td { padding: 9px 10px; text-align: right; border-bottom: 1px solid var(--rule); }
+    .gradient-table th:first-child, .gradient-table td:first-child { text-align: left; }
+    .gradient-table th { color: var(--teacher); }
+    .source-figure { max-width: 760px; padding: 16px; background: #fff; border: 1px solid var(--rule); }
+    .source-figure img { min-width: 0; }
+    .evidence-number { margin: 22px 0; padding: 16px 18px; border: 1px solid var(--rule); background: var(--paper-bright); font: .9rem/1.65 var(--mono); }
+    .evidence-grid { display: grid; grid-template-columns: 1.1fr .9fr; gap: 38px; align-items: start; }
+    .evidence-list { margin: 0; padding-left: 1.2em; }
+    .evidence-list li { margin-bottom: 13px; }
+    .limits { border-top: 4px solid var(--student); padding-top: 18px; }
+    .scope-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-top: 28px; }
+    .scope-grid article { padding-top: 15px; border-top: 3px solid var(--teacher); }
+    .scope-grid article:nth-child(2) { border-color: var(--student); }
+    .scope-grid article:nth-child(3) { border-color: var(--focus); }
+    .scope-grid p { font-size: .94rem; }
+    .recall { display: grid; grid-template-columns: 1fr 1fr; column-gap: 34px; }
+    footer { padding: 44px 0 64px; color: var(--muted); }
+    footer h2 { font: 500 1.7rem/1.2 var(--serif); }
+    footer ul { padding-left: 1.15em; }
+
+    @media (max-width: 760px) {
+      body { font-size: 17px; background: var(--paper); }
+      .shell { width: min(100% - 30px, 1060px); }
+      .mast, .bridge, .proof-sheet, .worked, .evidence-grid, .recall, .scope-grid { grid-template-columns: 1fr; }
+      .margin-thesis { margin-top: 20px; }
+      .proof-sheet > div + div { border-left: 0; border-top: 1px solid var(--rule); }
+      .route { grid-template-columns: repeat(2, 1fr); }
+      .route li:nth-child(even) { border-right: 0; }
+      .route li { border-bottom: 1px solid var(--rule); }
+      .route li:nth-last-child(-n+2) { border-bottom: 0; }
+      .control-line { grid-template-columns: 1fr 64px; }
+      .control-line label { grid-column: 1 / -1; }
+      .instrument { padding: 22px 16px; }
+      .prob-row { grid-template-columns: 58px 1fr 52px; }
+      .causal-chain { grid-template-columns: 1fr; }
+      .causal-chain div { min-height: 0; border-right: 0; border-bottom: 1px solid var(--rule); }
+      .causal-chain div:last-child { border-bottom: 0; }
+      .causal-chain div:not(:last-child)::after { content: "\2193"; right: 18px; top: auto; bottom: -18px; }
+      .notation { table-layout: fixed; }
+      .notation th { width: 20%; }
+      .notation td { overflow-wrap: anywhere; }
+      .notation .shape { white-space: normal; }
+      .diagram-scroll svg { min-width: 760px; }
+      .gradient-table { display: block; overflow-x: auto; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+      .fill { transition: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <a class="home" href="../index.html">← Daily AI Paper Lab</a>
+
+    <header class="mast">
+      <div>
+        <p class="kicker">Model compression · teacher-student learning</p>
+        <h1>The useful answer is larger than one label.</h1>
+        <p class="dek">A deployable student can learn not only which class wins, but how a cumbersome teacher ranks all the alternatives. Temperature makes that hidden structure trainable.</p>
+        <p class="byline"><em>Distilling the Knowledge in a Neural Network</em> · Geoffrey Hinton, Oriol Vinyals, and Jeff Dean · arXiv:1503.02531v1 · 2015</p>
+      </div>
+      <aside class="margin-thesis">
+        <strong>The paper's wager</strong>
+        Knowledge is not identical to a model's parameters. Treat it as an input-to-output mapping, then transfer that behavior into a model whose form is better suited to deployment.
+      </aside>
+    </header>
+
+    <main>
+      <section aria-labelledby="route-title">
+        <span class="section-mark">One-hour route</span>
+        <h2 id="route-title">Follow one causal thread from deployment pressure to a trainable loss.</h2>
+        <ol class="route">
+          <li><span class="minute">0-7 min</span>Find the deployment problem and analogy</li>
+          <li><span class="minute">7-16 min</span>Rebuild softmax and the hard-label baseline</li>
+          <li><span class="minute">16-28 min</span>Name symbols, shapes, and the two paths</li>
+          <li><span class="minute">28-43 min</span>Calculate temperature, gradients, and T²</li>
+          <li><span class="minute">43-52 min</span>Interrogate Table 1 and nearby evidence</li>
+          <li><span class="minute">52-60 min</span>Diagnose limits, recall, and connect</li>
+        </ol>
+      </section>
+
+      <section aria-labelledby="problem-title">
+        <span class="section-mark">1 · The deployment problem</span>
+        <h2 id="problem-title">The best model to train need not be the best model to serve.</h2>
+        <p class="lead">Ensembling separately trained models often improves predictions, but serving every member multiplies memory, latency, and computation. The paper separates the two jobs: use a cumbersome model to extract structure during training, then transfer its behavior into one student for deployment.</p>
+        <div class="compass"><strong>The paper's larva-adult analogy.</strong> A larva is specialized for gathering nutrients; an adult is specialized for travel and reproduction. Likewise, a training-time teacher may be large and expensive, while the deployment-time student should be fast and economical. The two forms serve different constraints.</div>
+        <div class="causal-chain" aria-label="The causal route from deployment constraint to knowledge distillation">
+          <div><strong>1 · Strong but cumbersome</strong><span>A large regularized model or ensemble generalizes well.</span></div>
+          <div><strong>2 · Hard to deploy</strong><span>Running every teacher member for each request is costly.</span></div>
+          <div><strong>3 · Transfer behavior</strong><span>Use the teacher's full output distribution as supervision.</span></div>
+          <div><strong>4 · Serve one student</strong><span>Train with two targets, then infer at ordinary temperature.</span></div>
+        </div>
+      </section>
+
+      <section aria-labelledby="bridge-title">
+        <span class="section-mark">2 · Prerequisite bridge</span>
+        <h2 id="bridge-title">An answer key gives the verdict; a teacher's notes explain the neighborhood.</h2>
+        <p>Suppose an image is a handwritten 2. A one-hot label says only “2 is correct.” A trained classifier might say “2 is very likely, 3 is more plausible than 7, and carrot is effectively impossible.” Those relative probabilities describe how the model generalizes around this example.</p>
+        <div class="bridge">
+          <article>
+            <span class="role-label">Hard-label baseline</span>
+            <h3>Train one student from the observed class.</h3>
+            <p>For logits <em>z</em>, ordinary softmax at T = 1 gives <em>q(1)</em>. Cross-entropy with one-hot label <em>e<sub>y</sub></em> is <strong><math class="math-inline" aria-label="negative log q sub y at temperature one"><mrow><mo>−</mo><mi>log</mi><msub><mi>q</mi><mi>y</mi></msub><mo>(</mo><mn>1</mn><mo>)</mo></mrow></math></strong>. It says which class must win, but not how the other classes relate.</p>
+          </article>
+          <article>
+            <span class="role-label">Teacher's proof sheet</span>
+            <h3>Keep the full pattern of corrections.</h3>
+            <p>The teacher's distribution gives a target for every class. The paper calls these “soft targets.” Their small non-winning probabilities carry the structure that a one-hot label discards.</p>
+          </article>
+        </div>
+        <div class="formula"><math display="block" aria-label="softmax at temperature T of a, component i, equals exponential of a i over T divided by the sum from j equals one to K of exponential a j over T"><mrow><msub><mrow><mi>softmax</mi></mrow><mi>T</mi></msub><mo>(</mo><mi>a</mi><msub><mo>)</mo><mi>i</mi></msub><mo>=</mo><mfrac><mrow><mi>exp</mi><mo>(</mo><mfrac><msub><mi>a</mi><mi>i</mi></msub><mi>T</mi></mfrac><mo>)</mo></mrow><mrow><munderover><mo>∑</mo><mrow><mi>j</mi><mo>=</mo><mn>1</mn></mrow><mi>K</mi></munderover><mi>exp</mi><mo>(</mo><mfrac><msub><mi>a</mi><mi>j</mi></msub><mi>T</mi></mfrac><mo>)</mo></mrow></mfrac></mrow></math></div>
+        <p><strong>Cross-entropy refresher.</strong> CE(target, prediction) averages the negative log probability assigned to outcomes, weighted by the target. With a one-hot target, only the correct class contributes. With a soft target, every class with nonzero teacher probability contributes.</p>
+      </section>
+
+      <section aria-labelledby="ingredients-title">
+        <span class="section-mark">3 · Name the players</span>
+        <h2 id="ingredients-title">Map every symbol to a role and a shape before deriving the loss.</h2>
+        <table class="notation">
+          <thead><tr><th>Symbol</th><th>Meaning</th><th>Shape</th></tr></thead>
+          <tbody>
+            <tr><th>K</th><td>Number of output classes.</td><td class="shape">scalar</td></tr>
+            <tr><th>v</th><td>Fixed teacher logits for one input, before softmax.</td><td class="shape">ℝ<sup>K</sup></td></tr>
+            <tr><th>z</th><td>Trainable student's logits for the same input.</td><td class="shape">ℝ<sup>K</sup></td></tr>
+            <tr><th>p(T)</th><td>Teacher probabilities after dividing <em>v</em> by T.</td><td class="shape">Δ<sup>K-1</sup></td></tr>
+            <tr><th>q(T)</th><td>Student probabilities after dividing <em>z</em> by the same T.</td><td class="shape">Δ<sup>K-1</sup></td></tr>
+            <tr><th>y, e<sub>y</sub></th><td>Observed class index and its one-hot vector.</td><td class="shape">y ∈ {1...K}; e<sub>y</sub> ∈ {0,1}<sup>K</sup></td></tr>
+            <tr><th>T</th><td>Positive temperature. T = 1 is ordinary softmax; T &gt; 1 softens the distribution.</td><td class="shape">scalar &gt; 0</td></tr>
+          </tbody>
+        </table>
+        <p>For a batch of B examples, the two logit arrays have shape <strong>B × K</strong>. Softmax runs across the K classes independently for each row. Every p(T) and q(T) row lies on the probability simplex Δ<sup>K-1</sup>: entries are nonnegative and sum to 1.</p>
+      </section>
+
+      <section aria-labelledby="mechanism-title">
+        <span class="section-mark">4 · Start with the behavior we want</span>
+        <h2 id="mechanism-title">Ask the student to match the teacher's generalization and the observed label.</h2>
+        <p>The paper's desired behavior comes first: the student should respond to each transfer example the way the teacher does, while labels—when available—keep learning pointed toward the correct answer. This becomes two cross-entropies computed from the same student logits.</p>
+        <div class="proof-sheet">
+          <div class="teacher">
+            <span class="role-label">Teacher · fixed proof sheet</span>
+            <p>Produce <em>v</em>, divide by T, and turn it into the soft target <em>p(T)</em>. No gradient updates the teacher.</p>
+          </div>
+          <div class="student">
+            <span class="role-label">Student · editable solution</span>
+            <p>Produce <em>z</em>. Compare <em>q(T)</em> with the teacher and <em>q(1)</em> with the hard label. Only the student receives gradients.</p>
+          </div>
+        </div>
+        <div class="formula"><math display="block" aria-label="soft loss equals cross entropy of p at T and q at T; hard loss equals cross entropy of e sub y and q at one"><mtable columnalign="right center left" rowspacing=".7em"><mtr class="teacher-ink"><mtd><msub><mi>L</mi><mi>soft</mi></msub></mtd><mtd><mo>=</mo></mtd><mtd><mi>CE</mi><mo>(</mo><mi>p</mi><mo>(</mo><mi>T</mi><mo>)</mo><mo>,</mo><mi>q</mi><mo>(</mo><mi>T</mi><mo>)</mo><mo>)</mo></mtd></mtr><mtr class="student-ink"><mtd><msub><mi>L</mi><mi>hard</mi></msub></mtd><mtd><mo>=</mo></mtd><mtd><mi>CE</mi><mo>(</mo><msub><mi>e</mi><mi>y</mi></msub><mo>,</mo><mi>q</mi><mo>(</mo><mn>1</mn><mo>)</mo><mo>)</mo></mtd></mtr></mtable></math></div>
+        <p>A convenient notation for the combined objective is:</p>
+        <div class="formula"><math display="block" aria-label="L equals alpha T squared L soft plus one minus alpha times L hard"><mrow><mi>L</mi><mo>=</mo><mi>α</mi><msup><mi>T</mi><mn>2</mn></msup><msub><mi>L</mi><mi>soft</mi></msub><mo>+</mo><mo>(</mo><mn>1</mn><mo>−</mo><mi>α</mi><mo>)</mo><msub><mi>L</mi><mi>hard</mi></msub></mrow></math></div>
+        <p>Here α simply names the relative weighting; the paper describes a weighted average rather than fixing this exact symbol. It generally reports lower weight on the hard objective, and explains why the soft-target gradient should be multiplied by T² when both terms are used.</p>
+        <figure>
+          <div class="diagram-scroll" role="region" tabindex="0" aria-label="Scrollable knowledge distillation diagram">
+          <svg viewBox="0 0 1040 430" role="img" aria-labelledby="distill-title distill-desc">
+            <title id="distill-title">Knowledge distillation teacher and student paths</title>
+            <desc id="distill-desc">A fixed teacher produces K logits and a softened probability target. A trainable student produces K logits. One loss compares softened distributions and another compares the ordinary student distribution with the hard label. Only the student is deployed.</desc>
+            <defs>
+              <marker id="teacher-arrow" markerWidth="8" markerHeight="8" refX="7" refY="3" orient="auto"><path d="M0 0L0 6L7 3z" fill="#183f60"/></marker>
+              <marker id="student-arrow" markerWidth="8" markerHeight="8" refX="7" refY="3" orient="auto"><path d="M0 0L0 6L7 3z" fill="#8a4038"/></marker>
+            </defs>
+            <style>
+              .dt{font:20px 'Iowan Old Style',Palatino,serif;fill:#16222c}.du{font:13px ui-monospace,monospace;fill:#52616d}.db{fill:#d8e5ec;stroke:#183f60;stroke-width:2}.ds{fill:#eadbd8;stroke:#8a4038;stroke-width:2}.da{fill:none;stroke:#183f60;stroke-width:2.5;marker-end:url(#teacher-arrow)}.dr{fill:none;stroke:#8a4038;stroke-width:2.5;marker-end:url(#student-arrow)}
+            </style>
+            <text class="du" x="34" y="44">TRAINING ONLY</text>
+            <rect class="db" x="32" y="70" width="190" height="92"/><text class="dt" x="68" y="108">teacher logits v</text><text class="du" x="81" y="135">shape B × K · fixed</text>
+            <path class="da" d="M224 116H346"/><text class="du" x="254" y="96">÷ T, softmax</text>
+            <rect class="db" x="350" y="70" width="176" height="92"/><text class="dt" x="409" y="108">p(T)</text><text class="du" x="375" y="135">soft target · B × K</text>
+            <path class="da" d="M528 116H650"/><text class="du" x="551" y="96">soft CE</text>
+            <rect class="ds" x="654" y="70" width="176" height="92"/><text class="dt" x="716" y="108">q(T)</text><text class="du" x="679" y="135">student path · B × K</text>
+            <rect class="ds" x="654" y="244" width="176" height="92"/><text class="dt" x="716" y="282">q(1)</text><text class="du" x="682" y="309">ordinary probabilities</text>
+            <rect x="350" y="244" width="176" height="92" fill="#f9fbfb" stroke="#8a4038" stroke-width="2"/><text class="dt" x="418" y="282">eᵧ</text><text class="du" x="378" y="309">hard label · B × K</text>
+            <path class="dr" d="M528 290H650"/><text class="du" x="547" y="270">hard CE</text>
+            <path class="dr" d="M832 290H990"/><text class="dt" x="874" y="272">deploy</text><text class="du" x="857" y="310">student only · T = 1</text>
+            <path d="M742 164V240" stroke="#8a4038" stroke-width="2" stroke-dasharray="5 5"/>
+            <text class="du" x="664" y="385">same student logits z feed both paths; gradients add here</text>
+            <path class="dr" d="M739 368V338"/>
+          </svg>
+          </div>
+          <figcaption><strong>Lesson diagram.</strong> The teacher and hard label supervise two views of the same student logits. High temperature exists only in the soft path during training; inference uses the student alone at T = 1.</figcaption>
+        </figure>
+      </section>
+
+      <section aria-labelledby="temperature-title">
+        <span class="section-mark">5 · Signature instrument</span>
+        <h2 id="temperature-title">Turn the temperature and expose the teacher's relative preferences.</h2>
+        <p class="question">Predict before moving the control: will increasing T change the class ranking, and will the gaps widen or narrow?</p>
+        <div class="instrument">
+          <h3>Teacher distribution for logits [4, 2, 1, -1]</h3>
+          <p>The same four scores are divided by T and normalized. Use the arrow keys when the slider has focus.</p>
+          <div class="control-line">
+            <label for="temperature">Temperature T</label>
+            <input id="temperature" type="range" min="1" max="8" step="0.5" value="4" aria-describedby="temperature-static">
+            <output id="temperature-value" for="temperature">4.0</output>
+          </div>
+          <div class="bars" aria-label="Softmax probabilities at the selected temperature">
+            <div class="prob-row"><span class="prob-label">class A</span><span class="track"><span class="fill" id="bar-0"></span></span><span class="prob-value" id="prob-0"></span></div>
+            <div class="prob-row"><span class="prob-label">class B</span><span class="track"><span class="fill" id="bar-1"></span></span><span class="prob-value" id="prob-1"></span></div>
+            <div class="prob-row"><span class="prob-label">class C</span><span class="track"><span class="fill" id="bar-2"></span></span><span class="prob-value" id="prob-2"></span></div>
+            <div class="prob-row"><span class="prob-label">class D</span><span class="track"><span class="fill" id="bar-3"></span></span><span class="prob-value" id="prob-3"></span></div>
+          </div>
+          <p id="distribution-reading" aria-live="polite"></p>
+          <details class="prediction">
+            <summary>Reveal the prediction answer</summary>
+            <p>The ranking cannot change: division by the same positive T preserves logit order. The gaps narrow because the exponential ratios move toward 1. At T = 4, the distribution is about [0.423, 0.256, 0.200, 0.121].</p>
+          </details>
+        </div>
+        <p id="temperature-static"><strong>Static reading.</strong> At T = 1 the probabilities are [0.839, 0.114, 0.042, 0.006]. At T = 4 they become [0.423, 0.256, 0.200, 0.121]. Temperature does not create similarity; it exposes relative logit differences already learned by the teacher.</p>
+      </section>
+
+      <section aria-labelledby="calc-one-title">
+        <span class="section-mark">6 · Calculation I — temperature</span>
+        <h2 id="calc-one-title">Compute one soft target without skipping the denominator.</h2>
+        <div class="calculation">
+          <h3>Teacher v = [4, 2, 1, -1], T = 4</h3>
+          <div class="step"><strong>1 · Scale.</strong><div class="formula"><math display="block" aria-label="v over T equals the row vector one, zero point five, zero point two five, negative zero point two five"><mrow><mfrac><mi>v</mi><mi>T</mi></mfrac><mo>=</mo><mo>[</mo><mtable><mtr><mtd><mn>1</mn></mtd><mtd><mn>0.5</mn></mtd><mtd><mn>0.25</mn></mtd><mtd><mo>−</mo><mn>0.25</mn></mtd></mtr></mtable><mo>]</mo></mrow></math></div></div>
+          <div class="step"><strong>2 · Exponentiate.</strong><div class="formula"><math display="block" aria-label="exponential of v over T is approximately the row vector two point seven one eight three, one point six four eight seven, one point two eight four zero, zero point seven seven eight eight"><mrow><mi>exp</mi><mo>(</mo><mfrac><mi>v</mi><mi>T</mi></mfrac><mo>)</mo><mo>≈</mo><mo>[</mo><mtable><mtr><mtd><mn>2.7183</mn></mtd><mtd><mn>1.6487</mn></mtd><mtd><mn>1.2840</mn></mtd><mtd><mn>0.7788</mn></mtd></mtr></mtable><mo>]</mo></mrow></math></div></div>
+          <div class="step"><strong>3 · Sum.</strong><div class="formula"><math display="block" aria-label="Z equals two point seven one eight three plus one point six four eight seven plus one point two eight four zero plus zero point seven seven eight eight equals six point four two nine eight"><mrow><mi>Z</mi><mo>=</mo><mn>2.7183</mn><mo>+</mo><mn>1.6487</mn><mo>+</mo><mn>1.2840</mn><mo>+</mo><mn>0.7788</mn><mo>=</mo><mn>6.4298</mn></mrow></math></div></div>
+          <div class="step"><strong>4 · Normalize.</strong><div class="formula"><math display="block" aria-label="p at four equals exponential of v over four divided by Z, approximately the row vector zero point four two two eight, zero point two five six four, zero point one nine nine seven, zero point one two one one"><mrow><mi>p</mi><mo>(</mo><mn>4</mn><mo>)</mo><mo>=</mo><mfrac><mrow><mi>exp</mi><mo>(</mo><mfrac><mi>v</mi><mn>4</mn></mfrac><mo>)</mo></mrow><mi>Z</mi></mfrac><mo>≈</mo><mo>[</mo><mtable><mtr><mtd><mn>0.4228</mn></mtd><mtd><mn>0.2564</mn></mtd><mtd><mn>0.1997</mn></mtd><mtd><mn>0.1211</mn></mtd></mtr></mtable><mo>]</mo></mrow></math></div></div>
+        </div>
+        <p class="question">Prediction check: if 10 is added to every teacher logit, does p(4) change?</p>
+        <details class="answer"><summary>Reveal the answer</summary><p>No. Every numerator and the denominator are multiplied by <math class="math-inline" aria-label="exponential of ten over four"><mrow><mi>exp</mi><mo>(</mo><mfrac><mn>10</mn><mn>4</mn></mfrac><mo>)</mo></mrow></math>, so the common factor cancels. Softmax depends on logit differences, not their absolute offset.</p></details>
+      </section>
+
+      <section aria-labelledby="calc-two-title">
+        <span class="section-mark">7 · Calculation II — gradient and T²</span>
+        <h2 id="calc-two-title">The soft path weakens twice as temperature rises.</h2>
+        <p>For cross-entropy from teacher target p(T) to student q(T), the derivative with respect to student logit z<sub>i</sub> is exactly:</p>
+        <div class="formula"><math display="block" aria-label="partial C over partial z sub i equals q sub i at T minus p sub i at T, divided by T"><mrow><mfrac><mrow><mo>∂</mo><mi>C</mi></mrow><mrow><mo>∂</mo><msub><mi>z</mi><mi>i</mi></msub></mrow></mfrac><mo>=</mo><mfrac><mrow><msub><mi>q</mi><mi>i</mi></msub><mo>(</mo><mi>T</mi><mo>)</mo><mo>−</mo><msub><mi>p</mi><mi>i</mi></msub><mo>(</mo><mi>T</mi><mo>)</mo></mrow><mi>T</mi></mfrac></mrow></math></div>
+        <p>One factor of 1/T appears directly from differentiating z/T. At high T, the difference q(T) - p(T) also shrinks roughly as 1/T. Together the gradient is approximately proportional to 1/T².</p>
+        <div class="calculation">
+          <h3>Exact four-class gradient at T = 4</h3>
+          <p>Keep teacher v = [4, 2, 1, -1] and use student z = [3, 2, 0, -1]. Then p(4) and q(4) are:</p>
+          <table class="gradient-table">
+            <thead><tr><th>Class</th><th>p(4)</th><th>q(4)</th><th>(q-p)/4</th><th>16 × gradient</th></tr></thead>
+            <tbody>
+              <tr><td>A</td><td>0.42276</td><td>0.38182</td><td>-0.01024</td><td>-0.16377</td></tr>
+              <tr><td>B</td><td>0.25642</td><td>0.29736</td><td>+0.01024</td><td>+0.16377</td></tr>
+              <tr><td>C</td><td>0.19970</td><td>0.18036</td><td>-0.00484</td><td>-0.07736</td></tr>
+              <tr><td>D</td><td>0.12112</td><td>0.14046</td><td>+0.00484</td><td>+0.07736</td></tr>
+            </tbody>
+          </table>
+          <div class="formula"><math display="block" aria-label="For class A, zero point three eight one eight two minus zero point four two two seven six, divided by four, equals negative zero point zero one zero two four"><mrow><mfrac><mrow><mn>0.38182</mn><mo>−</mo><mn>0.42276</mn></mrow><mn>4</mn></mfrac><mo>=</mo><mo>−</mo><mn>0.01024</mn></mrow></math></div><p>Multiplying the soft loss by T² = 16 makes its gradient -0.16377. The correction does not change the optimum of the soft term; it restores its scale relative to the hard term.</p>
+        </div>
+        <p class="question">Sign check: under gradient descent, does the negative class-A gradient raise or lower z<sub>A</sub>?</p>
+        <details class="answer"><summary>Reveal the answer</summary><p>It raises z<sub>A</sub>. Gradient descent subtracts the gradient, so subtracting a negative value increases the logit. That is appropriate because q<sub>A</sub> is below the teacher's p<sub>A</sub>.</p></details>
+      </section>
+
+      <section aria-labelledby="calc-three-title">
+        <span class="section-mark">8 · Calculation III — the high-temperature limit</span>
+        <h2 id="calc-three-title">Logit matching appears as a special case, not a separate mystery.</h2>
+        <p>If T is large compared with the logits, and teacher and student logits are separately centered so each set sums to zero, the paper approximates:</p>
+        <div class="formula"><math display="block" aria-label="partial C over partial z sub i is approximately z sub i minus v sub i, divided by K T squared"><mrow><mfrac><mrow><mo>∂</mo><mi>C</mi></mrow><mrow><mo>∂</mo><msub><mi>z</mi><mi>i</mi></msub></mrow></mfrac><mo>≈</mo><mfrac><mrow><msub><mi>z</mi><mi>i</mi></msub><mo>−</mo><msub><mi>v</mi><mi>i</mi></msub></mrow><mrow><mi>K</mi><msup><mi>T</mi><mn>2</mn></msup></mrow></mfrac></mrow></math></div>
+        <p>Centering v gives [2.5, 0.5, -0.5, -2.5]; centering z gives [2, 1, -1, -2]. Their difference z - v is [-0.5, +0.5, -0.5, +0.5]. At K = 4 and T = 20:</p>
+        <div class="calculation">
+          <div class="formula"><math display="block" aria-label="class A approximation equals negative zero point five divided by four times twenty squared, equals negative zero point zero zero zero three one two five"><mtable columnalign="right center left" rowspacing=".65em"><mtr><mtd><mtext>class A approximation</mtext></mtd><mtd><mo>=</mo></mtd><mtd><mfrac><mrow><mo>−</mo><mn>0.5</mn></mrow><mrow><mn>4</mn><mo>×</mo><msup><mn>20</mn><mn>2</mn></msup></mrow></mfrac></mtd></mtr><mtr><mtd></mtd><mtd><mo>=</mo></mtd><mtd><mo>−</mo><mn>0.0003125</mn></mtd></mtr></mtable></math></div>
+          <p>The exact class-A cross-entropy gradient at T = 20 is -0.0003354, already close to the approximation. In the high-temperature limit, minimizing soft-target cross-entropy therefore behaves like matching centered teacher and student logits with squared error.</p>
+        </div>
+        <aside class="annotation"><strong>Why the condition matters.</strong> Without centering, an arbitrary common logit offset would affect squared error even though it leaves softmax probabilities unchanged. At lower T, distillation also pays less attention to extremely negative logits; the paper notes that this can help when those logits are noisy.</aside>
+      </section>
+
+      <section aria-labelledby="recipe-title">
+        <span class="section-mark">9 · Make the method executable</span>
+        <h2 id="recipe-title">One batch, two targets, one student update.</h2>
+        <ol>
+          <li>Run each transfer input through the fixed teacher, or load cached teacher logits.</li>
+          <li>Compute p(T) from teacher logits and q(T) from student logits using the same T.</li>
+          <li>Compute T² CE(p(T), q(T)).</li>
+          <li>If a hard label is available, also compute CE(e<sub>y</sub>, q(1)).</li>
+          <li>Weight the two losses, backpropagate through the student only, and update its parameters.</li>
+          <li>At deployment, discard the teacher and use the student at T = 1.</li>
+        </ol>
+        <p>The transfer set may be the original labeled set, another unlabeled set, or a mixture. On unlabeled examples only the soft path is available. If the teacher is an ensemble, its members' predictive distributions can be combined before forming soft targets.</p>
+        <p class="question">Decision exercise: the teacher assigns only 0.38 to the true class and strongly prefers a wrong class. Should the student ignore the label and copy the teacher?</p>
+        <details class="prediction"><summary>Reveal the answer</summary><p>No. When the hard label is known, the hard-target term gives an independent correction. The relative weight must be selected on validation data; a wrong, biased, or poorly calibrated teacher can pass those failures to the student.</p></details>
+      </section>
+
+      <section aria-labelledby="evidence-title">
+        <span class="section-mark">10 · Read the central evidence</span>
+        <h2 id="evidence-title">A single acoustic model recovered most of a ten-model ensemble's gain.</h2>
+        <p>The speech experiment used an acoustic model with eight hidden layers of 2,560 rectified linear units, a 14,000-class softmax, about 85 million parameters, roughly 2,000 hours of English, and about 700 million training examples. Ten models with the same architecture were independently initialized; their averaged predictions formed the ensemble teacher. Distillation tried T ∈ {1, 2, 5, 10} and used relative hard-target cross-entropy weight 0.5.</p>
+        <div class="evidence-grid">
+          <figure class="source-figure">
+            <img src="paper_table_1.png" width="925" height="205" alt="Original paper Table 1. Baseline test frame accuracy is 58.9 percent with 10.9 percent WER; the ten-model ensemble scores 61.1 percent and 10.7 percent; the distilled single model scores 60.8 percent and 10.7 percent.">
+            <figcaption><strong>Original paper, Table 1 (PDF page 5).</strong> Test frame accuracy and word error rate for one baseline model, averaged predictions from ten models, and one distilled model.</figcaption>
+          </figure>
+          <div>
+            <h3>Calculate before interpreting</h3>
+            <div class="evidence-number"><math display="block" aria-label="ensemble gain equals sixty one point one minus fifty eight point nine equals two point two points; student gain equals sixty point eight minus fifty eight point nine equals one point nine points; fraction recovered equals one point nine over two point two equals eighty six point four percent"><mtable columnalign="right center left" rowspacing=".55em"><mtr><mtd><mtext>ensemble gain</mtext></mtd><mtd><mo>=</mo></mtd><mtd><mn>61.1</mn><mo>−</mo><mn>58.9</mn><mo>=</mo><mn>2.2</mn><mtext> points</mtext></mtd></mtr><mtr><mtd><mtext>student gain</mtext></mtd><mtd><mo>=</mo></mtd><mtd><mn>60.8</mn><mo>−</mo><mn>58.9</mn><mo>=</mo><mn>1.9</mn><mtext> points</mtext></mtd></mtr><mtr><mtd><mtext>fraction recovered</mtext></mtd><mtd><mo>=</mo></mtd><mtd><mfrac><mn>1.9</mn><mn>2.2</mn></mfrac><mo>=</mo><mn>86.4</mn><mo>%</mo></mtd></mtr></mtable></math></div>
+            <ul class="evidence-list">
+              <li>The student's 60.8% does not equal the ensemble's 61.1%, so transfer is strong but not exact.</li>
+              <li>Both report 10.7% WER, transferring the ensemble's 0.2-point WER improvement in this test.</li>
+              <li>The paper itself summarizes the frame-accuracy recovery as “more than 80%.”</li>
+            </ul>
+          </div>
+        </div>
+        <p class="question">Interpretation check: does 86.4% mean the student is 86.4% as accurate as the ensemble?</p>
+        <details class="answer"><summary>Reveal the answer</summary><p>No. It is the fraction of the ensemble's improvement over the 58.9% baseline that the student recovered. The student's absolute frame accuracy is 60.8%.</p></details>
+        <p class="question">Why can identical WER coexist with different frame accuracy?</p>
+        <details class="answer"><summary>Reveal the answer</summary><p>Frame classification is the local acoustic objective, while WER is produced after decoding sequences with the HMM and language model. Different frame-level predictions can lead to the same rounded word error rate. The paper explicitly notes this objective mismatch.</p></details>
+      </section>
+
+      <section aria-labelledby="scope-title">
+        <span class="section-mark">11 · Evidence beyond Table 1</span>
+        <h2 id="scope-title">Three experiments reveal what soft targets can—and cannot—carry.</h2>
+        <div class="scope-grid">
+          <article>
+            <span class="role-label">MNIST capacity transfer</span>
+            <h3>67 → 74 errors</h3>
+            <p>A large regularized network made 67 test errors. A smaller 2 × 800-unit network made 146 when trained normally, but 74 when trained to match soft targets at T = 20.</p>
+          </article>
+          <article>
+            <span class="role-label">Missing-class probe</span>
+            <h3>A “mythical” digit 3</h3>
+            <p>With all training 3s omitted from the transfer set, the student made 206 errors, 133 on 1,010 test 3s. After a post-hoc +3.5 bias adjustment chosen on the test set, it made 109 total errors and only 14 on 3s. This is a striking probe, but the test-tuned correction is not a clean evaluation protocol.</p>
+          </article>
+          <article>
+            <span class="role-label">Soft targets as regularizer</span>
+            <h3>3% data, 57.0% test accuracy</h3>
+            <p>On speech, hard targets with 3% of training data reached 67.3% train but only 44.5% test frame accuracy. Soft targets on that same 3% reached 65.4% train and 57.0% test, near the 58.9% full-data baseline.</p>
+          </article>
+        </div>
+        <p>The paper also explores 61 independently trained specialists for confusable JFT class subsets. Their combined predictions improve the generalist, but the authors explicitly say they had not yet shown that the specialist ensemble could be distilled back into one large model.</p>
+      </section>
+
+      <section aria-labelledby="limits-title">
+        <span class="section-mark">12 · Misconceptions and limits</span>
+        <h2 id="limits-title">Distillation compresses behavior, including behavior we may not want.</h2>
+        <div class="bridge">
+          <div>
+            <details><summary>“Higher temperature is always better.”</summary><p>No. Too little softening hides alternatives; too much flattens distinctions. The paper reports intermediate T = 2.5 to 4 worked best for its radically small 30-unit MNIST student, while students with at least 300 units were similar above T = 8.</p></details>
+            <details><summary>“The student uses high temperature in production.”</summary><p>No. High T is a training device for the soft-target path. The trained student returns to T = 1 at inference.</p></details>
+            <details><summary>“Soft targets are ordinary label smoothing.”</summary><p>No. Generic label smoothing assigns a fixed pattern around every label. Distillation supplies a different, input-dependent distribution from the teacher for each example.</p></details>
+            <details><summary>“Dark knowledge means hidden activations are copied.”</summary><p>No. This paper transfers output behavior—the pattern of class probabilities—not internal features or a proof that the two networks reason alike.</p></details>
+          </div>
+          <div class="limits">
+            <h3>Boundary conditions</h3>
+            <ul>
+              <li>A student with insufficient capacity cannot reproduce every teacher distinction.</li>
+              <li>Teacher errors, bias, and poor calibration can be inherited.</li>
+              <li>The transfer set must cover inputs on which useful teacher behavior should be learned.</li>
+              <li>Training still needs teacher inference or stored logits; only deployment becomes teacher-free.</li>
+              <li>Table 1 compares one model with a ten-model ensemble; it does not report a smaller parameter count than the single-model baseline.</li>
+              <li>The 2015 evidence does not establish modern robustness, fairness, calibration, or universal success across architectures.</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <section aria-labelledby="recall-title">
+        <span class="section-mark">13 · Active recall</span>
+        <h2 id="recall-title">Close the derivation and reconstruct the transfer.</h2>
+        <div class="recall">
+          <details><summary>What information does a one-hot label omit?</summary><p>It omits the teacher's relative beliefs among non-target classes: which alternatives resemble the example and which are implausible.</p></details>
+          <details><summary>Why must teacher and student use the same T in the soft path?</summary><p>They must be compared under the same scaling. Otherwise the distributions reflect different levels of softening rather than only teacher-student disagreement.</p></details>
+          <details><summary>Where do the two factors of 1/T come from?</summary><p>One comes directly from differentiating z/T. At high T, q(T) - p(T) contributes another approximate 1/T because both distributions move toward uniform.</p></details>
+          <details><summary>What does multiplying the soft loss by T² accomplish?</summary><p>It approximately restores the soft gradient's scale relative to the hard-label gradient as T changes; it does not alter the soft loss's optimum.</p></details>
+          <details><summary>When does distillation become logit matching?</summary><p>In the high-temperature limit, after teacher and student logits are separately zero-centered, the gradient is proportional to z - v.</p></details>
+          <details><summary>What is deployed?</summary><p>The student alone at T = 1.</p></details>
+          <details><summary>What exactly does Table 1 establish?</summary><p>In the reported speech setup, one distilled model recovered 86.4% of the ten-model ensemble's frame-accuracy gain over baseline and matched its rounded WER.</p></details>
+          <details><summary>What is the main risk to inspect?</summary><p>Whether the teacher's mistakes, biases, and blind spots are transferred along with its useful class similarities.</p></details>
+        </div>
+      </section>
+
+      <section aria-labelledby="map-title">
+        <span class="section-mark">Connect it to your mental map</span>
+        <h2 id="map-title">Distillation changes the supervision channel, not the required architecture.</h2>
+        <p><strong>Dropout</strong> can make one training network behave like an implicit ensemble; this paper then treats that cumbersome predictor as a teacher. <strong>SimCLR</strong> also uses temperature, but its softmax organizes positive and negative views, whereas distillation organizes a teacher's class alternatives. <strong>Lottery-ticket pruning</strong> changes the network's connectivity; distillation can instead train a differently shaped student by changing its targets.</p>
+        <p><strong>DPO</strong> follows a parallel causal style but solves a different problem. DPO compares chosen and rejected sequences relative to a frozen reference policy. Distillation compares the student's full class distribution with a fixed teacher's distribution. Both can train an existing architecture through a changed objective; neither mechanism implies that teacher/reference errors disappear.</p>
+      </section>
+
+      <section aria-labelledby="takeaway-title">
+        <span class="section-mark">Takeaway</span>
+        <h2 id="takeaway-title">A label gives the verdict; a teacher reveals the neighborhood around it.</h2>
+        <p class="lead">Native intuition: soften teacher and student by the same temperature, match the whole distribution, correct the soft gradient by T² when combining it with hard labels, then deploy only the student at T = 1. The gain comes from transferring how the teacher generalizes—not merely its top answer.</p>
+      </section>
+    </main>
+
+    <footer>
+      <h2>Source and further exploration</h2>
+      <ul>
+        <li><a href="distilling_the_knowledge_in_a_neural_network.pdf">Original paper PDF</a></li>
+        <li><a href="https://arxiv.org/abs/1503.02531">Canonical arXiv record</a> — Hinton, Vinyals, and Dean</li>
+      </ul>
+    </footer>
+  </div>
+
+  <script>
+    const temperature = document.querySelector('#temperature');
+    const temperatureValue = document.querySelector('#temperature-value');
+    const reading = document.querySelector('#distribution-reading');
+    const logits = [4, 2, 1, -1];
+    const bars = logits.map((_, index) => document.querySelector(`#bar-${index}`));
+    const values = logits.map((_, index) => document.querySelector(`#prob-${index}`));
+
+    function softened(inputLogits, t) {
+      const largest = Math.max(...inputLogits);
+      const scaled = inputLogits.map(value => Math.exp((value - largest) / t));
+      const total = scaled.reduce((sum, value) => sum + value, 0);
+      return scaled.map(value => value / total);
+    }
+
+    function entropy(probabilities) {
+      return -probabilities.reduce((sum, probability) => sum + probability * Math.log(probability), 0);
+    }
+
+    function renderTemperature() {
+      const t = Number(temperature.value);
+      const probabilities = softened(logits, t);
+      temperatureValue.value = t.toFixed(1);
+      probabilities.forEach((probability, index) => {
+        bars[index].style.width = `${(probability * 100).toFixed(1)}%`;
+        values[index].textContent = probability.toFixed(3);
+      });
+      reading.textContent = `At T = ${t.toFixed(1)}, the top class has ${(probabilities[0] * 100).toFixed(1)}% probability, the lowest has ${(probabilities[3] * 100).toFixed(1)}%, and entropy is ${entropy(probabilities).toFixed(3)} nats.`;
+    }
+
+    temperature.addEventListener('input', renderTemperature);
+    renderTemperature();
+  </script>
+</body>
+</html>

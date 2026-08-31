@@ -1,134 +1,474 @@
 {
   "schema_version": 1,
-  "collection_title": "Daily AI Papers",
+  "collection_title": "Daily AI Paper Lab",
   "timezone": "Asia/Kuala_Lumpur",
-  "schedule": "daily at 7:50 AM",
+  "schedule": "daily at 10:00 AM",
   "selection_policy": "Use one openly accessible, high-quality, educational core paper per day. Mix foundational and newer work across AI, ML, and DL. Verify a readable primary PDF before creating a lesson. Avoid repeats.",
   "concepts_introduced": [
-    "graphs", "adjacency matrix", "message passing", "self-loops", "degree normalization", "node classification", "over-smoothing", "embeddings", "tokenization", "self-attention", "multi-head attention", "positional encoding", "encoder-decoder", "autoregressive decoding", "residual connections", "layer normalization", "convolutional neural networks", "degradation problem", "identity shortcuts", "residual mapping", "bottleneck blocks", "reinforcement learning", "discounted return", "action-value function", "Bellman backup", "temporal-difference error", "experience replay", "target network", "epsilon-greedy exploration", "off-policy learning", "batch normalization", "mini-batch statistics", "running statistics", "learned affine transform", "stochastic gradient descent", "momentum", "adaptive learning rates", "first moment", "second raw moment", "bias correction", "coordinatewise updates", "preference pairs", "Bradley-Terry model", "KL-regularized reward maximization", "reference policy", "implicit reward", "DPO loss", "beta", "latent variables", "generative model", "approximate posterior", "ELBO", "reparameterization trick", "variational inference", "prior distribution", "dropout", "regularization", "generalization", "co-adaptation", "Bernoulli masks", "test-time scaling", "shared-weight ensemble"
+    "graphs",
+    "adjacency matrix",
+    "message passing",
+    "self-loops",
+    "degree normalization",
+    "node classification",
+    "over-smoothing",
+    "embeddings",
+    "tokenization",
+    "self-attention",
+    "multi-head attention",
+    "positional encoding",
+    "encoder-decoder",
+    "autoregressive decoding",
+    "residual connections",
+    "layer normalization",
+    "convolutional neural networks",
+    "degradation problem",
+    "identity shortcuts",
+    "residual mapping",
+    "bottleneck blocks",
+    "reinforcement learning",
+    "discounted return",
+    "action-value function",
+    "Bellman backup",
+    "temporal-difference error",
+    "experience replay",
+    "target network",
+    "epsilon-greedy exploration",
+    "off-policy learning",
+    "batch normalization",
+    "mini-batch statistics",
+    "running statistics",
+    "learned affine transform",
+    "stochastic gradient descent",
+    "momentum",
+    "adaptive learning rates",
+    "first moment",
+    "second raw moment",
+    "bias correction",
+    "coordinatewise updates",
+    "preference pairs",
+    "Bradley-Terry model",
+    "KL-regularized reward maximization",
+    "reference policy",
+    "implicit reward",
+    "DPO loss",
+    "beta",
+    "latent variables",
+    "generative model",
+    "approximate posterior",
+    "ELBO",
+    "reparameterization trick",
+    "variational inference",
+    "prior distribution",
+    "dropout",
+    "regularization",
+    "generalization",
+    "co-adaptation",
+    "Bernoulli masks",
+    "test-time scaling",
+    "shared-weight ensemble",
+    "diffusion models",
+    "forward noising process",
+    "reverse denoising process",
+    "noise schedule",
+    "noise prediction",
+    "variational bound",
+    "iterative sampling",
+    "knowledge distillation",
+    "soft targets",
+    "teacher-student learning",
+    "softmax temperature",
+    "dark knowledge",
+    "temperature-squared gradient scaling",
+    "model compression",
+    "self-supervised learning",
+    "contrastive learning",
+    "positive pairs",
+    "negative pairs",
+    "NT-Xent loss",
+    "temperature",
+    "projection head",
+    "linear evaluation",
+    "unstructured pruning",
+    "binary masks",
+    "winning tickets",
+    "iterative magnitude pruning",
+    "original initialization",
+    "sparse trainability"
   ],
   "completed_lessons": [
+    {
+      "date": "2026-08-31",
+      "slug": "denoising-diffusion-probabilistic-models",
+      "title": "Denoising Diffusion Probabilistic Models",
+      "lesson_file": "denoising-diffusion-probabilistic-models/denoising_diffusion_probabilistic_models.html",
+      "paper_file": "denoising-diffusion-probabilistic-models/denoising_diffusion_probabilistic_models.pdf",
+      "authors": [
+        "Jonathan Ho",
+        "Ajay Jain",
+        "Pieter Abbeel"
+      ],
+      "venue": "NeurIPS 2020",
+      "canonical_url": "https://arxiv.org/abs/2006.11239",
+      "domain": "diffusion-based generative modeling",
+      "areas": [
+        "generative modeling",
+        "diffusion models",
+        "denoising",
+        "score matching"
+      ],
+      "concepts_introduced": [
+        "diffusion models",
+        "forward noising process",
+        "reverse denoising process",
+        "noise schedule",
+        "noise prediction",
+        "variational bound",
+        "iterative sampling"
+      ],
+      "mental_map_connection": "Adds a likelihood-trained generative path beside GANs and VAEs: corrupt data with a fixed process, then learn many local denoising corrections.",
+      "description": "Learn how generation can be decomposed into reversing a known sequence of small noise steps."
+    },
+    {
+      "date": "2026-08-30",
+      "slug": "distilling-the-knowledge-in-a-neural-network",
+      "title": "Distilling the Knowledge in a Neural Network",
+      "lesson_file": "distilling-the-knowledge-in-a-neural-network/distilling_the_knowledge_in_a_neural_network.html",
+      "paper_file": "distilling-the-knowledge-in-a-neural-network/distilling_the_knowledge_in_a_neural_network.pdf",
+      "authors": [
+        "Geoffrey Hinton",
+        "Oriol Vinyals",
+        "Jeff Dean"
+      ],
+      "venue": "NeurIPS Deep Learning Workshop 2015",
+      "canonical_url": "https://arxiv.org/abs/1503.02531",
+      "domain": "model compression and teacher-student learning",
+      "areas": [
+        "model compression",
+        "knowledge distillation",
+        "deployment",
+        "transfer learning"
+      ],
+      "concepts_introduced": [
+        "knowledge distillation",
+        "soft targets",
+        "teacher-student learning",
+        "softmax temperature",
+        "dark knowledge",
+        "temperature-squared gradient scaling",
+        "model compression"
+      ],
+      "mental_map_connection": "Adds a model-compression branch: a smaller student learns the teacher’s relationships among classes rather than copying only hard labels.",
+      "description": "Learn how a small model learns from a teacher’s entire softened probability distribution, carrying more information than one hard label."
+    },
+    {
+      "date": "2026-08-26",
+      "slug": "simclr-contrastive-learning",
+      "title": "A Simple Framework for Contrastive Learning of Visual Representations",
+      "lesson_file": "simclr-contrastive-learning/a_simple_framework_for_contrastive_learning_of_visual_representations.html",
+      "paper_file": "simclr-contrastive-learning/a_simple_framework_for_contrastive_learning_of_visual_representations.pdf",
+      "authors": [
+        "Ting Chen",
+        "Simon Kornblith",
+        "Mohammad Norouzi",
+        "Geoffrey Hinton"
+      ],
+      "venue": "ICML 2020",
+      "canonical_url": "https://proceedings.mlr.press/v119/chen20j.html",
+      "domain": "self-supervised visual representation learning",
+      "areas": [
+        "self-supervised learning",
+        "representation learning",
+        "contrastive learning",
+        "computer vision"
+      ],
+      "concepts_introduced": [
+        "self-supervised learning",
+        "contrastive learning",
+        "positive pairs",
+        "negative pairs",
+        "NT-Xent loss",
+        "temperature",
+        "projection head",
+        "linear evaluation"
+      ],
+      "mental_map_connection": "Adds self-supervision: augmentation defines invariances, while a contrastive objective shapes representations without class labels.",
+      "description": "Learn how carefully chosen augmented views become a self-supervised training signal, teaching an encoder what should stay the same without labels."
+    },
     {
       "date": "2026-08-24",
       "slug": "semi-supervised-classification-with-graph-convolutional-networks",
       "title": "Semi-Supervised Classification with Graph Convolutional Networks",
-      "lesson_file": "2026-08-24-semi-supervised-classification-with-graph-convolutional-networks/semi_supervised_classification_with_graph_convolutional_networks.html",
-      "paper_file": "2026-08-24-semi-supervised-classification-with-graph-convolutional-networks/semi_supervised_classification_with_graph_convolutional_networks.pdf",
-      "authors": ["Thomas N. Kipf", "Max Welling"],
+      "lesson_file": "semi-supervised-classification-with-graph-convolutional-networks/semi_supervised_classification_with_graph_convolutional_networks.html",
+      "paper_file": "semi-supervised-classification-with-graph-convolutional-networks/semi_supervised_classification_with_graph_convolutional_networks.pdf",
+      "authors": [
+        "Thomas N. Kipf",
+        "Max Welling"
+      ],
       "venue": "ICLR 2017",
       "canonical_url": "https://openreview.net/forum?id=SJU4ayYgl",
       "domain": "graph representation learning and semi-supervised node classification",
-      "areas": ["graph neural networks", "representation learning", "semi-supervised learning"],
-      "concepts_introduced": ["graphs", "adjacency matrix", "message passing", "self-loops", "degree normalization", "node classification", "over-smoothing"],
-      "mental_map_connection": "Adds a graph-structured-data branch: it generalizes the shared local rule of CNNs beyond grids and contrasts fixed graph neighbourhood mixing with the Transformer’s learned attention."
+      "areas": [
+        "graph neural networks",
+        "representation learning",
+        "semi-supervised learning"
+      ],
+      "concepts_introduced": [
+        "graphs",
+        "adjacency matrix",
+        "message passing",
+        "self-loops",
+        "degree normalization",
+        "node classification",
+        "over-smoothing"
+      ],
+      "mental_map_connection": "Adds a graph-structured-data branch: it generalizes the shared local rule of CNNs beyond grids and contrasts fixed graph neighbourhood mixing with the Transformer’s learned attention.",
+      "description": "Learn how a node mixes carefully normalized information from its neighbours and itself, then turns relational context into a class prediction."
+    },
+    {
+      "date": "2026-08-24",
+      "slug": "the-lottery-ticket-hypothesis",
+      "title": "The Lottery Ticket Hypothesis: Finding Sparse, Trainable Neural Networks",
+      "lesson_file": "the-lottery-ticket-hypothesis/the_lottery_ticket_hypothesis.html",
+      "paper_file": "the-lottery-ticket-hypothesis/the_lottery_ticket_hypothesis.pdf",
+      "authors": [
+        "Jonathan Frankle",
+        "Michael Carbin"
+      ],
+      "venue": "ICLR 2019",
+      "canonical_url": "https://arxiv.org/abs/1803.03635",
+      "domain": "neural-network sparsity, pruning, and initialization",
+      "areas": [
+        "efficient ML",
+        "sparsity",
+        "pruning",
+        "initialization",
+        "optimization"
+      ],
+      "concepts_introduced": [
+        "unstructured pruning",
+        "binary masks",
+        "winning tickets",
+        "iterative magnitude pruning",
+        "original initialization",
+        "sparse trainability"
+      ],
+      "mental_map_connection": "Adds a sparsity branch: optimization may depend not only on architecture, but on which parameters survive and the values from which they started.",
+      "description": "Learn why a useful sparse network may be defined by both its mask and its original initialization, and how pruning discovers one route through a dense model."
     },
     {
       "date": "2026-08-23",
       "slug": "auto-encoding-variational-bayes",
       "title": "Auto-Encoding Variational Bayes",
-      "lesson_file": "2026-08-23-auto-encoding-variational-bayes/auto_encoding_variational_bayes.html",
-      "paper_file": "2026-08-23-auto-encoding-variational-bayes/auto_encoding_variational_bayes.pdf",
-      "authors": ["Diederik P. Kingma", "Max Welling"],
+      "lesson_file": "auto-encoding-variational-bayes/auto_encoding_variational_bayes.html",
+      "paper_file": "auto-encoding-variational-bayes/auto_encoding_variational_bayes.pdf",
+      "authors": [
+        "Diederik P. Kingma",
+        "Max Welling"
+      ],
       "venue": "ICLR 2014",
       "canonical_url": "https://arxiv.org/abs/1312.6114",
       "domain": "probabilistic generative modeling and variational inference",
-      "areas": ["generative modeling", "variational inference", "latent-variable models"],
-      "concepts_introduced": ["latent variables", "generative model", "approximate posterior", "ELBO", "reparameterization trick", "variational inference", "prior distribution"],
-      "mental_map_connection": "Adds a likelihood-based latent-variable branch beside GANs, and connects probabilistic inference to the stochastic-gradient training ideas introduced by Adam."
+      "areas": [
+        "generative modeling",
+        "variational inference",
+        "latent-variable models"
+      ],
+      "concepts_introduced": [
+        "latent variables",
+        "generative model",
+        "approximate posterior",
+        "ELBO",
+        "reparameterization trick",
+        "variational inference",
+        "prior distribution"
+      ],
+      "mental_map_connection": "Adds a likelihood-based latent-variable branch beside GANs, and connects probabilistic inference to the stochastic-gradient training ideas introduced by Adam.",
+      "description": "Learn how a VAE balances reconstruction with a sampleable latent space, and why reparameterization lets gradients flow through random samples."
     },
     {
       "date": "2026-08-23",
       "slug": "dropout-a-simple-way-to-prevent-neural-networks-from-overfitting",
       "title": "Dropout: A Simple Way to Prevent Neural Networks from Overfitting",
-      "lesson_file": "2026-08-23-dropout-a-simple-way-to-prevent-neural-networks-from-overfitting/dropout_a_simple_way_to_prevent_neural_networks_from_overfitting.html",
-      "paper_file": "2026-08-23-dropout-a-simple-way-to-prevent-neural-networks-from-overfitting/dropout_a_simple_way_to_prevent_neural_networks_from_overfitting.pdf",
-      "authors": ["Nitish Srivastava", "Geoffrey Hinton", "Alex Krizhevsky", "Ilya Sutskever", "Ruslan Salakhutdinov"],
+      "lesson_file": "dropout-a-simple-way-to-prevent-neural-networks-from-overfitting/dropout_a_simple_way_to_prevent_neural_networks_from_overfitting.html",
+      "paper_file": "dropout-a-simple-way-to-prevent-neural-networks-from-overfitting/dropout_a_simple_way_to_prevent_neural_networks_from_overfitting.pdf",
+      "authors": [
+        "Nitish Srivastava",
+        "Geoffrey Hinton",
+        "Alex Krizhevsky",
+        "Ilya Sutskever",
+        "Ruslan Salakhutdinov"
+      ],
       "venue": "JMLR 2014",
       "canonical_url": "https://www.jmlr.org/papers/v15/srivastava14a.html",
       "domain": "regularization and generalization",
-      "areas": ["regularization", "generalization", "deep learning", "model averaging"],
-      "concepts_introduced": ["dropout", "regularization", "generalization", "co-adaptation", "Bernoulli masks", "test-time scaling", "shared-weight ensemble"],
-      "mental_map_connection": "Adds a regularization branch: it changes which internal routes train on each pass, unlike Adam's parameter updates, BatchNorm's activation statistics, or ResNet's permanent shortcut paths."
-    },
-    {
-      "date": "2026-08-22",
-      "slug": "direct-preference-optimization",
-      "title": "Direct Preference Optimization: Your Language Model is Secretly a Reward Model",
-      "lesson_file": "2026-08-22-direct-preference-optimization/direct_preference_optimization.html",
-      "paper_file": "2026-08-22-direct-preference-optimization/direct_preference_optimization.pdf",
-      "authors": ["Rafael Rafailov", "Archit Sharma", "Eric Mitchell", "Stefano Ermon", "Christopher D. Manning", "Chelsea Finn"],
-      "venue": "NeurIPS 2023",
-      "canonical_url": "https://proceedings.neurips.cc/paper_files/paper/2023/file/a85b405ed65c6477a4fe8302b5e06ce7-Paper-Conference.pdf",
-      "domain": "language-model post-training and alignment",
-      "areas": ["language-model post-training", "alignment", "preference learning"],
-      "concepts_introduced": ["preference pairs", "Bradley-Terry model", "KL-regularized reward maximization", "reference policy", "implicit reward", "DPO loss", "beta"],
-      "mental_map_connection": "First collection lesson: establishes the preference-learning and post-training branch."
+      "areas": [
+        "regularization",
+        "generalization",
+        "deep learning",
+        "model averaging"
+      ],
+      "concepts_introduced": [
+        "dropout",
+        "regularization",
+        "generalization",
+        "co-adaptation",
+        "Bernoulli masks",
+        "test-time scaling",
+        "shared-weight ensemble"
+      ],
+      "mental_map_connection": "Adds a regularization branch: it changes which internal routes train on each pass, unlike Adam's parameter updates, BatchNorm's activation statistics, or ResNet's permanent shortcut paths.",
+      "description": "Learn why training with missing internal routes discourages fragile feature partnerships, and how one scaled test network approximates an ensemble."
     },
     {
       "date": "2026-08-22",
       "slug": "adam-a-method-for-stochastic-optimization",
       "title": "Adam: A Method for Stochastic Optimization",
-      "authors": ["Diederik P. Kingma", "Jimmy Ba"],
+      "authors": [
+        "Diederik P. Kingma",
+        "Jimmy Ba"
+      ],
       "year": 2015,
-      "areas": ["optimization", "deep-learning", "adaptive-methods", "training-dynamics"],
+      "areas": [
+        "optimization",
+        "deep-learning",
+        "adaptive-methods",
+        "training-dynamics"
+      ],
       "canonical_url": "https://arxiv.org/abs/1412.6980",
-      "paper_file": "2026-08-22-adam-a-method-for-stochastic-optimization/adam_a_method_for_stochastic_optimization.pdf",
-      "lesson_file": "2026-08-22-adam-a-method-for-stochastic-optimization/adam_a_method_for_stochastic_optimization.html"
+      "paper_file": "adam-a-method-for-stochastic-optimization/adam_a_method_for_stochastic_optimization.pdf",
+      "lesson_file": "adam-a-method-for-stochastic-optimization/adam_a_method_for_stochastic_optimization.html",
+      "description": "Learn how Adam keeps separate memories for gradient direction and gradient scale, then turns them into a calibrated parameter update."
+    },
+    {
+      "date": "2026-08-22",
+      "slug": "direct-preference-optimization",
+      "title": "Direct Preference Optimization: Your Language Model is Secretly a Reward Model",
+      "lesson_file": "direct-preference-optimization/direct_preference_optimization.html",
+      "paper_file": "direct-preference-optimization/direct_preference_optimization.pdf",
+      "authors": [
+        "Rafael Rafailov",
+        "Archit Sharma",
+        "Eric Mitchell",
+        "Stefano Ermon",
+        "Christopher D. Manning",
+        "Chelsea Finn"
+      ],
+      "venue": "NeurIPS 2023",
+      "canonical_url": "https://proceedings.neurips.cc/paper_files/paper/2023/file/a85b405ed65c6477a4fe8302b5e06ce7-Paper-Conference.pdf",
+      "domain": "language-model post-training and alignment",
+      "areas": [
+        "language-model post-training",
+        "alignment",
+        "preference learning"
+      ],
+      "concepts_introduced": [
+        "preference pairs",
+        "Bradley-Terry model",
+        "KL-regularized reward maximization",
+        "reference policy",
+        "implicit reward",
+        "DPO loss",
+        "beta"
+      ],
+      "mental_map_connection": "First collection lesson: establishes the preference-learning and post-training branch.",
+      "description": "Learn how preference pairs can directly reshape a language model through a logistic objective, without training a separate reward model or running reinforcement learning."
     },
     {
       "date": "2026-08-21",
       "slug": "batch-normalization",
       "title": "Batch Normalization: Accelerating Deep Network Training by Reducing Internal Covariate Shift",
-      "authors": ["Sergey Ioffe", "Christian Szegedy"],
+      "authors": [
+        "Sergey Ioffe",
+        "Christian Szegedy"
+      ],
       "year": 2015,
-      "areas": ["deep-learning", "optimization", "normalization", "computer-vision"],
+      "areas": [
+        "deep-learning",
+        "optimization",
+        "normalization",
+        "computer-vision"
+      ],
       "canonical_url": "https://arxiv.org/abs/1502.03167",
-      "paper_file": "2026-08-21-batch-normalization/batch_normalization_accelerating_deep_network_training.pdf",
-      "lesson_file": "2026-08-21-batch-normalization/batch_normalization_accelerating_deep_network_training.html"
+      "paper_file": "batch-normalization/batch_normalization_accelerating_deep_network_training.pdf",
+      "lesson_file": "batch-normalization/batch_normalization_accelerating_deep_network_training.html",
+      "description": "Understand how a learned measuring tape uses mini-batch statistics during training, then running statistics at inference, to make deep feature scales easier to manage."
     },
     {
       "date": "2026-08-20",
       "slug": "generative-adversarial-nets",
       "title": "Generative Adversarial Nets",
-      "authors": ["Ian Goodfellow et al."],
+      "authors": [
+        "Ian Goodfellow et al."
+      ],
       "year": 2014,
-      "areas": ["generative-modeling", "deep-learning", "adversarial-learning", "probabilistic-modeling"],
+      "areas": [
+        "generative-modeling",
+        "deep-learning",
+        "adversarial-learning",
+        "probabilistic-modeling"
+      ],
       "canonical_url": "https://arxiv.org/abs/1406.2661",
-      "paper_file": "2026-08-20-generative-adversarial-nets/generative_adversarial_nets.pdf",
-      "lesson_file": "2026-08-20-generative-adversarial-nets/generative_adversarial_nets.html"
+      "paper_file": "generative-adversarial-nets/generative_adversarial_nets.pdf",
+      "lesson_file": "generative-adversarial-nets/generative_adversarial_nets.html",
+      "description": "Learn how a generator and a learned critic play a game that moves generated samples toward the real data distribution."
     },
     {
       "date": "2026-08-19",
       "slug": "attention-is-all-you-need",
       "title": "Attention Is All You Need",
-      "authors": ["Ashish Vaswani et al."],
+      "authors": [
+        "Ashish Vaswani et al."
+      ],
       "year": 2017,
-      "areas": ["deep-learning", "natural-language-processing", "transformers", "attention"],
+      "areas": [
+        "deep-learning",
+        "natural-language-processing",
+        "transformers",
+        "attention"
+      ],
       "canonical_url": "https://arxiv.org/abs/1706.03762",
-      "paper_file": "2026-08-19-attention-is-all-you-need/attention_is_all_you_need.pdf",
-      "lesson_file": "2026-08-19-attention-is-all-you-need/attention_is_all_you_need.html"
+      "paper_file": "attention-is-all-you-need/attention_is_all_you_need.pdf",
+      "lesson_file": "attention-is-all-you-need/attention_is_all_you_need.html",
+      "description": "Learn how tokens exchange information through queries, keys, values, and causal masking to build context for translation."
     },
     {
       "date": "2026-08-19",
       "slug": "deep-residual-learning-for-image-recognition",
       "title": "Deep Residual Learning for Image Recognition",
-      "authors": ["Kaiming He et al."],
+      "authors": [
+        "Kaiming He et al."
+      ],
       "year": 2015,
-      "areas": ["deep-learning", "computer-vision", "convolutional-neural-networks", "optimization"],
+      "areas": [
+        "deep-learning",
+        "computer-vision",
+        "convolutional-neural-networks",
+        "optimization"
+      ],
       "canonical_url": "https://arxiv.org/abs/1512.03385",
-      "paper_file": "2026-08-19-deep-residual-learning-for-image-recognition/deep_residual_learning_for_image_recognition.pdf",
-      "lesson_file": "2026-08-19-deep-residual-learning-for-image-recognition/deep_residual_learning_for_image_recognition.html"
+      "paper_file": "deep-residual-learning-for-image-recognition/deep_residual_learning_for_image_recognition.pdf",
+      "lesson_file": "deep-residual-learning-for-image-recognition/deep_residual_learning_for_image_recognition.html",
+      "description": "See why deep networks learn more easily when each block preserves a useful feature map and learns only the correction."
     },
     {
       "date": "2026-08-19",
       "slug": "human-level-control-through-deep-reinforcement-learning",
       "title": "Human-level Control through Deep Reinforcement Learning",
-      "authors": ["Volodymyr Mnih et al."],
+      "authors": [
+        "Volodymyr Mnih et al."
+      ],
       "year": 2015,
-      "areas": ["deep-reinforcement-learning", "decision-making", "computer-vision", "deep-learning"],
+      "areas": [
+        "deep-reinforcement-learning",
+        "decision-making",
+        "computer-vision",
+        "deep-learning"
+      ],
       "canonical_url": "https://www.nature.com/articles/nature14236",
-      "paper_file": "2026-08-19-human-level-control-through-deep-reinforcement-learning/human_level_control_through_deep_reinforcement_learning.pdf",
-      "lesson_file": "2026-08-19-human-level-control-through-deep-reinforcement-learning/human_level_control_through_deep_reinforcement_learning.html"
+      "paper_file": "human-level-control-through-deep-reinforcement-learning/human_level_control_through_deep_reinforcement_learning.pdf",
+      "lesson_file": "human-level-control-through-deep-reinforcement-learning/human_level_control_through_deep_reinforcement_learning.html",
+      "description": "Build intuition for value forecasts, Bellman targets, experience replay, and the delayed target network that stabilizes learning from pixels."
     }
   ]
 }

@@ -1,0 +1,942 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="A one-hour university lesson on dropout, co-adaptation, Bernoulli masks, gradient routing, and test-time scaling.">
+  <title>Dropout - Learn when routes disappear</title>
+  <style>
+    :root {
+      --ink: #1f2826;
+      --paper: #f5f7f5;
+      --sheet: #fcfdfb;
+      --route: #2e6559;
+      --signal: #98533e;
+      --fog: #788580;
+      --ghost: #d7dedb;
+      --rule: #bcc7c2;
+      --dark: #202b29;
+      --focus: #b55b2e;
+      --serif: Georgia, "Times New Roman", serif;
+      --sans: "Avenir Next", Avenir, "Segoe UI", sans-serif;
+      --mono: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+
+    body {
+      margin: 0;
+      color: var(--ink);
+      background:
+        linear-gradient(90deg, transparent calc(50% - 1px), rgba(46, 101, 89, .045) 50%, transparent calc(50% + 1px)),
+        var(--paper);
+      font: 18px/1.68 var(--serif);
+    }
+
+    a {
+      color: #205d52;
+      text-underline-offset: .2em;
+      text-decoration-thickness: .08em;
+    }
+    a:hover { color: #7d402f; }
+    a:focus-visible,
+    button:focus-visible,
+    summary:focus-visible,
+    input:focus-visible {
+      outline: 3px solid var(--focus);
+      outline-offset: 4px;
+    }
+    img, svg { max-width: 100%; }
+    code, .mono { font-family: var(--mono); font-size: .9em; }
+    math {
+      font-family: "STIX Two Math", "Cambria Math", "Times New Roman", serif;
+    }
+    math.math-inline {
+      display: inline-block;
+      vertical-align: -.12em;
+      white-space: nowrap;
+      font-size: 1.04em;
+    }
+    math[display="block"] {
+      display: block;
+      width: max-content;
+      min-width: min-content;
+      max-width: 100%;
+      margin: .7rem auto;
+      text-align: center;
+      font-size: 1.08em;
+    }
+    math mfrac { padding-inline: .1em; }
+    math mtable { row-gap: .32em; column-gap: .55em; }
+    math mtable.row-vector { column-gap: .28em; }
+    .math-scroll {
+      max-width: 100%;
+      overflow-x: auto;
+      overscroll-behavior-inline: contain;
+    }
+    .math-scroll math[display="block"] { min-width: max-content; }
+
+    .page {
+      width: min(1080px, calc(100% - 2.5rem));
+      margin: 0 auto;
+    }
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      min-height: 68px;
+      border-bottom: 1px solid var(--rule);
+      font: 700 .72rem/1.2 var(--sans);
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+    .home { color: var(--ink); text-decoration: none; }
+    .topbar span { color: var(--fog); }
+
+    .hero {
+      padding: clamp(3.5rem, 9vw, 7.8rem) 0 3.2rem;
+      border-bottom: 3px solid var(--ink);
+    }
+    .hero-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.08fr) minmax(330px, .92fr);
+      align-items: center;
+      gap: clamp(2rem, 6vw, 5.2rem);
+    }
+    .eyebrow,
+    .section-kicker,
+    .figure-label,
+    .route time,
+    th {
+      font: 700 .72rem/1.35 var(--sans);
+      letter-spacing: .1em;
+      text-transform: uppercase;
+    }
+    .eyebrow { color: var(--route); }
+    h1, h2, h3 {
+      margin-top: 0;
+      font-family: var(--serif);
+      line-height: 1.08;
+      letter-spacing: -.025em;
+    }
+    h1 {
+      max-width: 720px;
+      margin-bottom: 1.2rem;
+      font-size: clamp(3.25rem, 8vw, 6.9rem);
+      font-weight: 500;
+    }
+    h1 .ghost-word {
+      color: transparent;
+      -webkit-text-stroke: 1.5px var(--fog);
+      text-decoration: line-through;
+      text-decoration-color: var(--signal);
+      text-decoration-thickness: .06em;
+    }
+    .dek {
+      max-width: 700px;
+      margin-bottom: 1.5rem;
+      font-size: clamp(1.08rem, 2vw, 1.38rem);
+      color: #3b4744;
+    }
+    .byline {
+      max-width: 720px;
+      margin: 0;
+      color: var(--fog);
+      font-size: .88rem;
+    }
+    .hero-figure {
+      margin: 0;
+      padding-left: clamp(0rem, 3vw, 2rem);
+      border-left: 1px solid var(--rule);
+    }
+    .hero-figure svg { display: block; width: 100%; height: auto; }
+    .hero-route { fill: none; stroke: var(--route); stroke-width: 2.2; }
+    .hero-route.ghost { stroke: var(--ghost); stroke-dasharray: 6 8; }
+    .hero-node { fill: var(--sheet); stroke: var(--route); stroke-width: 2.2; }
+    .hero-node.ghost { fill: var(--paper); stroke: var(--ghost); stroke-dasharray: 4 4; }
+    figcaption {
+      margin-top: .8rem;
+      color: var(--fog);
+      font-size: .88rem;
+      line-height: 1.5;
+    }
+    .figure-label {
+      display: block;
+      margin-bottom: .18rem;
+      color: var(--route);
+    }
+
+    .route {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      margin-top: 3rem;
+      border-top: 1px solid var(--rule);
+      border-bottom: 1px solid var(--rule);
+    }
+    .route div { min-height: 108px; padding: 1rem 1.1rem 1.1rem 0; }
+    .route div + div { padding-left: 1.1rem; border-left: 1px solid var(--rule); }
+    .route time { display: block; margin-bottom: .35rem; color: var(--signal); }
+    .route span { font-size: .9rem; line-height: 1.45; }
+
+    main { padding: 1rem 0 6rem; }
+    .lesson-section {
+      display: grid;
+      grid-template-columns: minmax(120px, .3fr) minmax(0, 1.7fr);
+      gap: clamp(1.5rem, 5vw, 4.5rem);
+      padding: clamp(3.8rem, 8vw, 6.5rem) 0;
+      border-bottom: 1px solid var(--rule);
+    }
+    .section-side { align-self: start; position: sticky; top: 1.25rem; }
+    .section-kicker { display: block; color: var(--signal); }
+    .section-time { display: block; margin-top: .5rem; color: var(--fog); font: .78rem/1.4 var(--mono); }
+    .section-body { min-width: 0; }
+    .section-body > h2 {
+      max-width: 760px;
+      margin-bottom: 1.4rem;
+      font-size: clamp(2rem, 4.5vw, 3.65rem);
+      font-weight: 500;
+    }
+    .section-body > p:first-of-type { font-size: 1.08em; }
+    .lead-question { margin: 0 0 1.4rem; color: var(--route); font-style: italic; }
+    .bridge,
+    .claim-scope,
+    .warning {
+      margin: 1.5rem 0;
+      padding: 1rem 1.2rem;
+      background: #eef2ef;
+      border-left: 4px solid var(--route);
+    }
+    .warning { background: #f6eee9; border-left-color: var(--signal); }
+
+    .causal-strip {
+      margin: 2rem 0;
+      padding: 1.25rem;
+      background: var(--sheet);
+      border: 1px solid var(--rule);
+    }
+    .causal-flow {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: .75rem;
+      align-items: stretch;
+    }
+    .causal-flow div {
+      position: relative;
+      min-height: 116px;
+      padding: .9rem .8rem;
+      border-top: 3px solid var(--route);
+      background: #f1f4f2;
+      font-size: .88rem;
+      line-height: 1.45;
+    }
+    .causal-flow div::after {
+      content: "→";
+      position: absolute;
+      top: 50%;
+      right: -.72rem;
+      z-index: 2;
+      width: 1.4rem;
+      color: var(--signal);
+      background: var(--sheet);
+      text-align: center;
+      transform: translateY(-50%);
+    }
+    .causal-flow div:last-child::after { display: none; }
+    .causal-flow strong { display: block; margin-bottom: .25rem; }
+
+    .concept-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1px;
+      margin: 1.8rem 0;
+      background: var(--rule);
+      border: 1px solid var(--rule);
+    }
+    .concept-grid article { padding: 1.2rem; background: var(--sheet); }
+    .concept-grid h3 { margin-bottom: .45rem; font-size: 1.18rem; }
+    .concept-grid p { margin: 0; font-size: .92rem; }
+
+    .table-wrap {
+      margin: 1.5rem 0;
+      overflow-x: auto;
+      border-top: 2px solid var(--ink);
+      border-bottom: 2px solid var(--ink);
+    }
+    table { width: 100%; border-collapse: collapse; font-size: .92rem; }
+    th, td {
+      padding: .8rem .65rem;
+      border-bottom: 1px solid var(--rule);
+      text-align: left;
+      vertical-align: top;
+    }
+    th { color: var(--route); background: #edf2ef; }
+    tr:last-child td { border-bottom: 0; }
+
+    .equation {
+      margin: 1.5rem 0;
+      padding: 1.25rem 1.4rem;
+      overflow-x: auto;
+      color: #f3f7f5;
+      background: var(--dark);
+      border-left: 5px solid #8bb0a6;
+      font: .91rem/1.8 var(--mono);
+    }
+    .equation .eq-label {
+      display: block;
+      margin-bottom: .5rem;
+      color: #a8c8bf;
+      font: 700 .68rem/1.3 var(--sans);
+      letter-spacing: .09em;
+      text-transform: uppercase;
+    }
+    .equation math,
+    .equation math * { color: inherit; }
+    .equation math[display="block"] {
+      min-width: max-content;
+      margin-block: .35rem;
+      font-size: 1.13em;
+    }
+
+    .source-figure,
+    .lesson-figure {
+      margin: 2rem 0;
+      padding: clamp(.8rem, 2vw, 1.25rem);
+      background: var(--sheet);
+      border: 1px solid var(--rule);
+    }
+    .source-figure img { display: block; width: 100%; height: auto; }
+    .paper-mark {
+      display: block;
+      margin-bottom: .8rem;
+      color: var(--signal);
+      font: 700 .7rem/1.3 var(--sans);
+      letter-spacing: .09em;
+      text-transform: uppercase;
+    }
+
+    .instrument {
+      margin: 2rem 0;
+      padding: clamp(1rem, 3vw, 1.8rem);
+      background: #edf2ef;
+      border: 1px solid #9eafa9;
+    }
+    .instrument h3 { margin-bottom: .45rem; font-size: 1.45rem; }
+    .instrument-head {
+      display: flex;
+      align-items: start;
+      justify-content: space-between;
+      gap: 1rem;
+      margin-bottom: 1rem;
+    }
+    button {
+      min-height: 44px;
+      padding: .7rem .9rem;
+      color: var(--sheet);
+      background: var(--route);
+      border: 1px solid var(--route);
+      border-radius: 0;
+      font: 700 .78rem/1 var(--sans);
+      letter-spacing: .04em;
+      cursor: pointer;
+    }
+    button:hover { background: #244f46; }
+    .mask-svg {
+      display: block;
+      width: 100%;
+      height: auto;
+      background: var(--sheet);
+      border: 1px solid var(--rule);
+    }
+    .mask-svg .edge {
+      stroke: var(--route);
+      stroke-width: 3;
+      transition: opacity .34s ease, stroke .34s ease;
+    }
+    .mask-svg .unit {
+      fill: var(--sheet);
+      stroke: var(--route);
+      stroke-width: 3;
+      transition: opacity .34s ease, fill .34s ease, stroke .34s ease;
+    }
+    .mask-svg .edge.is-dropped {
+      opacity: .24;
+      stroke: var(--fog);
+      stroke-dasharray: 7 8;
+    }
+    .mask-svg .unit.is-dropped {
+      fill: #eef0ef;
+      stroke: var(--fog);
+      stroke-dasharray: 5 5;
+      opacity: .58;
+    }
+    .mask-svg text { font-family: var(--sans); fill: var(--ink); }
+    .status-line { margin: .9rem 0 0; color: #31413d; font-size: .9rem; }
+
+    .trace {
+      counter-reset: trace;
+      margin: 1.6rem 0;
+      padding: 0;
+      list-style: none;
+    }
+    .trace li {
+      counter-increment: trace;
+      display: grid;
+      grid-template-columns: 2.2rem 1fr;
+      gap: .8rem;
+      padding: .95rem 0;
+      border-top: 1px solid var(--rule);
+    }
+    .trace li::before {
+      content: counter(trace);
+      display: grid;
+      width: 2rem;
+      height: 2rem;
+      place-items: center;
+      color: var(--sheet);
+      background: var(--route);
+      border-radius: 50%;
+      font: 700 .78rem var(--sans);
+    }
+    .trace strong { color: var(--route); }
+
+    .predict {
+      margin: 1.6rem 0;
+      padding: 1rem 1.2rem;
+      background: #f5eee9;
+      border: 1px solid #c9a899;
+    }
+    .predict summary { cursor: pointer; color: #713e2f; font-weight: 700; }
+    .predict[open] summary { margin-bottom: .8rem; }
+    .result-table td:last-child, .result-table th:last-child { text-align: right; }
+
+    .evidence-reading {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      margin-top: 1.3rem;
+    }
+    .evidence-reading div { padding: 1rem; border-top: 3px solid var(--route); background: var(--sheet); }
+    .evidence-reading h3 { margin-bottom: .4rem; font-size: 1.12rem; }
+    .evidence-reading p { margin: 0; font-size: .92rem; }
+
+    details.check {
+      margin: .8rem 0;
+      padding: .85rem 1rem;
+      background: var(--sheet);
+      border-top: 1px solid var(--rule);
+      border-bottom: 1px solid var(--rule);
+    }
+    details.check summary { cursor: pointer; font-weight: 700; }
+    .recall-list > li { margin-bottom: 1rem; }
+    .answer-key {
+      margin-top: 1.4rem;
+      padding: 1rem 1.2rem;
+      background: #eaf1ee;
+      border-left: 4px solid var(--route);
+    }
+    .answer-key summary { cursor: pointer; font-weight: 700; }
+    .answer-key ol { margin-bottom: 0; }
+
+    .mental-map {
+      display: grid;
+      grid-template-columns: 160px 1fr;
+      gap: .85rem 1.25rem;
+      margin: 0;
+    }
+    .mental-map dt { color: var(--route); font: 700 .82rem/1.4 var(--sans); }
+    .mental-map dd { margin: 0; }
+
+    .takeaway-section {
+      padding: clamp(3rem, 7vw, 5rem);
+      color: #f2f7f4;
+      background: var(--dark);
+      border-bottom: 0;
+    }
+    .takeaway-section .section-side { position: static; }
+    .takeaway-section .section-kicker { color: #9ec4b9; }
+    .takeaway-section .section-time { color: #bbc9c5; }
+    .takeaway-section h2 { color: #f2f7f4; }
+    .takeaway-line { font-size: clamp(1.2rem, 2.6vw, 1.65rem); }
+
+    footer {
+      padding: 3rem 0 5rem;
+      border-top: 3px solid var(--ink);
+      color: var(--fog);
+      font-size: .92rem;
+    }
+    footer h2 { margin-bottom: 1rem; color: var(--ink); font-size: 1.45rem; }
+    footer li { margin: .45rem 0; }
+
+    @media (max-width: 820px) {
+      .hero-grid { grid-template-columns: 1fr; }
+      .hero-figure { max-width: 560px; padding-left: 0; border-left: 0; }
+      .route { grid-template-columns: 1fr; }
+      .route div { min-height: auto; padding: .85rem 0; }
+      .route div + div { padding-left: 0; border-top: 1px solid var(--rule); border-left: 0; }
+      .lesson-section { grid-template-columns: 1fr; }
+      .section-side { position: static; }
+      .section-time { display: inline; margin-left: .5rem; }
+      .causal-flow { grid-template-columns: 1fr 1fr; }
+      .causal-flow div:nth-child(2)::after { display: none; }
+      .concept-grid { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 620px) {
+      body { font-size: 17px; }
+      .page { width: min(100% - 1.4rem, 1080px); }
+      .topbar { align-items: flex-start; flex-direction: column; justify-content: center; padding: .75rem 0; }
+      h1 { font-size: clamp(2.7rem, 15vw, 4.2rem); }
+      .lesson-section { padding: 3.6rem 0; }
+      .causal-flow { grid-template-columns: 1fr; }
+      .causal-flow div::after { display: none; }
+      .instrument-head { align-items: stretch; flex-direction: column; }
+      .instrument-head button { width: 100%; }
+      .evidence-reading { grid-template-columns: 1fr; }
+      .mental-map { grid-template-columns: 1fr; }
+      .mental-map dt { padding-top: .7rem; border-top: 1px solid var(--rule); }
+      .takeaway-section { padding: 2rem 1.1rem; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+      *, *::before, *::after {
+        scroll-behavior: auto !important;
+        transition-duration: .01ms !important;
+        animation-duration: .01ms !important;
+        animation-iteration-count: 1 !important;
+      }
+    }
+    @media print {
+      body { background: #fff; }
+      .page { width: 100%; }
+      .section-side { position: static; }
+      button { display: none; }
+      .lesson-section { break-inside: avoid; }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <header class="topbar">
+      <a class="home" href="../index.html">← Daily AI Paper Lab</a>
+      <span>One-hour university lesson · regularization</span>
+    </header>
+
+    <section class="hero" aria-labelledby="page-title">
+      <div class="hero-grid">
+        <div>
+          <p class="eyebrow">Srivastava et al. · JMLR 2014</p>
+          <h1 id="page-title">Learn when routes <span class="ghost-word">disappear</span></h1>
+          <p class="dek">Dropout trains one shared network under many temporary absences. The causal story is simple: unreliable partners disrupt brittle co-adaptation, masked routes redirect learning, and one scaled full network stands in for a huge shared-weight ensemble at inference.</p>
+          <p class="byline">Nitish Srivastava, Geoffrey Hinton, Alex Krizhevsky, Ilya Sutskever, and Ruslan Salakhutdinov · Journal of Machine Learning Research 15 (2014), 1929-1958</p>
+        </div>
+
+        <figure class="hero-figure">
+          <svg viewBox="0 0 520 410" role="img" aria-labelledby="hero-title hero-desc">
+            <title id="hero-title">A neural network with active and ghosted routes</title>
+            <desc id="hero-desc">Three input nodes connect to four hidden nodes and one output. Two hidden nodes and their incident routes are ghosted to represent dropout.</desc>
+            <g aria-hidden="true">
+              <path class="hero-route" d="M85 86L250 72M85 86L250 154M85 86L250 236M85 86L250 318M85 205L250 72M85 205L250 154M85 205L250 236M85 205L250 318M85 324L250 72M85 324L250 154M85 324L250 236M85 324L250 318"/>
+              <path class="hero-route" d="M250 72L430 205M250 236L430 205"/>
+              <path class="hero-route ghost" d="M250 154L430 205M250 318L430 205"/>
+              <circle class="hero-node" cx="85" cy="86" r="22"/>
+              <circle class="hero-node" cx="85" cy="205" r="22"/>
+              <circle class="hero-node" cx="85" cy="324" r="22"/>
+              <circle class="hero-node" cx="250" cy="72" r="22"/>
+              <circle class="hero-node ghost" cx="250" cy="154" r="22"/>
+              <circle class="hero-node" cx="250" cy="236" r="22"/>
+              <circle class="hero-node ghost" cx="250" cy="318" r="22"/>
+              <path d="M236 140L264 168M264 140L236 168M236 304L264 332M264 304L236 332" stroke="#98533e" stroke-width="3"/>
+              <circle class="hero-node" cx="430" cy="205" r="22"/>
+              <text x="37" y="383" fill="#788580" font-family="Avenir Next, sans-serif" font-size="14">input</text>
+              <text x="224" y="383" fill="#788580" font-family="Avenir Next, sans-serif" font-size="14">mask r</text>
+              <text x="411" y="383" fill="#788580" font-family="Avenir Next, sans-serif" font-size="14">output</text>
+            </g>
+          </svg>
+          <figcaption><span class="figure-label">Lesson diagram</span>On each training case, a fresh Bernoulli mask makes some units and every incident route temporarily unavailable. The weights are not deleted.</figcaption>
+        </figure>
+      </div>
+
+      <nav class="route" aria-label="One-hour study route">
+        <div><time>0-7 min</time><span><strong>Bridge the prerequisites.</strong> Recall layers, gradients, and the generalization gap through one rotating-team analogy.</span></div>
+        <div><time>7-15 min</time><span><strong>Name the failure.</strong> Follow the chain from flexible capacity to brittle co-adaptation.</span></div>
+        <div><time>15-25 min</time><span><strong>Build the mechanism.</strong> Meet every actor, map its shape, and sample a thinned network.</span></div>
+        <div><time>25-40 min</time><span><strong>Work three traces.</strong> Calculate an expectation, a masked gradient, and deterministic inference.</span></div>
+        <div><time>40-50 min</time><span><strong>Read the evidence.</strong> Inspect the paper's mechanism figure, learned features, and reported errors with scope.</span></div>
+        <div><time>50-60 min</time><span><strong>Stress-test the idea.</strong> Correct misconceptions, retrieve the mechanism, and connect it to your mental map.</span></div>
+      </nav>
+    </section>
+
+    <main>
+      <section class="lesson-section" aria-labelledby="bridge-title">
+        <aside class="section-side"><span class="section-kicker">Prerequisite bridge</span><span class="section-time">0-7 min</span></aside>
+        <div class="section-body">
+          <h2 id="bridge-title">From one dependable layer to a team with absences</h2>
+          <p class="lead-question">What must already make sense before a missing neuron can make sense?</p>
+          <p>A feed-forward layer receives a vector, multiplies it by a weight matrix, adds a bias, and applies a nonlinearity. Backpropagation then sends credit or blame only through the computation that actually happened. Overfitting appears when low training error does not carry over to unseen examples.</p>
+          <div class="concept-grid">
+            <article><h3>Layer</h3><p><math class="math-inline" aria-label="y superscript l"><msup><mi>y</mi><mrow><mo>(</mo><mi>l</mi><mo>)</mo></mrow></msup></math> is the activation vector leaving layer <math class="math-inline" aria-label="l"><mi>l</mi></math>. It is the information available to the next layer.</p></article>
+            <article><h3>Gradient route</h3><p>If a quantity does not participate in the forward computation, that route contributes zero to its gradient on that pass.</p></article>
+            <article><h3>Generalization gap</h3><p>A widening gap between training and held-out performance signals that the learned solution may depend on quirks of the sample.</p></article>
+          </div>
+          <aside class="bridge"><strong>Analogy - a rotating study group.</strong> If the same four students always solve every problem together, one may learn only to finish another's partial argument. Now make one or two members absent at random. Each student has to produce an explanation that remains useful beside many possible partners. Dropout imposes that rotating attendance policy on hidden units.</aside>
+          <p>The analogy has a boundary: units are not people, and dropout does not guarantee independent features. It makes a particular fixed coalition unreliable during training; useful cooperation can still emerge.</p>
+        </div>
+      </section>
+
+      <section class="lesson-section" aria-labelledby="problem-title">
+        <aside class="section-side"><span class="section-kicker">The problem</span><span class="section-time">7-15 min</span></aside>
+        <div class="section-body">
+          <h2 id="problem-title">Overfitting can be a coordination failure</h2>
+          <p class="lead-question">Why can a network with enough capacity fit perfectly and still fail?</p>
+          <p>In the paper's account, ordinary backpropagation lets each unit update while every other unit is present. A unit can learn a fragile feature because another specific unit reliably repairs its mistakes. Those tightly coupled feature partnerships are <strong>co-adaptations</strong>.</p>
+          <figure class="causal-strip">
+            <div class="causal-flow" role="img" aria-label="Causal chain from flexible capacity to poor generalization">
+              <div><strong>High capacity</strong>Many parameter settings can explain the training sample.</div>
+              <div><strong>Stable partners</strong>The same units appear together on every pass.</div>
+              <div><strong>Brittle coalition</strong>Features specialize to correct one another's sample-specific errors.</div>
+              <div><strong>Test shift</strong>The learned coalition meets unseen variation and generalizes poorly.</div>
+            </div>
+            <figcaption><span class="figure-label">Lesson diagram</span>The paper's causal hypothesis: dropout intervenes at “stable partners,” breaking the path toward complex co-adaptations.</figcaption>
+          </figure>
+          <aside class="claim-scope"><strong>Evidence boundary.</strong> Co-adaptation is the paper's main explanatory hypothesis, supported by qualitative feature analyses and broad task results. The experiments do not prove it is the only reason dropout helps.</aside>
+        </div>
+      </section>
+
+      <section class="lesson-section" aria-labelledby="actors-title">
+        <aside class="section-side"><span class="section-kicker">Actors and shapes</span><span class="section-time">15-19 min</span></aside>
+        <div class="section-body">
+          <h2 id="actors-title">Name every object before the route disappears</h2>
+          <p>Let layer <math class="math-inline" aria-label="l"><mi>l</mi></math> contain <math class="math-inline" aria-label="d sub l"><msub><mi>d</mi><mi>l</mi></msub></math> units and the next layer contain <math class="math-inline" aria-label="d sub l plus 1"><msub><mi>d</mi><mrow><mi>l</mi><mo>+</mo><mn>1</mn></mrow></msub></math>. The mask has exactly the same shape as the activation vector it gates.</p>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Actor</th><th>Shape</th><th>Job</th></tr></thead>
+              <tbody>
+                <tr><td><math class="math-inline" aria-label="y superscript l"><msup><mi>y</mi><mrow><mo>(</mo><mi>l</mi><mo>)</mo></mrow></msup></math></td><td><math class="math-inline" aria-label="d sub l"><msub><mi>d</mi><mi>l</mi></msub></math></td><td>Ordinary activations leaving layer <math class="math-inline" aria-label="l"><mi>l</mi></math>.</td></tr>
+                <tr><td><math class="math-inline" aria-label="r superscript l"><msup><mi>r</mi><mrow><mo>(</mo><mi>l</mi><mo>)</mo></mrow></msup></math></td><td><math class="math-inline" aria-label="d sub l"><msub><mi>d</mi><mi>l</mi></msub></math></td><td>Independent Bernoulli mask; <math class="math-inline" aria-label="one"><mn>1</mn></math> retains a unit and <math class="math-inline" aria-label="zero"><mn>0</mn></math> drops it.</td></tr>
+                <tr><td><math class="math-inline" aria-label="y tilde superscript l equals r superscript l elementwise multiplied by y superscript l"><mrow><msup><mover accent="true"><mi>y</mi><mo>~</mo></mover><mrow><mo>(</mo><mi>l</mi><mo>)</mo></mrow></msup><mo>=</mo><msup><mi>r</mi><mrow><mo>(</mo><mi>l</mi><mo>)</mo></mrow></msup><mo>⊙</mo><msup><mi>y</mi><mrow><mo>(</mo><mi>l</mi><mo>)</mo></mrow></msup></mrow></math></td><td><math class="math-inline" aria-label="d sub l"><msub><mi>d</mi><mi>l</mi></msub></math></td><td>Thinned activation vector sent forward.</td></tr>
+                <tr><td><math class="math-inline" aria-label="W superscript l plus 1"><msup><mi>W</mi><mrow><mo>(</mo><mi>l</mi><mo>+</mo><mn>1</mn><mo>)</mo></mrow></msup></math></td><td><math class="math-inline" aria-label="d sub l plus 1 by d sub l"><mrow><msub><mi>d</mi><mrow><mi>l</mi><mo>+</mo><mn>1</mn></mrow></msub><mo>×</mo><msub><mi>d</mi><mi>l</mi></msub></mrow></math></td><td>Shared weights from layer <math class="math-inline" aria-label="l"><mi>l</mi></math> to layer <math class="math-inline" aria-label="l plus 1"><mrow><mi>l</mi><mo>+</mo><mn>1</mn></mrow></math>.</td></tr>
+                <tr><td><math class="math-inline" aria-label="b superscript l plus 1"><msup><mi>b</mi><mrow><mo>(</mo><mi>l</mi><mo>+</mo><mn>1</mn><mo>)</mo></mrow></msup></math></td><td><math class="math-inline" aria-label="d sub l plus 1"><msub><mi>d</mi><mrow><mi>l</mi><mo>+</mo><mn>1</mn></mrow></msub></math></td><td>Bias vector in the next layer.</td></tr>
+                <tr><td><math class="math-inline" aria-label="p"><mi>p</mi></math></td><td>scalar</td><td>Retention probability in this paper; dropout probability is <math class="math-inline" aria-label="one minus p"><mrow><mn>1</mn><mo>−</mo><mi>p</mi></mrow></math>.</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="equation" aria-label="Dropout forward equations">
+            <span class="eq-label">Paper notation, one layer</span>
+            <math display="block">
+              <mtable columnalign="right center left" rowspacing=".5em">
+                <mtr>
+                  <mtd><msubsup><mi>r</mi><mi>j</mi><mrow><mo>(</mo><mi>l</mi><mo>)</mo></mrow></msubsup></mtd>
+                  <mtd><mo>~</mo></mtd>
+                  <mtd><mrow><mi mathvariant="normal">Bernoulli</mi><mo>(</mo><mi>p</mi><mo>)</mo></mrow></mtd>
+                </mtr>
+                <mtr>
+                  <mtd><msup><mover accent="true"><mi>y</mi><mo>~</mo></mover><mrow><mo>(</mo><mi>l</mi><mo>)</mo></mrow></msup></mtd>
+                  <mtd><mo>=</mo></mtd>
+                  <mtd><mrow><msup><mi>r</mi><mrow><mo>(</mo><mi>l</mi><mo>)</mo></mrow></msup><mo>⊙</mo><msup><mi>y</mi><mrow><mo>(</mo><mi>l</mi><mo>)</mo></mrow></msup></mrow></mtd>
+                </mtr>
+                <mtr>
+                  <mtd><msup><mi>z</mi><mrow><mo>(</mo><mi>l</mi><mo>+</mo><mn>1</mn><mo>)</mo></mrow></msup></mtd>
+                  <mtd><mo>=</mo></mtd>
+                  <mtd><mrow><msup><mi>W</mi><mrow><mo>(</mo><mi>l</mi><mo>+</mo><mn>1</mn><mo>)</mo></mrow></msup><msup><mover accent="true"><mi>y</mi><mo>~</mo></mover><mrow><mo>(</mo><mi>l</mi><mo>)</mo></mrow></msup><mo>+</mo><msup><mi>b</mi><mrow><mo>(</mo><mi>l</mi><mo>+</mo><mn>1</mn><mo>)</mo></mrow></msup></mrow></mtd>
+                </mtr>
+                <mtr>
+                  <mtd><msup><mi>y</mi><mrow><mo>(</mo><mi>l</mi><mo>+</mo><mn>1</mn><mo>)</mo></mrow></msup></mtd>
+                  <mtd><mo>=</mo></mtd>
+                  <mtd><mrow><mi>f</mi><mo>(</mo><msup><mi>z</mi><mrow><mo>(</mo><mi>l</mi><mo>+</mo><mn>1</mn><mo>)</mo></mrow></msup><mo>)</mo></mrow></mtd>
+                </mtr>
+              </mtable>
+            </math>
+          </div>
+          <p>The symbol <math class="math-inline" aria-label="elementwise multiplication"><mo>⊙</mo></math> means elementwise multiplication. A zero in the mask removes one activation and, therefore, every route that would carry that activation to the next layer.</p>
+        </div>
+      </section>
+
+      <section class="lesson-section" aria-labelledby="source-mechanism-title">
+        <aside class="section-side"><span class="section-kicker">Source mechanism</span><span class="section-time">19-22 min</span></aside>
+        <div class="section-body">
+          <h2 id="source-mechanism-title">One parent network, many thinned networks</h2>
+          <figure class="source-figure">
+            <span class="paper-mark">Original paper · Figure 1 · PDF page 2 (journal p. 1930)</span>
+            <img src="paper_figure_1_dropout_model.png" width="2080" height="1040" alt="Figure 1 from the dropout paper. A dense two-hidden-layer neural network is shown beside a thinned version in which several crossed units and their connections are absent.">
+            <figcaption>Srivastava et al., Figure 1. The right side shows one sampled thinned network, not a permanently pruned architecture.</figcaption>
+          </figure>
+          <p>With <math class="math-inline" aria-label="n"><mi>n</mi></math> droppable units there are <math class="math-inline" aria-label="two to the power n"><msup><mn>2</mn><mi>n</mi></msup></math> possible binary masks. The paper's key efficiency move is <strong>weight sharing</strong>: these subnetworks are views of one parameter set, not <math class="math-inline" aria-label="two to the power n"><msup><mn>2</mn><mi>n</mi></msup></math> separately stored and fully trained models.</p>
+        </div>
+      </section>
+
+      <section class="lesson-section" aria-labelledby="mechanism-title">
+        <aside class="section-side"><span class="section-kicker">The intervention</span><span class="section-time">22-25 min</span></aside>
+        <div class="section-body">
+          <h2 id="mechanism-title">Sample a mask, then train only the surviving computation</h2>
+          <p>For each training case, the paper samples a fresh thinned network. Forward propagation and backpropagation occur only through that subnetwork. A parameter unused by that case contributes a gradient of zero for that case; gradients are then averaged over the mini-batch.</p>
+          <div class="instrument" aria-labelledby="instrument-title">
+            <div class="instrument-head">
+              <div><h3 id="instrument-title">Inspect three deterministic mask samples</h3><p>Press the button to move through masks. Solid routes participate; dashed routes are absent on that pass.</p></div>
+              <button id="sample-mask" type="button">Sample another mask</button>
+            </div>
+            <figure class="lesson-figure">
+              <svg id="mask-diagram" class="mask-svg" viewBox="0 0 760 330" role="img" aria-labelledby="mask-title mask-desc">
+                <title id="mask-title">Interactive dropout mask on four hidden units</title>
+                <desc id="mask-desc">The initial mask retains hidden units one, three, and four, while unit two and all its incident edges are ghosted.</desc>
+                <g aria-hidden="true">
+                  <text x="55" y="36" font-size="16" font-weight="700">input h</text>
+                  <text x="320" y="36" font-size="16" font-weight="700">hidden units</text>
+                  <text x="638" y="36" font-size="16" font-weight="700">output z</text>
+                  <g class="edge" data-unit="0"><line x1="112" y1="115" x2="340" y2="72"/><line x1="112" y1="215" x2="340" y2="72"/><line x1="388" y1="72" x2="640" y2="165"/></g>
+                  <g class="edge" data-unit="1"><line x1="112" y1="115" x2="340" y2="132"/><line x1="112" y1="215" x2="340" y2="132"/><line x1="388" y1="132" x2="640" y2="165"/></g>
+                  <g class="edge" data-unit="2"><line x1="112" y1="115" x2="340" y2="198"/><line x1="112" y1="215" x2="340" y2="198"/><line x1="388" y1="198" x2="640" y2="165"/></g>
+                  <g class="edge" data-unit="3"><line x1="112" y1="115" x2="340" y2="258"/><line x1="112" y1="215" x2="340" y2="258"/><line x1="388" y1="258" x2="640" y2="165"/></g>
+                  <circle class="unit" cx="88" cy="115" r="24"/><circle class="unit" cx="88" cy="215" r="24"/>
+                  <circle class="unit" data-unit="0" cx="364" cy="72" r="24"/><circle class="unit" data-unit="1" cx="364" cy="132" r="24"/><circle class="unit" data-unit="2" cx="364" cy="198" r="24"/><circle class="unit" data-unit="3" cx="364" cy="258" r="24"/>
+                  <circle class="unit" cx="664" cy="165" r="24"/>
+                  <text x="356" y="78" font-size="16">1</text><text x="356" y="138" font-size="16">2</text><text x="356" y="204" font-size="16">3</text><text x="356" y="264" font-size="16">4</text>
+                </g>
+              </svg>
+              <figcaption><span class="figure-label">Lesson diagram</span>The static first sample retains units 1, 3, and 4. Changing the sample changes which shared weights receive signal on this case.</figcaption>
+            </figure>
+            <p id="mask-status" class="status-line" aria-live="polite"><strong>Mask 1:</strong> <math class="math-inline" aria-label="row vector 1, 0, 1, 1"><mrow><mo>[</mo><mtable class="row-vector"><mtr><mtd><mn>1</mn></mtd><mtd><mn>0</mn></mtd><mtd><mn>1</mn></mtd><mtd><mn>1</mn></mtd></mtr></mtable><mo>]</mo></mrow></math>. Unit 2 and its routes are absent.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="lesson-section" aria-labelledby="expectation-title">
+        <aside class="section-side"><span class="section-kicker">Worked trace I</span><span class="section-time">25-31 min</span></aside>
+        <div class="section-body">
+          <h2 id="expectation-title">Expectation: average all four masks, not just the convenient two</h2>
+          <p>Take activations <math class="math-inline" aria-label="h equals row vector 2, 4"><mrow><mi>h</mi><mo>=</mo><mo>[</mo><mtable class="row-vector"><mtr><mtd><mn>2</mn></mtd><mtd><mn>4</mn></mtd></mtr></mtable><mo>]</mo></mrow></math>, outgoing weights <math class="math-inline" aria-label="w equals row vector 3, 1"><mrow><mi>w</mi><mo>=</mo><mo>[</mo><mtable class="row-vector"><mtr><mtd><mn>3</mn></mtd><mtd><mn>1</mn></mtd></mtr></mtable><mo>]</mo></mrow></math>, no bias, and retention <math class="math-inline" aria-label="p equals 0.5"><mrow><mi>p</mi><mo>=</mo><mn>0.5</mn></mrow></math>. Under the paper's original convention, training uses <math class="math-inline" aria-label="h tilde equals m elementwise multiplied by h"><mrow><mover accent="true"><mi>h</mi><mo>~</mo></mover><mo>=</mo><mi>m</mi><mo>⊙</mo><mi>h</mi></mrow></math> without scaling retained activations.</p>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Mask <math class="math-inline" aria-label="m"><mi>m</mi></math></th><th>Masked <math class="math-inline" aria-label="h tilde"><mover accent="true"><mi>h</mi><mo>~</mo></mover></math></th><th>Preactivation <math class="math-inline" aria-label="z equals w transpose h tilde"><mrow><mi>z</mi><mo>=</mo><msup><mi>w</mi><mi mathvariant="normal">T</mi></msup><mover accent="true"><mi>h</mi><mo>~</mo></mover></mrow></math></th><th>Probability</th><th>Contribution to <math class="math-inline" aria-label="expected z"><mrow><mi mathvariant="normal">E</mi><mo>[</mo><mi>z</mi><mo>]</mo></mrow></math></th></tr></thead>
+              <tbody>
+                <tr><td><math class="math-inline" aria-label="row vector 0, 0"><mrow><mo>[</mo><mtable class="row-vector"><mtr><mtd><mn>0</mn></mtd><mtd><mn>0</mn></mtd></mtr></mtable><mo>]</mo></mrow></math></td><td><math class="math-inline" aria-label="row vector 0, 0"><mrow><mo>[</mo><mtable class="row-vector"><mtr><mtd><mn>0</mn></mtd><mtd><mn>0</mn></mtd></mtr></mtable><mo>]</mo></mrow></math></td><td>0</td><td>0.25</td><td>0</td></tr>
+                <tr><td><math class="math-inline" aria-label="row vector 1, 0"><mrow><mo>[</mo><mtable class="row-vector"><mtr><mtd><mn>1</mn></mtd><mtd><mn>0</mn></mtd></mtr></mtable><mo>]</mo></mrow></math></td><td><math class="math-inline" aria-label="row vector 2, 0"><mrow><mo>[</mo><mtable class="row-vector"><mtr><mtd><mn>2</mn></mtd><mtd><mn>0</mn></mtd></mtr></mtable><mo>]</mo></mrow></math></td><td>6</td><td>0.25</td><td>1.5</td></tr>
+                <tr><td><math class="math-inline" aria-label="row vector 0, 1"><mrow><mo>[</mo><mtable class="row-vector"><mtr><mtd><mn>0</mn></mtd><mtd><mn>1</mn></mtd></mtr></mtable><mo>]</mo></mrow></math></td><td><math class="math-inline" aria-label="row vector 0, 4"><mrow><mo>[</mo><mtable class="row-vector"><mtr><mtd><mn>0</mn></mtd><mtd><mn>4</mn></mtd></mtr></mtable><mo>]</mo></mrow></math></td><td>4</td><td>0.25</td><td>1.0</td></tr>
+                <tr><td><math class="math-inline" aria-label="row vector 1, 1"><mrow><mo>[</mo><mtable class="row-vector"><mtr><mtd><mn>1</mn></mtd><mtd><mn>1</mn></mtd></mtr></mtable><mo>]</mo></mrow></math></td><td><math class="math-inline" aria-label="row vector 2, 4"><mrow><mo>[</mo><mtable class="row-vector"><mtr><mtd><mn>2</mn></mtd><mtd><mn>4</mn></mtd></mtr></mtable><mo>]</mo></mrow></math></td><td>10</td><td>0.25</td><td>2.5</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <ol class="trace">
+            <li><div><strong>Sum the contributions.</strong><div class="math-scroll"><math display="block" aria-label="expected z equals 0 plus 1.5 plus 1.0 plus 2.5 equals 5"><mrow><mi mathvariant="normal">E</mi><mo>[</mo><mi>z</mi><mo>]</mo><mo>=</mo><mn>0</mn><mo>+</mo><mn>1.5</mn><mo>+</mo><mn>1.0</mn><mo>+</mo><mn>2.5</mn><mo>=</mo><mn>5</mn></mrow></math></div></div></li>
+            <li><div><strong>Use linearity of expectation.</strong> More generally,<div class="math-scroll"><math display="block" aria-label="expected m elementwise multiplied by h equals p h, therefore expected z equals w transpose p h"><mtable columnalign="right center left" rowspacing=".45em"><mtr><mtd><mrow><mi mathvariant="normal">E</mi><mo>[</mo><mi>m</mi><mo>⊙</mo><mi>h</mi><mo>]</mo></mrow></mtd><mtd><mo>=</mo></mtd><mtd><mrow><mi>p</mi><mi>h</mi></mrow></mtd></mtr><mtr><mtd><mrow><mi mathvariant="normal">E</mi><mo>[</mo><mi>z</mi><mo>]</mo></mrow></mtd><mtd><mo>=</mo></mtd><mtd><mrow><msup><mi>w</mi><mi mathvariant="normal">T</mi></msup><mo>(</mo><mi>p</mi><mi>h</mi><mo>)</mo></mrow></mtd></mtr></mtable></math></div></div></li>
+            <li><div><strong>Build one deterministic test computation.</strong><div class="math-scroll"><math display="block" aria-label="w transpose p h equals row vector 3, 1 transpose times row vector 1, 2 equals 5"><mrow><msup><mi>w</mi><mi mathvariant="normal">T</mi></msup><mo>(</mo><mi>p</mi><mi>h</mi><mo>)</mo><mo>=</mo><msup><mrow><mo>[</mo><mtable class="row-vector"><mtr><mtd><mn>3</mn></mtd><mtd><mn>1</mn></mtd></mtr></mtable><mo>]</mo></mrow><mi mathvariant="normal">T</mi></msup><mrow><mo>[</mo><mtable class="row-vector"><mtr><mtd><mn>1</mn></mtd><mtd><mn>2</mn></mtd></mtr></mtable><mo>]</mo></mrow><mo>=</mo><mn>5</mn></mrow></math></div></div></li>
+          </ol>
+          <details class="predict">
+            <summary>Predict before reveal: at test time, should the paper's original convention use <math class="math-inline" aria-label="one"><mn>1</mn></math>, <math class="math-inline" aria-label="p"><mi>p</mi></math>, or <math class="math-inline" aria-label="one over p"><mfrac><mn>1</mn><mi>p</mi></mfrac></math>?</summary>
+            <p><strong>Answer: <math class="math-inline" aria-label="p"><mi>p</mi></math>.</strong> Multiply outgoing weights by <math class="math-inline" aria-label="p"><mi>p</mi></math> (equivalently, activations by <math class="math-inline" aria-label="p"><mi>p</mi></math>) so the deterministic linear preactivation matches the expectation under training masks. The <math class="math-inline" aria-label="one over p"><mfrac><mn>1</mn><mi>p</mi></mfrac></math> factor belongs to inverted dropout during training.</p>
+          </details>
+        </div>
+      </section>
+
+      <section class="lesson-section" aria-labelledby="gradient-title">
+        <aside class="section-side"><span class="section-kicker">Worked trace II</span><span class="section-time">31-35 min</span></aside>
+        <div class="section-body">
+          <h2 id="gradient-title">Gradient: a missing route receives zero credit and zero blame</h2>
+          <p>Continue with target <math class="math-inline" aria-label="t equals 5"><mrow><mi>t</mi><mo>=</mo><mn>5</mn></mrow></math> and squared loss <math class="math-inline" aria-label="L equals one half times the quantity z minus t squared"><mrow><mi>L</mi><mo>=</mo><mfrac><mn>1</mn><mn>2</mn></mfrac><msup><mrow><mo>(</mo><mi>z</mi><mo>−</mo><mi>t</mi><mo>)</mo></mrow><mn>2</mn></msup></mrow></math>. For mask <math class="math-inline" aria-label="m equals row vector 1, 0"><mrow><mi>m</mi><mo>=</mo><mo>[</mo><mtable class="row-vector"><mtr><mtd><mn>1</mn></mtd><mtd><mn>0</mn></mtd></mtr></mtable><mo>]</mo></mrow></math>, the preactivation is <math class="math-inline" aria-label="z equals 6"><mrow><mi>z</mi><mo>=</mo><mn>6</mn></mrow></math>.</p>
+          <div class="equation" aria-label="Gradient calculation for the first mask">
+            <span class="eq-label">Mask [1,0]</span>
+            <math display="block">
+              <mtable columnalign="right center left" rowspacing=".65em">
+                <mtr>
+                  <mtd><mfrac><mrow><mo>∂</mo><mi>L</mi></mrow><mrow><mo>∂</mo><msub><mi>w</mi><mn>1</mn></msub></mrow></mfrac></mtd>
+                  <mtd><mo>=</mo></mtd>
+                  <mtd><mrow><mo>(</mo><mi>z</mi><mo>−</mo><mi>t</mi><mo>)</mo><msub><mover accent="true"><mi>h</mi><mo>~</mo></mover><mn>1</mn></msub><mo>=</mo><mo>(</mo><mn>6</mn><mo>−</mo><mn>5</mn><mo>)</mo><mo>·</mo><mn>2</mn><mo>=</mo><mn>2</mn></mrow></mtd>
+                </mtr>
+                <mtr>
+                  <mtd><mfrac><mrow><mo>∂</mo><mi>L</mi></mrow><mrow><mo>∂</mo><msub><mi>w</mi><mn>2</mn></msub></mrow></mfrac></mtd>
+                  <mtd><mo>=</mo></mtd>
+                  <mtd><mrow><mo>(</mo><mi>z</mi><mo>−</mo><mi>t</mi><mo>)</mo><msub><mover accent="true"><mi>h</mi><mo>~</mo></mover><mn>2</mn></msub><mo>=</mo><mo>(</mo><mn>6</mn><mo>−</mo><mn>5</mn><mo>)</mo><mo>·</mo><mn>0</mn><mo>=</mo><mn>0</mn></mrow></mtd>
+                </mtr>
+              </mtable>
+            </math>
+          </div>
+          <p>With learning rate <math class="math-inline" aria-label="eta equals 0.1"><mrow><mi>η</mi><mo>=</mo><mn>0.1</mn></mrow></math>, gradient descent gives</p>
+          <div class="math-scroll"><math display="block" aria-label="w sub 1 is updated from 3 to 2.8 while w sub 2 stays at 1"><mtable columnalign="right center left" rowspacing=".45em"><mtr><mtd><msub><mi>w</mi><mn>1</mn></msub></mtd><mtd><mo>←</mo></mtd><mtd><mrow><mn>3</mn><mo>−</mo><mn>0.1</mn><mo>·</mo><mn>2</mn><mo>=</mo><mn>2.8</mn></mrow></mtd></mtr><mtr><mtd><msub><mi>w</mi><mn>2</mn></msub></mtd><mtd><mo>←</mo></mtd><mtd><mn>1</mn></mtd></mtr></mtable></math></div>
+          <p>while <math class="math-inline" aria-label="w sub 2"><msub><mi>w</mi><mn>2</mn></msub></math> stays at <math class="math-inline" aria-label="one"><mn>1</mn></math> on this pass.</p>
+          <p>Now switch to mask <math class="math-inline" aria-label="m equals row vector 0, 1"><mrow><mi>m</mi><mo>=</mo><mo>[</mo><mtable class="row-vector"><mtr><mtd><mn>0</mn></mtd><mtd><mn>1</mn></mtd></mtr></mtable><mo>]</mo></mrow></math>. Then</p>
+          <div class="math-scroll"><math display="block" aria-label="z equals 4, partial L over partial w 1 equals 0, and partial L over partial w 2 equals negative 4"><mtable columnalign="right center left" rowspacing=".55em"><mtr><mtd><mi>z</mi></mtd><mtd><mo>=</mo></mtd><mtd><mn>4</mn></mtd></mtr><mtr><mtd><mfrac><mrow><mo>∂</mo><mi>L</mi></mrow><mrow><mo>∂</mo><msub><mi>w</mi><mn>1</mn></msub></mrow></mfrac></mtd><mtd><mo>=</mo></mtd><mtd><mn>0</mn></mtd></mtr><mtr><mtd><mfrac><mrow><mo>∂</mo><mi>L</mi></mrow><mrow><mo>∂</mo><msub><mi>w</mi><mn>2</mn></msub></mrow></mfrac></mtd><mtd><mo>=</mo></mtd><mtd><mrow><mo>(</mo><mn>4</mn><mo>−</mo><mn>5</mn><mo>)</mo><mo>·</mo><mn>4</mn><mo>=</mo><mo>−</mo><mn>4</mn></mrow></mtd></mtr></mtable></math></div>
+          <p>The second route now has to correct the error without help from the first.</p>
+          <aside class="claim-scope"><strong>Causal consequence.</strong> Masks do more than add output noise. They alter which parameter routes participate in each example's gradient, repeatedly changing the context in which a feature must be useful.</aside>
+        </div>
+      </section>
+
+      <section class="lesson-section" aria-labelledby="inference-title">
+        <aside class="section-side"><span class="section-kicker">Worked trace III</span><span class="section-time">35-40 min</span></aside>
+        <div class="section-body">
+          <h2 id="inference-title">Inference: two scaling conventions, one rule - never mix them</h2>
+          <p>The paper describes unscaled retained activations during training and multiplies outgoing weights by <math class="math-inline" aria-label="p"><mi>p</mi></math> at test time. Many modern libraries use <strong>inverted dropout</strong>: divide retained activations by <math class="math-inline" aria-label="p"><mi>p</mi></math> during training, then do nothing at test time.</p>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Convention</th><th>Training</th><th>Deterministic test</th><th>Expectation trace</th></tr></thead>
+              <tbody>
+                <tr>
+                  <td>Original paper</td>
+                  <td><math display="block" aria-label="h tilde equals m elementwise multiplied by h"><mrow><mover accent="true"><mi>h</mi><mo>~</mo></mover><mo>=</mo><mi>m</mi><mo>⊙</mo><mi>h</mi></mrow></math></td>
+                  <td><math display="block" aria-label="W test equals p W"><mrow><msub><mi>W</mi><mtext>test</mtext></msub><mo>=</mo><mi>p</mi><mi>W</mi></mrow></math></td>
+                  <td>With <math class="math-inline" aria-label="W equals row vector 3, 1"><mrow><mi>W</mi><mo>=</mo><mo>[</mo><mtable class="row-vector"><mtr><mtd><mn>3</mn></mtd><mtd><mn>1</mn></mtd></mtr></mtable><mo>]</mo></mrow></math>,
+                    <div class="math-scroll"><math display="block" aria-label="expected z equals 5, p W equals row vector 1.5, 0.5, and the test output equals 5"><mtable columnalign="right center left" rowspacing=".45em"><mtr><mtd><mrow><mi mathvariant="normal">E</mi><mo>[</mo><mi>z</mi><mo>]</mo></mrow></mtd><mtd><mo>=</mo></mtd><mtd><mn>5</mn></mtd></mtr><mtr><mtd><mrow><mi>p</mi><mi>W</mi></mrow></mtd><mtd><mo>=</mo></mtd><mtd><mrow><mo>[</mo><mtable class="row-vector"><mtr><mtd><mn>1.5</mn></mtd><mtd><mn>0.5</mn></mtd></mtr></mtable><mo>]</mo></mrow></mtd></mtr><mtr><mtd><msub><mi>z</mi><mtext>test</mtext></msub></mtd><mtd><mo>=</mo></mtd><mtd><mrow><mn>1.5</mn><mo>·</mo><mn>2</mn><mo>+</mo><mn>0.5</mn><mo>·</mo><mn>4</mn><mo>=</mo><mn>5</mn></mrow></mtd></mtr></mtable></math></div>
+                  </td>
+                </tr>
+                <tr>
+                  <td>Inverted dropout</td>
+                  <td><math display="block" aria-label="h tilde equals m elementwise multiplied by h, divided by p"><mrow><mover accent="true"><mi>h</mi><mo>~</mo></mover><mo>=</mo><mfrac><mrow><mi>m</mi><mo>⊙</mo><mi>h</mi></mrow><mi>p</mi></mfrac></mrow></math></td>
+                  <td>Use learned weights unchanged</td>
+                  <td>Using the correspondingly scaled parameterization <math class="math-inline" aria-label="W prime equals row vector 1.5, 0.5"><mrow><msup><mi>W</mi><mo>′</mo></msup><mo>=</mo><mo>[</mo><mtable class="row-vector"><mtr><mtd><mn>1.5</mn></mtd><mtd><mn>0.5</mn></mtd></mtr></mtable><mo>]</mo></mrow></math>,
+                    <div class="math-scroll"><math display="block" aria-label="expected W prime transpose h tilde equals W prime transpose h equals 5, and the test output equals 5"><mtable columnalign="right center left" rowspacing=".45em"><mtr><mtd><mrow><mi mathvariant="normal">E</mi><mo>[</mo><msup><msup><mi>W</mi><mo>′</mo></msup><mi mathvariant="normal">T</mi></msup><mover accent="true"><mi>h</mi><mo>~</mo></mover><mo>]</mo></mrow></mtd><mtd><mo>=</mo></mtd><mtd><mrow><msup><msup><mi>W</mi><mo>′</mo></msup><mi mathvariant="normal">T</mi></msup><mi>h</mi><mo>=</mo><mn>5</mn></mrow></mtd></mtr><mtr><mtd><msub><mi>z</mi><mtext>test</mtext></msub></mtd><mtd><mo>=</mo></mtd><mtd><mn>5</mn></mtd></mtr></mtable></math></div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <p>The paper states these forms are equivalent with appropriate scaling of learning rates and weight initializations. The linear expectation match is exact; replacing an ensemble's full nonlinear predictive distribution with one scaled network remains an approximation.</p>
+        </div>
+      </section>
+
+      <section class="lesson-section" aria-labelledby="meaning-title">
+        <aside class="section-side"><span class="section-kicker">Interpretation</span><span class="section-time">40-43 min</span></aside>
+        <div class="section-body">
+          <h2 id="meaning-title">What the update is really doing</h2>
+          <p>Each mask selects a thinned architecture, yet all masks write into the same underlying weights. Over many cases, a unit is optimized under many neighborhoods. This creates two linked interpretations:</p>
+          <div class="concept-grid">
+            <article><h3>Regularization</h3><p>Random absence makes exact co-adaptations unreliable and pushes features to remain useful in varied contexts.</p></article>
+            <article><h3>Noise injection</h3><p>Bernoulli multiplicative noise changes activations and the gradient paths seen on every case.</p></article>
+            <article><h3>Model combination</h3><p>Training samples exponentially many shared-weight subnetworks; deterministic scaling approximates their combined prediction.</p></article>
+          </div>
+          <p>These are not three unrelated stories. The shared cause is the mask: it perturbs representation learning during training and motivates averaging behavior at test time.</p>
+        </div>
+      </section>
+
+      <section class="lesson-section" aria-labelledby="evidence-title">
+        <aside class="section-side"><span class="section-kicker">Paper evidence</span><span class="section-time">43-50 min</span></aside>
+        <div class="section-body">
+          <h2 id="evidence-title">The paper asks whether features become less dependent on partners</h2>
+          <figure class="source-figure">
+            <span class="paper-mark">Original paper · Figure 7 · PDF page 15 (journal p. 1943)</span>
+            <img src="paper_figure_7_learned_features.png" width="2050" height="1250" loading="lazy" alt="Figure 7 from the dropout paper. A grid of noisy-looking MNIST autoencoder features without dropout is compared with a grid of clearer strokes, edges, and spots learned with hidden-unit retention probability 0.5.">
+            <figcaption>Srivastava et al., Figure 7. Identical one-hidden-layer autoencoders used 256 rectified linear units; the dropout model used hidden-layer retention <math class="math-inline" aria-label="p equals 0.5"><mrow><mi>p</mi><mo>=</mo><mn>0.5</mn></mrow></math>. The paper reports similar test reconstruction errors and interprets the clearer strokes, edges, and spots as evidence of reduced co-adaptation.</figcaption>
+          </figure>
+          <div class="evidence-reading">
+            <div><h3>What this figure supports</h3><p>Under this MNIST autoencoder setup, dropout is associated with qualitatively more individually interpretable first-layer filters.</p></div>
+            <div><h3>What it cannot establish alone</h3><p>A visual comparison is not a controlled proof that feature appearance causes the classification gains, nor that all dropout features become interpretable.</p></div>
+          </div>
+          <h3>Reported SVHN comparison</h3>
+          <p>For the convolutional-network configurations in Table 3, lower classification error is better:</p>
+          <div class="table-wrap result-table">
+            <table>
+              <thead><tr><th>Reported configuration</th><th>Error</th></tr></thead>
+              <tbody>
+                <tr><td>Conv net + max pooling</td><td>3.95%</td></tr>
+                <tr><td>+ dropout in fully connected layers</td><td>3.02%</td></tr>
+                <tr><td>+ dropout in all layers</td><td>2.55%</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p>The paper also reports improvements across MNIST, CIFAR-10/100, ImageNet, TIMIT, Reuters-RCV1, and alternative splicing. Read these as results for the paper's tuned architectures and training recipes, not as a guarantee for every modern model or placement.</p>
+        </div>
+      </section>
+
+      <section class="lesson-section" aria-labelledby="limits-title">
+        <aside class="section-side"><span class="section-kicker">Limits and diagnostics</span><span class="section-time">50-54 min</span></aside>
+        <div class="section-body">
+          <h2 id="limits-title">Useful regularization has a range, not a universal setting</h2>
+          <p>The paper itself shows important boundaries. In its MNIST data-size study, dropout did not improve the extremely small 100- and 500-example settings. When <math class="math-inline" aria-label="p"><mi>p</mi></math> is too small while width is fixed, too few units survive and the network underfits. On the large Reuters subset, the improvement was less significant because overfitting was already less serious.</p>
+          <aside class="warning"><strong>Paper-era heuristic, not law.</strong> Retaining hidden units with <math class="math-inline" aria-label="p equals 0.5"><mrow><mi>p</mi><mo>=</mo><mn>0.5</mn></mrow></math> was often effective in these experiments; input retention was usually closer to 1. Architecture, layer type, data size, and optimization all change the best choice.</aside>
+          <details class="check"><summary>Misconception: “Dropout permanently removes neurons.”</summary><p>No. Standard dropout removes activations and their incident computation only for a sampled training pass. The full network is available at standard inference.</p></details>
+          <details class="check"><summary>Misconception: “<math class="math-inline" aria-label="p"><mi>p</mi></math> means probability of dropping a unit.”</summary><p>Not in this paper. Here <math class="math-inline" aria-label="p"><mi>p</mi></math> is the probability of retaining a unit. The drop probability is <math class="math-inline" aria-label="one minus p"><mrow><mn>1</mn><mo>−</mo><mi>p</mi></mrow></math>. Some APIs name their argument the other way around, so always check the convention.</p></details>
+          <details class="check"><summary>Misconception: “Every one of the <math class="math-inline" aria-label="two to the power n"><msup><mn>2</mn><mi>n</mi></msup></math> subnetworks is trained to completion.”</summary><p>No. A new mask samples one shared-weight subnetwork for a case. Many possible subnetworks may never occur, and none owns a separate parameter copy.</p></details>
+          <details class="check"><summary>Misconception: “Weight scaling exactly averages every nonlinear prediction.”</summary><p>No. It exactly matches the expected linear input under independent masks. The single scaled nonlinear network is an efficient approximation to model averaging.</p></details>
+          <details class="check"><summary>Misconception: “Dropout and BatchNorm create the same train-test difference.”</summary><p>No. Dropout samples missing activation routes and then removes that randomness at standard inference. BatchNorm normalizes with mini-batch statistics during training and stored estimates at inference.</p></details>
+        </div>
+      </section>
+
+      <section class="lesson-section" aria-labelledby="recall-title">
+        <aside class="section-side"><span class="section-kicker">Active recall</span><span class="section-time">54-58 min</span></aside>
+        <div class="section-body">
+          <h2 id="recall-title">Close the route and retrieve it</h2>
+          <ol class="recall-list">
+            <li>What precise object has the same shape as a layer's activation vector?</li>
+            <li>Under the paper's convention, what does <math class="math-inline" aria-label="p"><mi>p</mi></math> mean?</li>
+            <li>Why is the gradient of a dropped route zero on that training case?</li>
+            <li>Why does the original convention multiply outgoing weights by <math class="math-inline" aria-label="p"><mi>p</mi></math> at test time?</li>
+            <li>How can dropout represent exponentially many subnetworks without exponentially many parameter sets?</li>
+            <li>Give one reason that “dropout always helps” is inconsistent with the paper.</li>
+          </ol>
+          <details class="answer-key">
+            <summary>Open the answer key</summary>
+            <ol>
+              <li>The Bernoulli mask <math class="math-inline" aria-label="r superscript l"><msup><mi>r</mi><mrow><mo>(</mo><mi>l</mi><mo>)</mo></mrow></msup></math>; elementwise multiplication requires it to match <math class="math-inline" aria-label="y superscript l"><msup><mi>y</mi><mrow><mo>(</mo><mi>l</mi><mo>)</mo></mrow></msup></math>.</li>
+              <li>Retention probability. A mask entry is 1 with probability <math class="math-inline" aria-label="p"><mi>p</mi></math>.</li>
+              <li>Its masked activation is zero, so the forward computation does not depend on that route and its local gradient contribution is zero.</li>
+              <li>Because <math class="math-inline" aria-label="expected r elementwise multiplied by y equals p y"><mrow><mi mathvariant="normal">E</mi><mo>[</mo><mi>r</mi><mo>⊙</mo><mi>y</mi><mo>]</mo><mo>=</mo><mi>p</mi><mi>y</mi></mrow></math>; scaling matches the expected linear signal produced under the training masks.</li>
+              <li>All thinned subnetworks share one underlying set of weights; the mask chooses which subset participates.</li>
+              <li>Examples: it did not improve the 100- or 500-example MNIST cases in the paper; too-small <math class="math-inline" aria-label="p"><mi>p</mi></math> with fixed width underfit; the Reuters gain was less significant when overfitting was less serious.</li>
+            </ol>
+          </details>
+        </div>
+      </section>
+
+      <section class="lesson-section" aria-labelledby="map-title">
+        <aside class="section-side"><span class="section-kicker">Connect it to your mental map</span><span class="section-time">58-60 min</span></aside>
+        <div class="section-body">
+          <h2 id="map-title">Place dropout among the things that change learning</h2>
+          <dl class="mental-map">
+            <dt>Adam</dt><dd>Adam changes how a gradient moves parameters. Dropout changes which subnetwork produces that gradient. They act on different parts of the training loop.</dd>
+            <dt>BatchNorm</dt><dd>BatchNorm uses batch-derived activation statistics; dropout uses Bernoulli gates. Both distinguish training from inference, but for different reasons and with different state.</dd>
+            <dt>ResNet</dt><dd>A residual shortcut provides a reliable path for information and gradients. Dropout deliberately makes selected learned paths unreliable during training.</dd>
+            <dt>Transformer</dt><dd>Attention creates content-dependent communication routes. Dropout may regularize activations or attention-related quantities, but it does not decide which tokens are relevant.</dd>
+            <dt>Ensembling</dt><dd>A conventional ensemble trains separate parameter sets. Dropout samples many architectures with extensive weight sharing and approximates their combination with one test network.</dd>
+          </dl>
+        </div>
+      </section>
+
+      <section class="lesson-section takeaway-section" aria-labelledby="takeaway-title">
+        <aside class="section-side"><span class="section-kicker">Takeaway</span><span class="section-time">Keep this sentence</span></aside>
+        <div class="section-body">
+          <h2 id="takeaway-title">Rehearse under missing teammates</h2>
+          <p class="takeaway-line">Dropout samples temporary missing routes during training, so features must remain useful across many partner sets; shared weights learn from those thinned networks, and an expectation-matched full network provides efficient deterministic inference.</p>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <h2>Source and further exploration</h2>
+      <ul>
+        <li><a href="dropout_a_simple_way_to_prevent_neural_networks_from_overfitting.pdf">Original paper PDF (local copy)</a></li>
+        <li><a href="https://www.jmlr.org/papers/v15/srivastava14a.html">JMLR paper record</a></li>
+        <li><a href="https://arxiv.org/abs/1207.0580">arXiv record</a></li>
+      </ul>
+    </footer>
+  </div>
+
+  <script>
+    (() => {
+      const button = document.getElementById('sample-mask');
+      const diagram = document.getElementById('mask-diagram');
+      const description = document.getElementById('mask-desc');
+      const status = document.getElementById('mask-status');
+      const masks = [
+        { values: [1, 0, 1, 1], absent: 'Unit 2 and its routes are absent.' },
+        { values: [0, 1, 1, 0], absent: 'Units 1 and 4 and their routes are absent.' },
+        { values: [1, 1, 0, 1], absent: 'Unit 3 and its routes are absent.' }
+      ];
+      let index = 0;
+      const applyMask = (maskIndex) => {
+        const mask = masks[maskIndex];
+        diagram.querySelectorAll('[data-unit]').forEach((element) => {
+          const unit = Number(element.dataset.unit);
+          element.classList.toggle('is-dropped', mask.values[unit] === 0);
+        });
+        const maskText = `[${mask.values.join(', ')}]`;
+        const maskCells = mask.values.map((value) => `<mtd><mn>${value}</mn></mtd>`).join('');
+        description.textContent = `Mask ${maskIndex + 1} is ${maskText}. ${mask.absent}`;
+        status.innerHTML = `<strong>Mask ${maskIndex + 1}:</strong> <math class="math-inline" aria-label="row vector ${mask.values.join(', ')}"><mrow><mo>[</mo><mtable class="row-vector"><mtr>${maskCells}</mtr></mtable><mo>]</mo></mrow></math>. ${mask.absent}`;
+      };
+      button.addEventListener('click', () => {
+        index = (index + 1) % masks.length;
+        applyMask(index);
+      });
+      applyMask(index);
+    })();
+  </script>
+</body>
+</html>

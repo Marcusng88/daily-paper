@@ -1,0 +1,400 @@
+﻿<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="A one-hour lesson on how Direct Preference Optimization turns chosen and rejected responses into a reference-anchored language-model training loss.">
+<title>Direct Preference Optimization - a study lesson</title>
+<style>
+:root{--ink:#20201e;--muted:#65635e;--paper:#fbfaf6;--panel:#f3efe7;--rule:#d7d1c4;--red:#7a302c;--blue:#315c68;--gold:#9c7137;--code:#252522}*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--paper);color:var(--ink);font:18px/1.62 Georgia,serif}.page{max-width:940px;margin:auto;padding:32px 28px 80px}a{color:var(--red);text-underline-offset:3px}a:focus-visible,input:focus-visible,button:focus-visible,summary:focus-visible{outline:3px solid #bd7a3c;outline-offset:3px}.home{font:600 13px/1 Arial,sans-serif;letter-spacing:.08em;text-transform:uppercase}.eyebrow{margin:55px 0 14px;color:var(--red);font:600 12px/1.3 Arial,sans-serif;letter-spacing:.11em;text-transform:uppercase}h1,h2,h3{line-height:1.15}h1{max-width:850px;font-size:clamp(2.45rem,7vw,4.65rem);letter-spacing:-.035em;margin:.1em 0}h2{font-size:2rem;margin:70px 0 18px;padding-top:8px;border-top:1px solid var(--rule)}h3{font-size:1.25rem;margin:35px 0 10px}.subtitle{max-width:700px;color:var(--muted);font-size:1.28rem}.byline{font-size:.9rem;color:var(--muted);margin:28px 0 54px}.route{display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);margin:38px 0;padding:16px 0;gap:14px}.route b,.label{display:block;font:600 11px/1.3 Arial,sans-serif;letter-spacing:.09em;text-transform:uppercase;color:var(--red)}.route span{font-size:.86rem}.callout{border-left:4px solid var(--red);padding:12px 18px;margin:26px 0;background:var(--panel)}.equation{overflow:auto;padding:16px 20px;background:var(--code);color:#f7f2e9;font:16px/1.55 ui-monospace,Consolas,monospace;border-radius:2px}.equation math,.equation math *{color:inherit}.equation math{display:block;min-width:max-content;font:1.08em/1.35 Cambria Math,STIX Two Math,serif}.equation mfrac{padding-inline:.12em}.equation .hi{color:#f2c57c}.grid{display:grid;grid-template-columns:1fr 1fr;gap:24px}.card{padding:18px 20px;border:1px solid var(--rule);background:#fffdf8}.card p:last-child{margin-bottom:0}table{width:100%;border-collapse:collapse;margin:20px 0;font-size:.92rem}th,td{padding:10px;border-bottom:1px solid var(--rule);text-align:left;vertical-align:top}th{font:600 12px Arial,sans-serif;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}figure{margin:32px 0;padding:20px;background:#fffdf8;border:1px solid var(--rule)}figcaption{font-size:.86rem;color:var(--muted);margin-top:14px}.instrument{padding:24px;background:#f5f0e9;border:1px solid var(--rule)}.controls{display:grid;grid-template-columns:1fr 1fr;gap:15px;margin-top:20px}.control label{display:flex;justify-content:space-between;font:600 13px Arial,sans-serif}.control output{color:var(--red)}input[type=range]{width:100%;accent-color:var(--red)}.result{padding:16px;margin-top:18px;background:#fffdf8;border-left:4px solid var(--blue);font-size:.94rem}details{margin:16px 0;border-top:1px solid var(--rule);padding:13px 0}summary{cursor:pointer;font-weight:bold}footer{margin-top:70px;border-top:2px solid var(--ink);padding-top:24px;font-size:.9rem;color:var(--muted)}svg{display:block;width:100%;height:auto}.small{font-size:.91rem;color:var(--muted)}.answer{background:#edf3f2;border-left-color:var(--blue)}@media(max-width:650px){.page{padding:24px 18px 60px}.grid,.controls{grid-template-columns:1fr}.route{grid-template-columns:1fr 1fr}h2{font-size:1.65rem}.equation{padding:14px}.equation math{font-size:1em}}@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+</style>
+<style>.results-figure{max-width:100%;overflow:hidden}.results-figure img{display:block;width:100%;max-width:100%;height:auto}</style>
+<style>
+:root{--muted:#625f59;--gold:#8b652f;--white:#fffdf8;--display:"Iowan Old Style",Baskerville,Georgia,serif;--body:Georgia,"Times New Roman",serif;--utility:"Avenir Next",Avenir,Arial,sans-serif}
+body{font-family:var(--body);line-height:1.66}
+.page{width:min(940px,100%)}
+p,li{max-width:74ch}
+a{text-decoration-thickness:1.5px}
+.home,.eyebrow,.route b,.label,th,.control label{font-family:var(--utility)}
+h1,h2,h3{font-family:var(--display)}
+.transition{margin:30px 0 0;padding-left:17px;border-left:2px solid var(--gold);color:var(--muted);font-style:italic}
+.trace{padding-left:1.2rem}.trace li{margin:.55rem 0}
+.table-wrap{overflow-x:auto;margin:20px 0;scrollbar-width:thin}
+.table-wrap table{min-width:610px;margin:0;font-variant-numeric:tabular-nums}
+.card li:last-child{margin-bottom:0}
+math{font-family:"Cambria Math","STIX Two Math","Times New Roman",serif}
+.equation{overflow-x:auto;overflow-y:hidden}
+.equation math[display="block"]{display:block;width:max-content;min-width:max-content;margin-inline:auto;font-size:1.08em;line-height:1.35}
+.equation mtable{column-gap:.45em}
+.inline-math{font-size:1em;vertical-align:-.14em;white-space:nowrap}
+figure img{display:block;width:100%;max-width:100%;height:auto}
+.instrument svg{margin-top:13px}
+.source-figure:focus-visible,.diagram-scroll:focus-visible{outline:3px solid #bd7a3c;outline-offset:3px}
+.diagram-scroll{overflow-x:auto;scrollbar-width:thin}
+.scroll-hint{display:none;color:var(--muted);font:650 12px/1.4 var(--utility)}
+.controls{grid-template-columns:repeat(3,minmax(0,1fr));gap:18px;margin-top:22px}
+.control label{gap:10px}.control output,.result{font-variant-numeric:tabular-nums}
+.result{max-width:none}
+.prediction{padding:14px 17px;border:1px solid var(--rule);background:var(--white)}
+details.answer{padding-inline:16px;border-left:4px solid var(--blue)}
+.evidence-reading li{margin:.7rem 0}
+.mental-map{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;padding:0;list-style:none}
+.mental-map li{padding:15px 16px;border-top:2px solid var(--blue);background:var(--white)}
+@media(max-width:720px){.page{padding:24px 18px 60px}.grid,.controls,.mental-map{grid-template-columns:1fr}.route{grid-template-columns:1fr 1fr}h2{font-size:1.65rem}.equation{padding:14px}.equation math{font-size:1em}figure,.instrument{padding:14px}.source-figure{overflow-x:auto;scrollbar-width:thin}.source-figure img{width:860px;max-width:none}.diagram-scroll svg{width:620px;max-width:none}.scroll-hint{display:block}}
+@media(max-width:420px){.route{grid-template-columns:1fr}.route div+div{padding-top:10px;border-top:1px solid var(--rule)}}
+</style>
+</head>
+<body>
+<main class="page">
+<a class="home" href="../index.html">&larr; Daily AI Paper Lab</a>
+<p class="eyebrow">A 60-minute active study session &middot; post-training</p>
+<h1>From RLHF Pipelines to One Loss</h1>
+<p class="subtitle">Direct Preference Optimization turns pairwise preferences into a policy-training objective, without fitting a separate reward model or running reinforcement learning in the fine-tuning loop.</p>
+<p class="byline">
+<em>Direct Preference Optimization: Your Language Model is Secretly a Reward Model</em> &middot; Rafael Rafailov, Archit Sharma, Eric Mitchell, Stefano Ermon, Christopher D. Manning, Chelsea Finn &middot; NeurIPS 2023</p>
+<nav class="route" aria-label="Study route">
+<div>
+<b>0-8 min</b>
+<span>Why preferences need a bridge</span>
+</div>
+<div>
+<b>8-25 min</b>
+<span>From reward-plus-KL to a policy</span>
+</div>
+<div>
+<b>25-43 min</b>
+<span>From a policy to one preference loss</span>
+</div>
+<div>
+<b>43-60 min</b>
+<span>Interpret, diagnose, connect</span>
+</div>
+</nav>
+<section>
+<h2>1. The problem: preferences are relative</h2>
+<p>A prompt can have many plausible completions. Asking a labeler for a calibrated numerical reward is hard; asking which of two completions is better is often easier. Let <em>y<sub>w</sub>
+</em> be the preferred completion and <em>y<sub>l</sub>
+</em> the rejected one for prompt <em>x</em>.</p>
+<p>Classic RLHF fits a reward model from these pairs, then trains a policy to maximize that reward while staying near a reference language model. The paper asks a sharper question: if the desired policy and the reward are mathematically linked, must we build the reward model as a separate object?</p>
+<div class="callout">
+<strong>Bridge from supervised learning.</strong> Cross-entropy says “make this target more likely.” DPO says “make the winner more likely <em>relative to the loser</em>, after comparing both changes to a stable reference model.”</div>
+<div class="callout"><strong>Plain-language compass.</strong> Think of the reference model as the first draft of an answer. DPO is not asking “is the new draft perfect?” It asks: compared with the first draft, did we improve the answer people preferred <em>more</em> than the answer they rejected?</div>
+<p class="transition">A preference pair gives a direction - chosen over rejected - but not an absolute score. That missing score is why the classic pipeline inserts a reward model, and why DPO needs a mathematical bridge to remove it.</p>
+</section>
+<section>
+<h2>2. From the original pipeline to DPO</h2>
+<p>In the paper's RLHF pipeline, SFT comes first; then response pairs are sampled, labeled, and used to fit a reward model; then RL fine-tunes the policy. DPO removes the separately trained reward model and the on-policy RL update, but it still needs offline preference pairs and a frozen reference policy.</p>
+<figure class="source-figure" tabindex="0" aria-label="Original paper Figure 1; scroll horizontally on a narrow screen"><p class="scroll-hint">Scroll horizontally to read the full source figure.</p><img src="figure_1_original_pipeline.png" width="1480" height="470" alt="Original DPO paper Figure 1. The RLHF route fits a reward model, repeatedly samples completions, labels rewards, and updates an LM policy with reinforcement learning. The DPO route sends preference pairs through one maximum-likelihood stage to a final language model."><figcaption><span class="label">Original paper figure</span> Figure 1 (p. 2). The left route alternates reward-scored sampling and reinforcement-learning updates; the right route trains the policy directly on fixed preference pairs. Here “maximum likelihood” means maximizing the observed winner-over-loser labels - it does not remove the need to collect completions or preferences.</figcaption></figure>
+<div class="callout"><strong>Active check (3 min).</strong> Point to the part DPO removes in the left pipeline. Answer: it bypasses fitting an explicit reward model and running RL against it, while preserving preference data and a reference model.</div>
+<p class="transition">The shorter pipeline creates a precise question: what must the direct loss remember from reward maximization so that “simpler” does not become “unanchored”?</p>
+</section><section>
+<h2>3. The ingredients: name the players before the derivation</h2>
+<p>One labeler supplies an ordering; two model roles turn that ordering into a trainable comparison. The <strong>trainable policy</strong> changes, while the <strong>reference policy</strong> stays frozen and defines what “more likely than before” means.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Symbol</th>
+<th>Meaning</th>
+<th>Intuition</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><em>x</em></td>
+<td>Prompt</td>
+<td>The shared context for both candidate completions.</td>
+</tr>
+<tr>
+<td><em>y<sub>w</sub></em>, <em>y<sub>l</sub></em></td>
+<td>Chosen winner and rejected loser</td>
+<td>The labeler supplies only their ordering, not an absolute score.</td>
+</tr>
+<tr>
+<td>&pi;<sub>&theta;</sub>(y|x)</td>
+<td>Trainable policy</td>
+<td>The model being moved by DPO.</td>
+</tr>
+<tr>
+<td>&pi;<sub>ref</sub>(y|x)</td>
+<td>Frozen reference policy</td>
+<td>A before-photo and ruler: how plausible was the completion before the update?</td>
+</tr>
+<tr>
+<td><math class="inline-math" aria-label="a theta of x y"><mrow><msub><mi>a</mi><mi>θ</mi></msub><mo>(</mo><mi>x</mi><mo>,</mo><mi>y</mi><mo>)</mo></mrow></math></td>
+<td>Policy-to-reference log-ratio</td>
+<td>The completion’s relative improvement; DPO subtracts the rejected value from the chosen value.</td>
+</tr>
+<tr>
+<td>r(x,y)</td>
+<td>Reward</td>
+<td>Latent quantity that would explain the preferences.</td>
+</tr>
+<tr>
+<td>&beta; &gt; 0</td>
+<td>KL/reward trade-off scale</td>
+<td>Sets the scale of the policy-to-reward mapping and the logistic margin.</td>
+</tr>
+<tr>
+<td>&sigma;(z)</td>
+<td><math aria-label="one over one plus e to the negative z"><mfrac><mn>1</mn><mrow><mn>1</mn><mo>+</mo><msup><mi>e</mi><mrow><mo>−</mo><mi>z</mi></mrow></msup></mrow></mfrac></math></td>
+<td>Maps a score difference to a preference probability.</td>
+</tr>
+<tr>
+<td><em>Z(x)</em></td>
+<td>Partition function</td>
+<td>A prompt-specific normalizer that makes the ideal policy sum to one; it cancels inside a same-prompt pair.</td>
+</tr>
+<tr>
+<td>D<sub>KL</sub>(&pi; || &pi;<sub>ref</sub>)</td>
+<td>Deviation cost</td>
+<td>The rubber-band cost for moving the policy away from the reference.</td>
+</tr>
+</tbody>
+</table></div>
+<div class="callout"><strong>The route we will follow.</strong> First, write down the behavior RLHF wants: better answers, but no wild drift from a stable model. Second, see the exact form of the best policy for that behavior. Third, rearrange that form to express the hidden reward through policy probabilities. Finally, compare a winner and loser for the same prompt: the one troublesome shared term cancels, leaving a loss we can train directly.</div>
+<p><strong>Keep these roles distinct.</strong> &pi;<sub>&theta;</sub> is the model we change. &pi;<sub>ref</sub> is one frozen copy used as the baseline throughout training. <em>r(x,y)</em> is the score that would explain a preference; DPO will avoid storing it as a separately trained model. The remaining symbols become useful only as we meet them.</p>
+</section>
+<section>
+<h2>4. Start with the behavior we want</h2>
+<p>DPO is not introduced as an arbitrary classifier. It starts with a thought experiment: imagine that we knew a trustworthy reward for every possible answer. For each prompt, we would want a policy that puts more probability on high-reward answers <em>without forgetting how to behave like the reference model</em>:</p>
+<div class="equation"><math display="block" aria-label="maximize over pi the expected reward under y sampled from pi, minus beta times the KL divergence from pi to the reference policy"><mrow><munder><mo>max</mo><mi>π</mi></munder><mspace width=".5em"/><msub><mi mathvariant="double-struck">E</mi><mrow><mi>y</mi><mo>∼</mo><mi>π</mi><mo>(</mo><mi>y</mi><mo>|</mo><mi>x</mi><mo>)</mo></mrow></msub><mo>[</mo><mi>r</mi><mo>(</mo><mi>x</mi><mo>,</mo><mi>y</mi><mo>)</mo><mo>]</mo><mo>−</mo><mi>β</mi><msub><mi>D</mi><mi>KL</mi></msub><mo>(</mo><mi>π</mi><mo>(</mo><mi>y</mi><mo>|</mo><mi>x</mi><mo>)</mo><mo>∥</mo><msub><mi>π</mi><mi>ref</mi></msub><mo>(</mo><mi>y</mi><mo>|</mo><mi>x</mi><mo>)</mo><mo>)</mo></mrow></math></div>
+<p>Read the first term as “seek better answers.” Read the second term as “pay a cost for becoming unlike the reference.” The KL term is a rubber band: reward pulls the model toward better answers; KL resists an implausibly large jump. Here &beta; controls the trade-off: in this original reward-minus-KL objective, a larger &beta; makes staying near the reference more important.</p>
+<p><strong>The question that unlocks DPO:</strong> if this were the desired behavior, what would its best possible policy look like? The answer lets us replace the reward model instead of training it separately.</p>
+</section><section>
+<h2>5. Solve it once, then make the reward disappear</h2>
+<p>For the objective above, the paper uses its exact optimal policy. Call it &pi;<sup>*</sup>: it is the ideal policy we would get if the reward were known. It begins with the reference probability, then multiplies it by a reward-based boost, and finally divides by <em>Z(x)</em> so all answer probabilities still add to one:</p>
+<div class="equation"><math display="block" aria-label="pi star of y given x equals pi reference of y given x times exponential of r of x y over beta, divided by Z of x"><mrow><msup><mi>π</mi><mo>*</mo></msup><mo>(</mo><mi>y</mi><mo>|</mo><mi>x</mi><mo>)</mo><mo>=</mo><mfrac><mrow><msub><mi>π</mi><mi>ref</mi></msub><mo>(</mo><mi>y</mi><mo>|</mo><mi>x</mi><mo>)</mo><mo>⁢</mo><mo>exp</mo><mo>(</mo><mfrac><mrow><mi>r</mi><mo>(</mo><mi>x</mi><mo>,</mo><mi>y</mi><mo>)</mo></mrow><mi>β</mi></mfrac><mo>)</mo></mrow><mrow><mi>Z</mi><mo>(</mo><mi>x</mi><mo>)</mo></mrow></mfrac></mrow></math></div>
+<p>For two possible answers, suppose the reference gives A probability 0.8 and B probability 0.2, but B has the higher reward. The reward boost raises B's weight; the normalizer then rescales both weights back into probabilities. B becomes more likely, but it does not erase the reference model. That is the mathematical version of the rubber band.</p>
+<p>Now rearrange that solution. The reward can be written using only the <em>relative change</em> from reference probability to optimal-policy probability:</p>
+<div class="equation"><math display="block" aria-label="reward equals beta times log of pi star over pi reference plus beta log Z"><mrow><mi>r</mi><mo>(</mo><mi>x</mi><mo>,</mo><mi>y</mi><mo>)</mo><mo>=</mo><mi>β</mi><mo>log</mo><mo>(</mo><mfrac><mrow><msup><mi>π</mi><mo>*</mo></msup><mo>(</mo><mi>y</mi><mo>|</mo><mi>x</mi><mo>)</mo></mrow><mrow><msub><mi>π</mi><mi>ref</mi></msub><mo>(</mo><mi>y</mi><mo>|</mo><mi>x</mi><mo>)</mo></mrow></mfrac><mo>)</mo><mo>+</mo><mi>β</mi><mo>log</mo><mi>Z</mi><mo>(</mo><mi>x</mi><mo>)</mo></mrow></math></div>
+<p>This is the key bridge. A policy that makes an answer more likely than the reference acts as if that answer had higher reward. <em>Z(x)</em> is a shared normalizing factor for every answer to the same prompt. It is hard to calculate across all possible text—but a preference label only compares two answers for one prompt, which is exactly where the shared term disappears.</p>
+<p>The Bradley-Terry preference model says that the chance of preferring <em>y<sub>w</sub></em> over <em>y<sub>l</sub></em> is:</p>
+<div class="equation"><math display="block" aria-label="the probability that y w is preferred to y l given x equals sigmoid of the reward for y w minus the reward for y l"><mrow><msup><mi>p</mi><mo>*</mo></msup><mo>(</mo><msub><mi>y</mi><mi>w</mi></msub><mo>≻</mo><msub><mi>y</mi><mi>l</mi></msub><mo>|</mo><mi>x</mi><mo>)</mo><mo>=</mo><mi>σ</mi><mo>(</mo><mi>r</mi><mo>(</mo><mi>x</mi><mo>,</mo><msub><mi>y</mi><mi>w</mi></msub><mo>)</mo><mo>−</mo><mi>r</mi><mo>(</mo><mi>x</mi><mo>,</mo><msub><mi>y</mi><mi>l</mi></msub><mo>)</mo><mo>)</mo></mrow></math></div>
+<p>This is a soft version of “higher score wins”: a larger score gap means a more confident predicted preference. Substitute the implicit-reward expression once for the winner and once for the loser.</p>
+<div class="equation"><math display="block" aria-label="the reward difference equals beta times the chosen log probability ratio minus the rejected log probability ratio; the shared beta log Z term cancels"><mtable columnalign="right left" rowspacing=".75em"><mtr><mtd><mi>r</mi><mo>(</mo><mi>x</mi><mo>,</mo><msub><mi>y</mi><mi>w</mi></msub><mo>)</mo><mo>−</mo><mi>r</mi><mo>(</mo><mi>x</mi><mo>,</mo><msub><mi>y</mi><mi>l</mi></msub><mo>)</mo></mtd><mtd><mo>=</mo><mi>β</mi><mo>[</mo><mo>log</mo><mo>(</mo><mfrac><mrow><mi>π</mi><mo>(</mo><msub><mi>y</mi><mi>w</mi></msub><mo>|</mo><mi>x</mi><mo>)</mo></mrow><mrow><msub><mi>π</mi><mi>ref</mi></msub><mo>(</mo><msub><mi>y</mi><mi>w</mi></msub><mo>|</mo><mi>x</mi><mo>)</mo></mrow></mfrac><mo>)</mo><mo>−</mo><mo>log</mo><mo>(</mo><mfrac><mrow><mi>π</mi><mo>(</mo><msub><mi>y</mi><mi>l</mi></msub><mo>|</mo><mi>x</mi><mo>)</mo></mrow><mrow><msub><mi>π</mi><mi>ref</mi></msub><mo>(</mo><msub><mi>y</mi><mi>l</mi></msub><mo>|</mo><mi>x</mi><mo>)</mo></mrow></mfrac><mo>)</mo><mo>]</mo></mtd></mtr><mtr><mtd><mtext>shared prompt term</mtext></mtd><mtd><mo>=</mo><mi>β</mi><mo>log</mo><mi>Z</mi><mo>(</mo><mi>x</mi><mo>)</mo><mo>−</mo><mi>β</mi><mo>log</mo><mi>Z</mi><mo>(</mo><mi>x</mi><mo>)</mo><mo>=</mo><mn>0</mn></mtd></mtr></mtable></math></div>
+<p>The two &beta; log Z(x) terms are identical, because winner and loser share prompt <em>x</em>, so they cancel. This is the escape hatch: a comparison does not need an absolute reward or a separately trained reward model. It needs only a <em>relative log-probability improvement</em>: how much the policy favors each completion compared with the reference.</p>
+<p>We now replace ideal &pi;<sup>*</sup> with the real trainable model &pi;<sub>&theta;</sub>. For each labelled pair, the sigmoid turns its relative improvement margin into the model’s probability that the winner should beat the loser. Training by maximum likelihood simply means: change &pi;<sub>&theta;</sub> to make the human-observed winner/loser labels more probable across the dataset. Taking the negative log gives the loss to minimize:</p>
+<div class="equation"><math display="block" aria-label="define a theta as the trainable-to-reference log probability ratio; the DPO loss is the negative expected log sigmoid of beta times the chosen a theta minus the rejected a theta"><mtable columnalign="right left" rowspacing=".85em"><mtr><mtd><msub><mi>a</mi><mi>θ</mi></msub><mo>(</mo><mi>x</mi><mo>,</mo><mi>y</mi><mo>)</mo></mtd><mtd><mo>=</mo><mo>log</mo><mo>(</mo><mfrac><mrow><msub><mi>π</mi><mi>θ</mi></msub><mo>(</mo><mi>y</mi><mo>|</mo><mi>x</mi><mo>)</mo></mrow><mrow><msub><mi>π</mi><mi>ref</mi></msub><mo>(</mo><mi>y</mi><mo>|</mo><mi>x</mi><mo>)</mo></mrow></mfrac><mo>)</mo></mtd></mtr><mtr><mtd><msub><mi>L</mi><mi>DPO</mi></msub></mtd><mtd><mo>=</mo><mo>−</mo><msub><mi mathvariant="double-struck">E</mi><mrow><mo>(</mo><mi>x</mi><mo>,</mo><msub><mi>y</mi><mi>w</mi></msub><mo>,</mo><msub><mi>y</mi><mi>l</mi></msub><mo>)</mo><mo>∼</mo><mi>D</mi></mrow></msub><mo>[</mo><mo>log</mo><mi>σ</mi><mo>(</mo><mi>β</mi><mo>(</mo><msub><mi>a</mi><mi>θ</mi></msub><mo>(</mo><mi>x</mi><mo>,</mo><msub><mi>y</mi><mi>w</mi></msub><mo>)</mo><mo>−</mo><msub><mi>a</mi><mi>θ</mi></msub><mo>(</mo><mi>x</mi><mo>,</mo><msub><mi>y</mi><mi>l</mi></msub><mo>)</mo><mo>)</mo><mo>)</mo><mo>]</mo></mtd></mtr></mtable></math></div>
+<div class="grid">
+<div class="card">
+<span class="label">Worked trace A</span>
+<h3>Winner improves, loser does not</h3>
+<ol class="trace">
+<li>The chosen answer’s log-ratio is +0.60; the rejected answer’s is +0.10. Both gained support relative to the reference.</li>
+<li>Subtract the rejected gain from the chosen gain: &Delta; = 0.60 - 0.10 = 0.50.</li>
+<li>With &beta; = 1, the DPO margin is 0.50, so &sigma;(0.50) &asymp; 0.622.</li>
+<li>The pair loss is -log(0.622) &asymp; 0.474. The ordering is right, but the gradient still asks for a clearer separation.</li>
+</ol>
+</div>
+<div class="card">
+<span class="label">Worked trace B</span>
+<h3>Both answers get more likely</h3>
+<ol class="trace">
+<li>The chosen and rejected log-ratios are both +0.60: the policy raised both equally relative to the reference.</li>
+<li>The difference is &Delta; = 0.60 - 0.60 = 0, regardless of the positive absolute gains.</li>
+<li>For any positive &beta;, the margin stays 0, &sigma;(0) = 0.5, and the pair loss is -log(0.5) &asymp; 0.693.</li>
+<li>DPO sees no preference separation. It rewards <em>relative</em> movement toward the chosen answer, not indiscriminate probability inflation.</li>
+</ol>
+</div>
+</div>
+</section>
+<section>
+<h2>6. Make the loss executable for a language model</h2>
+<p>For an LM, a completion log-probability is the sum of conditional token log-probabilities:</p>
+<div class="equation"><math display="block" aria-label="log probability of completion y given x equals the sum from token one through T of the conditional log probability of token y t given x and earlier completion tokens"><mrow><mo>log</mo><msub><mi>π</mi><mi>θ</mi></msub><mo>(</mo><mi>y</mi><mo>|</mo><mi>x</mi><mo>)</mo><mo>=</mo><munderover><mo>∑</mo><mrow><mi>t</mi><mo>=</mo><mn>1</mn></mrow><mi>T</mi></munderover><mo>log</mo><msub><mi>π</mi><mi>θ</mi></msub><mo>(</mo><msub><mi>y</mi><mi>t</mi></msub><mo>|</mo><mi>x</mi><mo>,</mo><msub><mi>y</mi><mrow><mo>&lt;</mo><mi>t</mi></mrow></msub><mo>)</mo></mrow></math></div>
+<p>Think of each next token as adding a small entry to a running confidence ledger; the completion score is the total. DPO compares whole completions, not just their last tokens.</p>
+<div class="table-wrap"><table><thead><tr><th>Completion</th><th>Current sequence log-prob</th><th>Reference sequence log-prob</th><th>Log-ratio</th></tr></thead><tbody><tr><td>Chosen completion</td><td>-1.5</td><td>-1.9</td><td>+0.4</td></tr><tr><td>Rejected completion</td><td>-2.0</td><td>-1.6</td><td>-0.4</td></tr></tbody></table></div>
+<p>With β=0.5, the margin is 0.5×(0.4-(-0.4))=0.4; σ(0.4)≈0.60 and the per-pair loss is about 0.51.</p>
+<p class="prediction"><strong>Predict before revealing:</strong> if the current-policy values stay fixed but only the reference values change, can the loss change?</p>
+<details class="answer"><summary>Reveal the answer</summary><p>Yes. The reference defines which probability shift counts as improvement. Changing either reference log-probability changes its completion’s log-ratio, which can change the margin, preference probability, and loss.</p></details>
+<h3>The gradient supplies an adaptive correction</h3><p>The paper's gradient raises the chosen log-probability and lowers the rejected one, weighted by <math class="inline-math" aria-label="sigmoid of the rejected implicit reward minus the chosen implicit reward, equal to sigmoid of negative margin"><mrow><mi>σ</mi><mo>(</mo><msub><mover><mi>r</mi><mo>^</mo></mover><mi>θ</mi></msub><mo>(</mo><mi>x</mi><mo>,</mo><msub><mi>y</mi><mi>l</mi></msub><mo>)</mo><mo>−</mo><msub><mover><mi>r</mi><mo>^</mo></mover><mi>θ</mi></msub><mo>(</mo><mi>x</mi><mo>,</mo><msub><mi>y</mi><mi>w</mi></msub><mo>)</mo><mo>)</mo><mo>=</mo><mi>σ</mi><mo>(</mo><mo>−</mo><mi>margin</mi><mo>)</mo></mrow></math>. Like a tutor spending more time on a clear mistake than on an already-correct answer, a well-ranked pair with margin +2 has weight about 0.12; a wrongly ranked pair with margin -2 has weight about 0.88. This continuous weighting is why DPO is not just chosen/rejected unlikelihood training.</p>
+</section><section>
+<h2>7. Instrument: inspect one DPO preference pair</h2>
+<p>Before moving the controls, predict: if the current policy over-promotes the rejected answer relative to the reference, should the loss be high or low?</p>
+<figure class="instrument">
+<span class="label">Lesson diagram</span>
+<p class="scroll-hint">Scroll the scale horizontally; the controls and explanation remain below it.</p>
+<div class="diagram-scroll" tabindex="0" aria-label="DPO log-ratio diagram; scroll horizontally on a narrow screen">
+<svg viewBox="0 0 760 250" role="img" aria-labelledby="scale-title scale-desc">
+<title id="scale-title">Chosen and rejected log-ratios on a shared DPO margin scale</title>
+<desc id="scale-desc">Two horizontal number lines run from minus two to plus two. The chosen marker is at plus 0.60 and the rejected marker is at plus 0.10. An arrow from rejected to chosen shows their difference, plus 0.50; beta scales that difference into the DPO margin.</desc>
+<defs><marker id="margin-arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8z" fill="#315c68"/></marker></defs>
+<g font-family="Avenir Next,Arial,sans-serif" font-size="13" fill="#625f59">
+<text x="16" y="93" fill="#315c68" font-weight="700">CHOSEN</text>
+<text x="16" y="156" fill="#7a302c" font-weight="700">REJECTED</text>
+<text x="445" y="27" text-anchor="middle">0 = unchanged from reference policy</text>
+<g text-anchor="middle"><text x="190" y="190">-2</text><text x="318" y="190">-1</text><text x="445" y="190">0</text><text x="573" y="190">+1</text><text x="700" y="190">+2</text></g>
+</g>
+<g stroke="#aaa49a" stroke-width="2"><line x1="190" y1="88" x2="700" y2="88"/><line x1="190" y1="151" x2="700" y2="151"/></g>
+<g stroke="#d7d1c4"><line x1="190" y1="78" x2="190" y2="162"/><line x1="318" y1="78" x2="318" y2="162"/><line x1="445" y1="53" x2="445" y2="162" stroke="#20201e" stroke-width="2"/><line x1="573" y1="78" x2="573" y2="162"/><line x1="700" y1="78" x2="700" y2="162"/></g>
+<circle id="chosenMarker" cx="522" cy="88" r="9" fill="#315c68"/><circle id="rejectedMarker" cx="458" cy="151" r="9" fill="#7a302c"/>
+<text id="chosenText" x="522" y="69" text-anchor="middle" font-family="Georgia,serif" font-size="17" fill="#315c68">+0.60</text>
+<text id="rejectedText" x="458" y="137" text-anchor="middle" font-family="Georgia,serif" font-size="17" fill="#7a302c">+0.10</text>
+<line id="marginSpan" x1="458" y1="211" x2="522" y2="211" stroke="#315c68" stroke-width="3" marker-end="url(#margin-arrow)"/>
+<text id="marginText" x="445" y="240" text-anchor="middle" font-family="Avenir Next,Arial,sans-serif" font-size="14" fill="#20201e">difference &Delta; = +0.50; scaled margin &beta;&Delta; = +0.50</text>
+</svg>
+</div>
+<div class="controls">
+<div class="control">
+<label for="chosen">Chosen log-ratio <output id="chosenOut">+0.60</output>
+</label>
+<input id="chosen" type="range" min="-2" max="2" step=".05" value=".6">
+</div>
+<div class="control">
+<label for="rejected">Rejected log-ratio <output id="rejectedOut">+0.10</output>
+</label>
+<input id="rejected" type="range" min="-2" max="2" step=".05" value=".1">
+</div>
+<div class="control">
+<label for="beta">Beta <output id="betaOut">1.00</output>
+</label>
+<input id="beta" type="range" min=".1" max="3" step=".1" value="1">
+</div>
+</div>
+<p id="result" class="result" aria-live="polite">Margin = 0.50. Preference probability = 0.62; per-pair loss = 0.47. The chosen completion is relatively favored.</p>
+<p class="small">Static reading: at the default setting, the chosen completion has a 0.50 larger log-ratio than the rejected completion. With &beta; = 1 this is a positive, but imperfect, preference margin. Moving &beta; while holding both log-ratios fixed is a diagnostic slice, not a complete simulation of training.</p>
+<figcaption><strong>Lesson diagram.</strong> Each marker measures one completion’s log probability under the trainable policy minus its log probability under the frozen reference. DPO subtracts the rejected marker from the chosen marker, then scales that difference by &beta;.</figcaption>
+</figure>
+<details class="answer">
+<summary>Reveal the prediction</summary>
+<p>High. If the rejected completion has the larger relative improvement, the margin is negative, &sigma;(margin) is below 0.5, and -log &sigma;(margin) increases. Gradient descent responds by raising the chosen likelihood and lowering the rejected likelihood.</p>
+</details>
+</section>
+<section>
+<h2>8. What the update is really doing</h2>
+<p>The paper differentiates the loss and finds a useful qualitative story: each pair pushes up <math class="inline-math" aria-label="log policy probability of chosen y w given x"><mrow><mo>log</mo><msub><mi>π</mi><mi>θ</mi></msub><mo>(</mo><msub><mi>y</mi><mi>w</mi></msub><mo>|</mo><mi>x</mi><mo>)</mo></mrow></math> and pushes down <math class="inline-math" aria-label="log policy probability of rejected y l given x"><mrow><mo>log</mo><msub><mi>π</mi><mi>θ</mi></msub><mo>(</mo><msub><mi>y</mi><mi>l</mi></msub><mo>|</mo><mi>x</mi><mo>)</mo></mrow></math>. Pairs that the implicit reward currently orders wrongly receive more weight. This is why “just maximize the chosen/rejected probability ratio” is not the same algorithm: the logistic form supplies a data-dependent weight.</p>
+<div class="callout">
+<strong>Do not collapse the roles.</strong> DPO does not claim preferences create an objective truth reward. It assumes a statistical model of observed comparisons, then uses the policy/reference log-ratio as an <em>implicit</em> reward parameterization.</div>
+<h3>Misconception check</h3>
+<details>
+<summary>“DPO removes the reference model.”</summary>
+<p>No. It removes the separately trained reward model and the RL loop, but the frozen reference policy appears inside every log ratio. It anchors the comparison.</p>
+</details>
+<details>
+<summary>“DPO simply teaches the policy to copy every chosen response.”</summary>
+<p>No. A pair asks for a relative ordering. The loss judges changes relative to &pi;<sub>ref</sub>, and it explicitly contrasts chosen against rejected completions.</p>
+</details>
+<details>
+<summary>“The derivation proves DPO works for arbitrary preference data.”</summary>
+<p>No. The central equivalence uses a Bradley-Terry-style preference model and the KL-regularized objective. The paper also assumes appropriate support and a positive &beta;.</p>
+</details>
+</section>
+<section>
+<h2>9. What the original experiments actually test</h2>
+<p>The paper separates controlled optimization from real preference data. Controlled sentiment generation uses IMDb prefixes, GPT-2-large, and classifier-created preference pairs, so reward and sequence-level KL are measurable directly. TL;DR summarization evaluates GPT-J policies against reference summaries with GPT-4 as a proxy judge. Single-turn dialogue uses Anthropic Helpful and Harmless data and Pythia-2.8B; the experiments reach models up to 6B parameters.</p>
+<figure class="results-figure source-figure" tabindex="0" aria-label="Original paper Figure 2; scroll horizontally on a narrow screen"><p class="scroll-hint">Scroll horizontally to read both result panels at a legible scale.</p><img src="original_figure_2_results.png" width="1720" height="560" alt="Original DPO paper Figure 2. Left, on controlled IMDb sentiment generation, yellow DPO points form the highest reward frontier over sequence-level KL divergence from the reference. Right, on TL;DR summarization judged by GPT-4, DPO has about 0.61 win rate at temperature zero and declines to about 0.39 at temperature one; PPO declines from about 0.57 to about 0.07."><figcaption><span class="label">Original paper figure</span> Figure 2 (p. 7). <strong>Left:</strong> compare methods at similar horizontal positions: moving right spends more sequence-level KL divergence from the reference, while moving up gains classifier reward. The yellow DPO runs form the upper frontier in this controlled sweep. <strong>Right:</strong> the dashed 0.50 line is an even win rate against human-written summaries. At temperature 0, DPO is about 0.61 and PPO about 0.57. At temperature 1, DPO falls to about 0.39 and PPO to about 0.07, while Best of 128 is about 0.47; DPO is more temperature-robust than PPO, not uniformly best against every baseline at every temperature.</figcaption></figure>
+<ol class="evidence-reading">
+<li><strong>Read the axes before the ranking.</strong> On the left, reward alone is not enough: a method that moves much farther from &pi;<sub>ref</sub> pays more KL. The relevant object is a reward-at-comparable-KL frontier.</li>
+<li><strong>Read the evaluation source.</strong> The left reward comes from the sentiment classifier used to construct the controlled preferences. The right win rate comes from a particular concise GPT-4 judging prompt against test-set reference summaries.</li>
+<li><strong>Read uncertainty and scope.</strong> The right-side points include error bars, so small visual gaps should not be over-read. The plot compares these methods, models, temperatures, and prompts; it is not a universal league table.</li>
+</ol>
+<div class="callout"><strong>Read the evidence at the right scale.</strong> The left chart is a controlled IMDb sentiment task where reward and KL can be measured directly. The right chart is TL;DR summarization judged by GPT-4 under specific sampling temperatures. These plots support the paper’s claim for those settings; they do not prove DPO is universally better for every task, model, or evaluator.</div>
+<details class="answer"><summary>Interpretation exercise: Why is “61%” not enough by itself?</summary><p>It is a win rate under a particular task, baseline, temperature, and judging prompt. The paper observes that a simple GPT-4 prompt favored longer repetitive summaries, and uses a concise prompt for its main results.</p></details>
+</section><section>
+<h2>10. Reward equivalence, assumptions, and limits</h2>
+<p>Preferences cannot identify an absolute reward. If <math class="inline-math" aria-label="r of x y"><mrow><mi>r</mi><mo>(</mo><mi>x</mi><mo>,</mo><mi>y</mi><mo>)</mo></mrow></math> and <math class="inline-math" aria-label="r prime of x y"><mrow><msup><mi>r</mi><mo>′</mo></msup><mo>(</mo><mi>x</mi><mo>,</mo><mi>y</mi><mo>)</mo></mrow></math> differ only by a prompt-dependent <math class="inline-math" aria-label="f of x"><mrow><mi>f</mi><mo>(</mo><mi>x</mi><mo>)</mo></mrow></math>, Bradley-Terry and Plackett-Luce comparisons are unchanged because the term cancels within a pair. The paper shows those equivalent rewards also induce the same KL-regularized optimal policy.</p>
+<p>DPO selects a normalized representative:</p>
+<div class="equation"><math display="block" aria-label="the implicit reward r hat theta of x y equals beta times the log of trainable policy probability divided by reference policy probability"><mrow><msub><mover><mi>r</mi><mo>^</mo></mover><mi>θ</mi></msub><mo>(</mo><mi>x</mi><mo>,</mo><mi>y</mi><mo>)</mo><mo>=</mo><mi>β</mi><mo>log</mo><mo>(</mo><mfrac><mrow><msub><mi>π</mi><mi>θ</mi></msub><mo>(</mo><mi>y</mi><mo>|</mo><mi>x</mi><mo>)</mo></mrow><mrow><msub><mi>π</mi><mi>ref</mi></msub><mo>(</mo><mi>y</mi><mo>|</mo><mi>x</mi><mo>)</mo></mrow></mfrac><mo>)</mo></mrow></math></div>
+<p>That is the precise sense in which the language model is “secretly” a reward model; it does not find a unique absolute human reward.</p>
+<div class="callout"><strong>Assumptions to carry forward.</strong> The derivation uses a Bradley-Terry/Plackett-Luce-style preference model, β&gt;0, and reference-policy support for relevant completions. The equivalence is about an idealized objective and reward classes, not a promise for finite models, noisy labels, or every optimization run.</div>
+<p>DPO removes on-policy sampling <em>during its optimization loop</em>, not sampling altogether. Preference completions must already exist, and every update needs both policy and frozen-reference log-probabilities. That second forward pass is simpler than maintaining a reward model plus an RL loop, but it is not free.</p>
+<p>The paper’s out-of-distribution CNN/DailyMail result is encouraging but narrow: one shifted summarization dataset and one automated judge. The authors explicitly leave comprehensive generalization, reward over-optimization, self-labeling on unlabeled prompts, scaling beyond 6B parameters, and evaluator prompt sensitivity for future work.</p>
+</section><section>
+<h2>11. Evidence and scope</h2>
+<p>The authors evaluate DPO on sentiment control, TL;DR summarization, and single-turn dialogue with models up to 6B parameters. They report that DPO matches or exceeds their PPO-based RLHF baselines on these settings, with stronger sentiment control and improved response quality in their summarization and dialogue evaluations. Treat this as scoped empirical evidence, not a universal ordering of alignment methods.</p>
+<div class="grid">
+<div class="card">
+<span class="label">What it simplifies</span>
+<p>No separate reward-model fitting stage; no policy sampling during the DPO fine-tuning loop; and a single classification-style objective on an offline preference dataset.</p>
+</div>
+<div class="card">
+<span class="label">What remains hard</span>
+<p>Preference labels can be biased, inconsistent, or underspecified. The paper asks how DPO generalizes out of distribution, how reward over-optimization appears, and how it scales beyond the tested 6B-parameter models. Its automated evaluation is also prompt-sensitive.</p>
+</div>
+</div>
+</section>
+<section>
+<h2>12. Active recall</h2>
+<details>
+<summary>Why does the partition function disappear?</summary>
+<p>Bradley-Terry uses a difference of two rewards for the same prompt. The prompt-only term &beta; log Z(x) appears in both rewards and cancels.</p>
+</details>
+<details>
+<summary>What is the one scalar that DPO feeds into the sigmoid?</summary>
+<p>&beta; times the difference between the chosen and rejected <em>log probability ratios</em>:</p>
+<div class="equation"><math display="block" aria-label="beta times the chosen trainable-to-reference log probability ratio minus the rejected trainable-to-reference log probability ratio"><mrow><mi>β</mi><mo>[</mo><mo>log</mo><mo>(</mo><mfrac><mrow><msub><mi>π</mi><mi>θ</mi></msub><mo>(</mo><msub><mi>y</mi><mi>w</mi></msub><mo>|</mo><mi>x</mi><mo>)</mo></mrow><mrow><msub><mi>π</mi><mi>ref</mi></msub><mo>(</mo><msub><mi>y</mi><mi>w</mi></msub><mo>|</mo><mi>x</mi><mo>)</mo></mrow></mfrac><mo>)</mo><mo>−</mo><mo>log</mo><mo>(</mo><mfrac><mrow><msub><mi>π</mi><mi>θ</mi></msub><mo>(</mo><msub><mi>y</mi><mi>l</mi></msub><mo>|</mo><mi>x</mi><mo>)</mo></mrow><mrow><msub><mi>π</mi><mi>ref</mi></msub><mo>(</mo><msub><mi>y</mi><mi>l</mi></msub><mo>|</mo><mi>x</mi><mo>)</mo></mrow></mfrac><mo>)</mo><mo>]</mo></mrow></math></div>
+</details>
+<details>
+<summary>What does a negative margin diagnose?</summary>
+<p>Relative to the reference, the policy has improved the rejected completion more than the chosen completion. The loss is high and the gradient corrects that ordering.</p>
+</details>
+<details>
+<summary>What does DPO eliminate, and what does it retain?</summary>
+<p>It eliminates the explicit reward model and RL policy-optimization loop. It retains a reference policy, offline preference pairs, a statistical preference model, and ordinary gradient-based policy training.</p>
+</details>
+</section>
+<section>
+<h2>Connect it to your mental map</h2>
+<p>DPO extends the collection’s language-model branch from architecture into post-training. Keep three jobs distinct: pretraining learns broad next-token statistics; supervised fine-tuning imitates demonstrations; preference optimization learns a <em>relative ordering</em> among possible completions.</p>
+<ul class="mental-map">
+<li><a href="../attention-is-all-you-need/attention_is_all_you_need.html"><strong>Attention Is All You Need</strong></a><br>The Transformer determines how the policy represents and predicts text. DPO changes the training objective, not the attention architecture.</li>
+<li><a href="../human-level-control-through-deep-reinforcement-learning/human_level_control_through_deep_reinforcement_learning.html"><strong>Human-level control through deep reinforcement learning</strong></a><br>DQN learns from scalar rewards and Bellman targets. DPO starts from an offline pairwise ordering and turns it into a classification-style policy loss.</li>
+<li><a href="../adam-a-method-for-stochastic-optimization/adam_a_method_for_stochastic_optimization.html"><strong>Adam: A Method for Stochastic Optimization</strong></a><br>Adam can minimize the DPO loss, but it does not define the preference signal. DPO supplies the objective; Adam supplies parameter updates.</li>
+</ul>
+<h2>Takeaway</h2>
+<p>A DPO update does not need to name a reward model. It asks one precise question: compared with a stable reference, did the policy move probability toward the response people chose and away from the one they rejected? Under the paper’s preference model, that relative movement is enough to train the policy directly.</p>
+</section>
+<footer>
+<h3>Source and further exploration</h3>
+<ul>
+<li>
+<a href="direct_preference_optimization.pdf">Local PDF: Rafailov et al., Direct Preference Optimization</a>
+</li>
+<li>
+<a href="https://proceedings.neurips.cc/paper_files/paper/2023/file/a85b405ed65c6477a4fe8302b5e06ce7-Paper-Conference.pdf">NeurIPS 2023 canonical paper record</a>
+</li>
+<li>
+<a href="https://arxiv.org/abs/2305.18290">arXiv record and version history</a>
+</li>
+<li>
+<a href="https://github.com/eric-mitchell/direct-preference-optimization">Authors' reference implementation</a>
+</li>
+</ul>
+</footer>
+</main>
+<script>
+const ids=['chosen','rejected','beta'];
+const n=id=>Number(document.getElementById(id).value);
+const format=value=>(value>=0?'+':'')+value.toFixed(2);
+const scaleX=value=>445+127.5*value;
+function update(){
+  const chosen=n('chosen');
+  const rejected=n('rejected');
+  const beta=n('beta');
+  const difference=chosen-rejected;
+  const margin=beta*difference;
+  const preferenceProbability=1/(1+Math.exp(-margin));
+  const loss=-Math.log(preferenceProbability);
+  const chosenX=scaleX(chosen);
+  const rejectedX=scaleX(rejected);
+  document.getElementById('chosenOut').value=format(chosen);
+  document.getElementById('rejectedOut').value=format(rejected);
+  document.getElementById('betaOut').value=beta.toFixed(2);
+  document.getElementById('chosenText').textContent=format(chosen);
+  document.getElementById('rejectedText').textContent=format(rejected);
+  document.getElementById('chosenText').setAttribute('x',chosenX);
+  document.getElementById('rejectedText').setAttribute('x',rejectedX);
+  document.getElementById('chosenMarker').setAttribute('cx',chosenX);
+  document.getElementById('rejectedMarker').setAttribute('cx',rejectedX);
+  document.getElementById('marginSpan').setAttribute('x1',rejectedX);
+  document.getElementById('marginSpan').setAttribute('x2',chosenX);
+  document.getElementById('marginText').textContent=`difference Δ = ${format(difference)}; scaled margin βΔ = ${format(margin)}`;
+  document.getElementById('scale-desc').textContent=`The chosen log-ratio is ${format(chosen)} and the rejected log-ratio is ${format(rejected)}. Their difference is ${format(difference)}; beta scales it to a DPO margin of ${format(margin)}.`;
+  const diagnosis=margin>0?'The chosen completion is relatively favored.':margin<0?'The rejected completion is relatively favored, so the update pressure is corrective.':'The pair is tied relative to the reference.';
+  document.getElementById('result').textContent=`Margin = ${margin.toFixed(2)}. Preference probability = ${preferenceProbability.toFixed(2)}; per-pair loss = ${loss.toFixed(2)}. ${diagnosis}`;
+}
+ids.forEach(id=>document.getElementById(id).addEventListener('input',update));
+update();
+</script>
+</body>
+</html>

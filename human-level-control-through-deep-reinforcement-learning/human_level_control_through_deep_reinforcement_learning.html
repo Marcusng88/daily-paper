@@ -1,0 +1,819 @@
+<!doctype html>
+<html lang="en">
+<head>
+ <meta charset="utf-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1">
+ <title>Human-level control through deep reinforcement learning — lesson</title>
+ <style>
+   :root {
+     --ink: #162431;
+     --paper: #f4f7f7;
+     --panel: #ffffff;
+     --line: #cbd7d9;
+     --cyan: #187a8b;
+     --cyan-dark: #0e5966;
+     --orange: #e06d3c;
+     --violet: #7059a8;
+     --graphite: #566170;
+     --mist: #dce5e8;
+     --soft-orange: #fff1e9;
+     --soft-violet: #f1edfb;
+     --display: "Arial Narrow", "Roboto Condensed", Impact, sans-serif;
+     --body: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+     --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+   }
+   * { box-sizing: border-box; }
+   html { scroll-behavior: smooth; }
+   body {
+     margin: 0;
+     background: var(--paper);
+     color: var(--ink);
+     font-family: var(--body);
+     line-height: 1.62;
+   }
+   a { color: var(--cyan-dark); text-underline-offset: 3px; }
+   button, input { font: inherit; }
+   button {
+     border: 1px solid var(--ink);
+     background: var(--panel);
+     color: var(--ink);
+     cursor: pointer;
+     padding: .58rem .8rem;
+     font-weight: 700;
+   }
+   button:hover { background: var(--ink); color: white; }
+   button:focus-visible, a:focus-visible, input:focus-visible, summary:focus-visible {
+     outline: 3px solid var(--orange);
+     outline-offset: 3px;
+   }
+   .shell { width: min(1180px, calc(100% - 2rem)); margin: 0 auto; }
+   .topbar {
+     display: flex; align-items: center;
+     padding: 1rem 0; border-bottom: 1px solid var(--line); font-size: .88rem;
+   }
+   .topbar a { color: var(--graphite); text-decoration: none; }
+   .topbar a:hover { color: var(--cyan-dark); text-decoration: underline; }
+   .topbar .home-link { display: inline-flex; align-items: center; padding: .34rem .58rem; border: 1px solid var(--cyan); color: var(--cyan-dark); background: var(--panel); font-weight: 800; }
+   .topbar .home-link:hover { color: var(--cyan-dark); text-decoration: none; background: #e8f5f6; }
+   .hero { padding: clamp(3.4rem, 9vw, 7.5rem) 0 3rem; }
+   .kicker {
+     color: var(--cyan-dark); font: 800 .78rem/1 var(--mono); letter-spacing: .13em;
+     text-transform: uppercase; margin: 0 0 1rem;
+   }
+   h1, h2, h3 { color: var(--ink); line-height: 1; margin: 0; }
+   h1 {
+     max-width: 12ch; font: 500 clamp(3.1rem, 8vw, 6.8rem)/.88 var(--display);
+     letter-spacing: -.055em; text-transform: uppercase;
+   }
+   h1 span { color: var(--cyan); display: block; }
+   .thesis { max-width: 42rem; font-size: clamp(1.18rem, 2.2vw, 1.48rem); margin: 1.7rem 0 0; }
+   .hero-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(300px, .88fr); gap: clamp(1.5rem, 5vw, 5rem); align-items: end; }
+   .hero-note { color: var(--graphite); max-width: 52ch; font-size: .96rem; }
+   .hero-visual {
+     background: var(--ink); color: white; padding: 1.25rem; position: relative; overflow: visible;
+     box-shadow: 12px 12px 0 var(--cyan);
+   }
+   .hero-visual::before {
+     content: ""; position: absolute; inset: 0; pointer-events: none;
+     background: repeating-linear-gradient(0deg, rgba(255,255,255,.04) 0 1px, transparent 1px 5px);
+   }
+   .hero-visual > * { position: relative; }
+   .visual-title { display: flex; justify-content: space-between; gap: .5rem; font: 700 .76rem var(--mono); text-transform: uppercase; letter-spacing: .08em; color: #dce5e8; }
+   .delayed-reward-diagram { display: block; width: 100%; height: auto; margin: .85rem 0 .7rem; overflow: visible; }
+   .lesson-caption { color: #bfd0d5; font: .72rem/1.45 var(--mono); margin: 0 0 .85rem; }
+   .hero-controls { display: flex; gap: .6rem; flex-wrap: wrap; }
+   .hero-controls button { border-color: #dce5e8; color: #fff; background: transparent; font-size: .83rem; }
+   .hero-controls button.active, .hero-controls button:hover { color: var(--ink); background: #dce5e8; }
+   .choice-output { color: #c7eff3; font: .8rem var(--mono); margin: .7rem 0 0; min-height: 1.35rem; }
+   .layout { min-width: 0; padding-bottom: 5rem; }
+   main, section, figure, .replay-grid > *, .evidence > * { min-width: 0; }
+   section { padding: 3.5rem 0; border-top: 1px solid var(--line); }
+   section:first-child { border-top: 0; padding-top: 0; }
+   h2 { font: 500 clamp(2rem, 4vw, 3.7rem)/.94 var(--display); letter-spacing: -.035em; text-transform: uppercase; max-width: 18ch; }
+   h3 { font: 800 1.1rem/1.2 var(--body); margin-bottom: .55rem; }
+   .lede { max-width: 48rem; font-size: 1.1rem; margin: 1rem 0 0; }
+   .small { color: var(--graphite); font-size: .9rem; }
+   .route { margin-top: 1.5rem; border-top: 1px solid var(--line); }
+   .route div { display: grid; grid-template-columns: 100px minmax(0, 1fr); gap: 1rem; padding: .8rem 0; border-bottom: 1px solid var(--line); }
+   .route time { display: block; color: var(--cyan-dark); font: 800 .76rem var(--mono); margin-bottom: .48rem; }
+   .route strong { font-size: .9rem; line-height: 1.25; display: block; }
+   .baseline-flow { display: grid; grid-template-columns: 1fr auto 1fr auto 1fr; gap: .55rem; align-items: stretch; margin-top: 1.5rem; }
+   .baseline-flow div { border: 1px solid var(--line); background: var(--panel); padding: 1rem; }
+   .baseline-flow strong { display: block; color: var(--cyan-dark); font: 800 .8rem/1.25 var(--mono); margin-bottom: .45rem; }
+   .baseline-flow .flow-arrow { border: 0; background: transparent; padding: 0; align-self: center; color: var(--orange); font: 1.5rem var(--mono); }
+   .figure-label { display: block; color: var(--cyan-dark); font: 800 .72rem/1 var(--mono); letter-spacing: .08em; text-transform: uppercase; margin-bottom: .75rem; }
+   .two-col { display: grid; grid-template-columns: minmax(0, 1fr) minmax(250px, .75fr); gap: 2rem; margin-top: 1.5rem; align-items: start; }
+   .terms { margin: 0; border-top: 1px solid var(--line); }
+   .terms div { display: grid; grid-template-columns: 105px 1fr; gap: .8rem; padding: .8rem 0; border-bottom: 1px solid var(--line); }
+   dt { font: 800 .84rem var(--mono); color: var(--cyan-dark); }
+   dd { margin: 0; }
+   .callout { border-left: 4px solid var(--orange); padding: .95rem 1.15rem; background: var(--soft-orange); }
+   .callout p:first-child { margin-top: 0; }
+   .callout p:last-child { margin-bottom: 0; }
+   .formula {
+     background: var(--ink); color: #f4f7f7; padding: 1.1rem 1.2rem; overflow-x: auto;
+     margin: 1.25rem 0;
+   }
+   .formula em { color: #8ed8e1; font-style: normal; }
+   .formula .orange { color: #ffb18d; }
+   math { font-family: "STIX Two Math", "Cambria Math", "Times New Roman", serif; }
+   math, math * { color: inherit; }
+   math[display="block"] { display: block; width: max-content; min-width: max-content; margin: .35rem auto; font-size: clamp(1rem, 2.2vw, 1.2rem); }
+   .math-block { max-width: 100%; overflow-x: auto; margin: .7rem 0; padding: .2rem 0 .45rem; }
+   .math-inline { font-size: 1.04em; vertical-align: -.08em; }
+   .formula math[display="block"] { color: #f4f7f7; }
+   .formula .reward-math { color: #ffb18d; }
+   .formula .value-math { color: #8ed8e1; }
+   .trace-steps .math-block { margin: .45rem 0 .65rem; }
+   .math-note { color: var(--graphite); font-size: .9rem; }
+   .lab { background: var(--panel); border: 1px solid var(--line); margin-top: 1.5rem; padding: clamp(1rem, 3vw, 1.6rem); }
+   .lab-head { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; margin-bottom: 1rem; }
+   .lab-head p { margin: 0; color: var(--graphite); font-size: .86rem; }
+   .gamma-row { display: grid; grid-template-columns: 110px minmax(0, 1fr) 76px; align-items: center; gap: .8rem; font-family: var(--mono); }
+   input[type="range"] { accent-color: var(--orange); width: 100%; }
+   .worked { display: grid; grid-template-columns: 1fr auto 1fr auto 1fr; gap: .5rem; align-items: stretch; margin-top: 1rem; }
+   .worked div { background: var(--mist); padding: .9rem; text-align: center; font: 700 .88rem var(--mono); }
+   .worked b { color: var(--cyan-dark); display: block; font-size: 1.2rem; }
+   .operator { align-self: center; font: 1.5rem var(--mono); color: var(--graphite); }
+   .pipeline { background: var(--ink); color: white; padding: 1rem; margin-top: 1.6rem; overflow: hidden; }
+   .pipeline-label { font: 700 .72rem var(--mono); text-transform: uppercase; letter-spacing: .08em; color: #bcd0d5; }
+   .pipeline svg { width: 100%; display: block; min-width: 680px; margin-top: .4rem; }
+   .pipeline-mobile { display: none; }
+   .legend { display: flex; gap: 1.1rem; flex-wrap: wrap; margin-top: .6rem; color: #dce5e8; font-size: .82rem; }
+   .legend i { display: inline-block; width: .72rem; height: .72rem; margin-right: .28rem; vertical-align: -.06rem; }
+   .symbol-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1px; background: var(--line); border: 1px solid var(--line); margin-top: 1rem; }
+   .symbol-grid div { background: var(--panel); padding: .85rem; }
+   .symbol-grid code { color: var(--violet); font: 800 .9rem var(--mono); }
+   .stability { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: var(--line); border: 1px solid var(--line); margin-top: 1.25rem; }
+   .stability article { background: var(--panel); padding: 1.1rem; }
+   .stability article:first-child { border-top: 4px solid var(--cyan); }
+   .stability article:last-child { border-top: 4px solid var(--violet); }
+   .stability p { margin-bottom: 0; }
+   .replay-grid { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(230px, .75fr); gap: 1rem; }
+   .replay-tape { display: grid; grid-template-columns: repeat(7, 1fr); gap: .4rem; align-items: end; min-height: 170px; }
+   .transition { border: 1px solid var(--line); background: var(--mist); padding: .4rem; min-height: 55px; display: flex; align-items: center; justify-content: center; text-align: center; font: .71rem/1.3 var(--mono); }
+   .transition.selected { background: var(--orange); color: white; border-color: var(--orange); transform: translateY(-14px); box-shadow: 0 8px 0 rgba(224,109,60,.22); }
+   .replay-controls { display: flex; flex-wrap: wrap; gap: .55rem; margin-top: 1.2rem; }
+   .target-console { background: var(--ink); padding: 1rem; color: white; }
+   .network { padding: .85rem; border: 1px solid #a0c2c8; margin-bottom: .8rem; font: .78rem var(--mono); }
+   .network.online { color: #c7eff3; box-shadow: inset 5px 0 var(--cyan); }
+   .network.target { color: #eadfff; opacity: .78; box-shadow: inset 5px 0 var(--violet); }
+   .network strong { display: block; color: white; margin-bottom: .25rem; }
+   .sync-flash { animation: sync .55s ease-out; }
+   @keyframes sync { 50% { background: var(--violet); transform: scale(1.025); } }
+   .console-readout { color: #b8cbd0; min-height: 2.8em; font: .74rem/1.45 var(--mono); }
+   .four-frame { display: grid; grid-template-columns: minmax(0, 1fr) 200px; gap: 1.5rem; margin-top: 1.5rem; align-items: center; }
+   .motion-stage { background: var(--ink); padding: 1rem; }
+   .motion-stage .figure-label { color: #8ed8e1; }
+   .screens { display: grid; grid-template-columns: repeat(4, 1fr); gap: .35rem; }
+   .screen { height: 90px; border: 1px solid #78909a; position: relative; background: #223947; overflow: hidden; }
+   .screen::after { content: ""; position: absolute; bottom: 11px; left: 12%; right: 12%; height: 2px; background: #91aab2; }
+   .ball { width: 12px; height: 12px; border-radius: 50%; background: var(--orange); position: absolute; bottom: 16px; left: var(--x); transition: left .35s ease; }
+   .paddle { width: 25px; height: 5px; background: #dce5e8; position: absolute; bottom: 6px; left: 46%; }
+   .q-values { border-left: 3px solid var(--cyan); padding-left: 1rem; font: .8rem/1.75 var(--mono); }
+   .q-values b { color: var(--cyan-dark); }
+   .evidence { display: grid; grid-template-columns: minmax(0, 1fr) 220px; gap: 1.5rem; align-items: start; margin-top: 1.35rem; }
+   .paper-figure { border: 1px solid var(--line); background: var(--panel); }
+   .paper-figure img { display: block; width: 100%; height: auto; }
+   figcaption { padding: .8rem .9rem; border-top: 1px solid var(--line); color: var(--graphite); font-size: .84rem; }
+   .evidence-numbers { background: var(--soft-violet); border-top: 4px solid var(--violet); padding: 1.1rem; }
+   .evidence-numbers p { margin-top: 0; }
+   .big-number { display: block; font: 500 3.6rem/.9 var(--display); letter-spacing: -.05em; color: var(--violet); margin: .75rem 0 .25rem; }
+   .diagnoses { display: grid; gap: 1px; background: var(--line); border: 1px solid var(--line); margin-top: 1.4rem; }
+   .diagnosis { background: var(--panel); display: grid; grid-template-columns: 150px 1fr; gap: 1rem; padding: 1rem; }
+   .diagnosis .tag { font: 800 .75rem/1.3 var(--mono); letter-spacing: .04em; color: var(--orange); text-transform: uppercase; }
+   .diagnosis p { margin: 0; }
+   .compare { width: 100%; border-collapse: collapse; margin-top: 1.4rem; font-size: .92rem; }
+   .compare th, .compare td { padding: .8rem; border: 1px solid var(--line); text-align: left; vertical-align: top; }
+   .compare th { background: var(--mist); font: 800 .75rem var(--mono); text-transform: uppercase; }
+   .shape-table { width: 100%; border-collapse: collapse; margin-top: 1.3rem; font-size: .9rem; }
+   .shape-table th, .shape-table td { padding: .72rem; border: 1px solid var(--line); text-align: left; vertical-align: top; }
+   .shape-table th { background: var(--mist); font: 800 .75rem var(--mono); text-transform: uppercase; }
+   .shape-table code { color: var(--violet); font: 800 .86rem var(--mono); }
+   .recall { display: grid; gap: .55rem; margin-top: 1.4rem; }
+   details { background: var(--panel); border: 1px solid var(--line); }
+   summary { cursor: pointer; padding: .85rem 1rem; font-weight: 750; }
+   details p { padding: 0 1rem 1rem; margin: 0; }
+   .signal-ledger { margin-top: 1.45rem; border-top: 2px solid var(--ink); }
+   .signal-row { display: grid; grid-template-columns: 135px 1fr; gap: 1.1rem; padding: 1.05rem 0; border-bottom: 1px solid var(--line); }
+   .signal-row h3 { margin: 0; font: 500 1.45rem/.95 var(--display); letter-spacing: -.02em; text-transform: uppercase; }
+   .signal-row p { margin: 0; }
+   .mental-question { background: var(--soft-violet); border-left: 4px solid var(--violet); padding: 1.1rem 1.25rem; margin-top: 1.45rem; }
+   .mental-question p { margin: 0; font-size: 1.04rem; }
+   .takeaway { background: var(--ink); color: #f4f7f7; padding: clamp(1.35rem, 4vw, 2.3rem); margin-top: 1.4rem; }
+   .takeaway .kicker { color: #8ed8e1; }
+   .takeaway h2 { color: #fff; max-width: 15ch; }
+   .takeaway p { max-width: 55rem; font-size: 1.08rem; }
+   .takeaway strong { color: #ffb18d; }
+   footer { border-top: 1px solid var(--line); padding: 2.3rem 0 4rem; color: var(--graphite); font-size: .9rem; }
+   footer p { max-width: 64rem; }
+   .source-title { color: var(--ink); font-weight: 800; }
+   .source-list { margin: .55rem 0 0; padding-left: 1.25rem; }
+   .source-list li { margin: .45rem 0; }
+   .deep-dive { background: #eef4f3; }
+   .deep-dive .deep-grid { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(270px, .95fr); gap: 1.4rem; margin-top: 1.4rem; }
+   .deep-dive .math-table { width: 100%; border-collapse: collapse; font: .86rem/1.45 var(--mono); }
+   .deep-dive .math-table th, .deep-dive .math-table td { padding: .65rem; border: 1px solid var(--line); text-align: left; vertical-align: top; }
+   .deep-dive .math-table th { background: var(--mist); color: var(--cyan-dark); }
+   .deep-dive .prediction { background: var(--panel); border: 1px solid var(--line); padding: 1.05rem; }
+   .deep-dive .prediction p { margin-top: 0; }
+   .reveal-answer { margin-top: .8rem; padding: .8rem; background: #e6f3ed; border-left: 4px solid var(--cyan); }
+   .reveal-answer[hidden] { display: none; }
+   .architecture-figure { margin: 1.5rem 0; border: 1px solid var(--line); background: var(--panel); padding: 1rem; }
+   .architecture-figure svg { width: 100%; height: auto; display: block; }
+   .architecture-figure figcaption { padding: .75rem 0 0; border: 0; }
+   .source-architecture { margin: 1.5rem 0; border: 1px solid var(--line); background: var(--panel); }
+   .source-architecture img { display: block; width: 100%; height: auto; }
+   .trace-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1.25rem; }
+   .trace-card { background: var(--panel); border: 1px solid var(--line); padding: 1rem; }
+   .trace-card h3 { margin-bottom: .8rem; }
+   .trace-steps { margin: 0; padding-left: 1.2rem; }
+   .trace-steps li { margin: .5rem 0; }
+   .limits-list { columns: 2; gap: 1.5rem; margin: 1rem 0 0; }
+   @media (max-width: 900px) {
+     .hero-grid, .layout, .two-col, .replay-grid, .four-frame, .evidence, .deep-dive .deep-grid, .trace-pair { grid-template-columns: 1fr; }
+     .layout { gap: 1.5rem; }
+     .rail { position: static; display: flex; gap: .8rem; flex-wrap: wrap; border-left: 0; border-bottom: 1px solid var(--line); padding: 0 0 .8rem; }
+     .rail p { width: 100%; margin: 0; }
+     .pipeline { overflow-x: auto; }
+   }
+   @media (max-width: 520px) {
+     .shell { width: calc(100% - 1.2rem); }
+     .topbar { align-items: flex-start; flex-direction: column; }
+     .stability, .symbol-grid { grid-template-columns: 1fr; }
+     .hero-visual { padding: .85rem; box-shadow: 6px 6px 0 var(--cyan); }
+     .visual-title { align-items: flex-start; flex-direction: column; }
+     .baseline-flow { grid-template-columns: 1fr; }
+     .baseline-flow .flow-arrow { transform: rotate(90deg); justify-self: center; }
+     .worked { grid-template-columns: 1fr auto 1fr; }
+     .worked .last { grid-column: 1 / -1; }
+     .worked .last-op { display: none; }
+     .gamma-row { grid-template-columns: 86px 1fr 54px; font-size: .84rem; }
+     .diagnosis { grid-template-columns: 1fr; gap: .4rem; }
+     .signal-row { grid-template-columns: 1fr; gap: .35rem; }
+     .limits-list { columns: 1; }
+     .lab { padding: .85rem; }
+     .lab-head { align-items: flex-start; flex-direction: column; }
+     .replay-tape { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+     .transition { min-width: 0; overflow-wrap: anywhere; }
+     .compare { display: block; overflow-x: auto; }
+     .shape-table { display: block; overflow-x: auto; }
+     .pipeline { padding: .75rem; }
+     .pipeline > svg { display: none; }
+     .pipeline-mobile { display: grid; grid-template-columns: 1fr; gap: .35rem; margin-top: .8rem; }
+     .pipeline-mobile div { border: 1px solid #78909a; background: #233a48; padding: .65rem; font: .75rem/1.4 var(--mono); }
+     .pipeline-mobile .flow-arrow { border: 0; background: transparent; padding: 0; color: #8ed8e1; text-align: center; }
+   }
+   @media (prefers-reduced-motion: reduce) {
+     html { scroll-behavior: auto; }
+     *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
+   }
+ </style>
+</head>
+<body>
+ <div class="shell">
+   <header class="topbar">
+     <a class="home-link" href="../index.html" aria-label="Return to all paper lessons">← Daily AI Paper Lab</a>
+   </header>
+
+   <section class="hero" aria-labelledby="lesson-title">
+     <div class="hero-grid">
+       <div>
+         <p class="kicker">Deep reinforcement learning · a one-hour paper lesson</p>
+         <h1 id="lesson-title">A value is a <span>promise</span> about the future.</h1>
+         <p class="thesis">DQN learned to choose Atari actions from pixels by forecasting their <em>discounted future reward</em>. Its central trick is not merely a convolutional network: it is learning from its own predictions without letting those predictions move too fast.</p>
+         <p class="hero-note">By the end, you should be able to trace one DQN update, distinguish replay from a target network, and explain why a high Q-value is not a probability.</p>
+         <p class="hero-note"><em>Human-level control through deep reinforcement learning</em> · Volodymyr Mnih et al. · <em>Nature</em> 518, 2015</p>
+       </div>
+       <div class="hero-visual">
+         <div class="visual-title"><span>Delayed-reward trace</span><span>start here</span></div>
+         <svg class="delayed-reward-diagram" viewBox="0 0 620 184" role="img" aria-labelledby="delay-title delay-desc">
+           <title id="delay-title">A choice whose useful reward arrives two steps later</title>
+           <desc id="delay-desc">Four state boxes show zero reward now, zero reward one step later, a reward of plus eight two steps later, and a later hazard. Arrows connect the sequence.</desc>
+           <defs><marker id="delay-arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8z" fill="#8ed8e1"/></marker></defs>
+           <g font-family="ui-monospace, monospace">
+             <g fill="#1d3140" stroke="#8ca1aa"><rect x="6" y="26" width="132" height="128"/><rect x="164" y="26" width="132" height="128"/><rect x="322" y="26" width="132" height="128"/><rect x="480" y="26" width="132" height="128"/></g>
+             <g fill="#b9cbd1" font-size="13"><text x="18" y="50">state t</text><text x="176" y="50">state t+1</text><text x="334" y="50">state t+2</text><text x="492" y="50">state t+3</text></g>
+             <g stroke="#8ed8e1" stroke-width="2" marker-end="url(#delay-arrow)"><path d="M140 90H158"/><path d="M298 90H316"/><path d="M456 90H474"/></g>
+             <g fill="#e06d3c"><circle cx="72" cy="87" r="12"/><circle cx="230" cy="87" r="12"/><circle cx="388" cy="87" r="17"/></g>
+             <path d="M526 101l10-28 11 28 10-28 11 28 10-28 11 28z" fill="#bda7ef"/>
+             <g fill="#ffffff" font-size="15" font-weight="700"><text x="18" y="138">r = 0</text><text x="176" y="138">r = 0</text><text x="334" y="138">r = +8</text><text x="492" y="138">hazard</text></g>
+           </g>
+         </svg>
+         <p class="lesson-caption"><strong>Lesson diagram.</strong> The useful action can look unrewarding until its delayed consequence arrives.</p>
+         <div class="hero-controls">
+           <button type="button" class="choice active" data-choice="future">Choose the long route</button>
+           <button type="button" class="choice" data-choice="now">Take a small reward now</button>
+         </div>
+         <p class="choice-output" id="choice-output">The useful action looks empty at first, then pays +8 two steps later.</p>
+       </div>
+     </div>
+   </section>
+
+   <div class="layout">
+     <main>
+       <section aria-label="Lesson plan">
+         <p class="kicker">The route</p>
+         <h2>Build one mental model, then stress-test it.</h2>
+         <div class="route">
+           <div><time>0–8 min</time><strong>Why naive deep Q-learning is unstable</strong></div>
+           <div><time>8–20 min</time><strong>What value and Bellman backup mean</strong></div>
+           <div><time>20–32 min</time><strong>How pixels become action values</strong></div>
+           <div><time>32–46 min</time><strong>Trace two updates by hand</strong></div>
+           <div><time>46–60 min</time><strong>Stabilizers, evidence, limits, recall</strong></div>
+         </div>
+       </section>
+
+       <section id="problem">
+         <p class="kicker">1 · The problem and the unstable baseline</p>
+         <h2>A neural network must learn from labels it keeps changing.</h2>
+         <p class="lede">Atari control combines three hard problems: infer motion from pixels, assign credit to actions whose rewards arrive later, and keep learning even though each new policy changes which experiences come next. A naive baseline—online Q-learning with a deep network trained on consecutive frames and its own latest predictions—couples all three feedback loops.</p>
+         <div class="baseline-flow" aria-label="Causal instability chain">
+           <div><strong>1 · UPDATE VALUES</strong>A gradient step changes several Q-values at once.</div>
+           <div class="flow-arrow" aria-hidden="true">→</div>
+           <div><strong>2 · MOVE THE TARGET</strong>The same network supplies the next-state value, so the label moves too.</div>
+           <div class="flow-arrow" aria-hidden="true">→</div>
+           <div><strong>3 · CHANGE THE DATA</strong>A new argmax changes the policy and therefore the states collected next.</div>
+         </div>
+         <p class="small"><strong>Lesson diagram.</strong> This is the baseline failure chain DQN is designed to interrupt. Replay weakens the data-correlation link; a delayed target network weakens the moving-label link.</p>
+         <div class="callout"><strong>Prerequisite bridge.</strong> Supervised learning is like practising from an answer sheet that stays fixed. DQN is closer to writing tomorrow’s answer sheet using today’s partly trained model. The lesson will first define the forecast, then derive one label, then show why DQN needs two memories: one for experiences and one for network weights.</div>
+       </section>
+
+       <section id="kit">
+         <p class="kicker">2 · The minimal RL kit</p>
+         <h2>Before “deep”: state, action, reward, return.</h2>
+         <div class="two-col">
+           <dl class="terms">
+             <div><dt>state φ<sub>t</sub></dt><dd>What the agent uses to decide at time <em>t</em>. In DQN, it is a stack of four processed game frames.</dd></div>
+             <div><dt>action a<sub>t</sub></dt><dd>One legal choice now: move left, move right, fire, and so on.</dd></div>
+             <div><dt>reward r<sub>t+1</sub></dt><dd>The immediate feedback after acting. It is a signal, not the final goal by itself.</dd></div>
+             <div><dt>return G<sub>t</sub></dt><dd>The discounted sum of future rewards. It asks, “How good did this choice turn out to be over time?”</dd></div>
+             <div><dt>Q(φ, a)</dt><dd>The predicted expected return if you take <em>a</em> in φ and then continue well. It is a value, not a probability of winning.</dd></div>
+           </dl>
+           <div class="callout">
+             <h3>The one question DQN learns to answer</h3>
+             <p>For this visual situation, which action has the largest expected future payoff?</p>
+             <div class="formula">
+               <math display="block" aria-label="G sub t equals the sum from k equals zero to infinity of gamma to the k times r sub t plus k plus one; equivalently r sub t plus one plus gamma r sub t plus two plus gamma squared r sub t plus three and so on">
+                 <mtable columnalign="right center left" rowspacing=".55em">
+                   <mtr>
+                     <mtd><msub><mi>G</mi><mi>t</mi></msub></mtd><mtd><mo>=</mo></mtd>
+                     <mtd><munderover><mo>∑</mo><mrow><mi>k</mi><mo>=</mo><mn>0</mn></mrow><mo>∞</mo></munderover><msup><mi>γ</mi><mi>k</mi></msup><msub><mi>r</mi><mrow><mi>t</mi><mo>+</mo><mi>k</mi><mo>+</mo><mn>1</mn></mrow></msub></mtd>
+                   </mtr>
+                   <mtr>
+                     <mtd></mtd><mtd><mo>=</mo></mtd>
+                     <mtd><msub><mi>r</mi><mrow><mi>t</mi><mo>+</mo><mn>1</mn></mrow></msub><mo>+</mo><mi>γ</mi><msub><mi>r</mi><mrow><mi>t</mi><mo>+</mo><mn>2</mn></mrow></msub><mo>+</mo><msup><mi>γ</mi><mn>2</mn></msup><msub><mi>r</mi><mrow><mi>t</mi><mo>+</mo><mn>3</mn></mrow></msub><mo>+</mo><mo>⋯</mo></mtd>
+                   </mtr>
+                 </mtable>
+               </math>
+             </div>
+             <p><strong>γ</strong>, the discount, makes immediate feedback count more than equally distant feedback. In the paper’s experiments, γ = 0.99.</p>
+           </div>
+         </div>
+         <table class="shape-table">
+           <thead><tr><th>Symbol</th><th>Shape in this paper</th><th>Role in one update</th></tr></thead>
+           <tbody>
+             <tr><td><code>φ<sub>t</sub></code></td><td>4 × 84 × 84 processed frames</td><td>Network input; four frames expose short-term motion that one screen hides.</td></tr>
+             <tr><td><code>Q<sub>θ</sub>(φ<sub>t</sub>, ·)</code></td><td>|A| scalars; |A| ranges from 4 to 18 across games</td><td>One predicted return for every legal discrete action in a single forward pass.</td></tr>
+             <tr><td><code>(φ, a, r, φ′)</code></td><td>One transition tuple</td><td>An item in replay memory. Only Q<sub>θ</sub>(φ, a) for the recorded action enters its loss.</td></tr>
+             <tr><td><code>y</code>, <code>δ</code>, <code>L</code></td><td>One scalar each</td><td>Target, target-minus-prediction error, and loss contribution for that transition.</td></tr>
+           </tbody>
+         </table>
+         <p class="small"><strong>Bridge forward:</strong> immediate reward, long-term return, and action value now have different jobs. The next question is where a numerical training label for Q(φ, a) can come from when no teacher knows the correct return.</p>
+       </section>
+
+       <section id="bellman">
+         <p class="kicker">3 · The Bellman insight</p>
+         <h2>Tomorrow helps label today.</h2>
+         <p class="lede">Unlike supervised learning, nobody hands DQN the correct value for a frame. It makes a provisional label by combining the reward it just saw with its estimate of the best thing possible next.</p>
+         <div class="formula">
+           <math display="block" aria-label="Q star of phi comma a equals the expectation of r plus gamma times the maximum over a prime of Q star of phi prime comma a prime, conditioned on phi comma a">
+             <mrow>
+               <msup class="value-math"><mi>Q</mi><mo>*</mo></msup><mo>(</mo><mi>φ</mi><mo>,</mo><mi>a</mi><mo>)</mo>
+               <mo>=</mo><mi mathvariant="double-struck">E</mi><mo>[</mo><mi class="reward-math">r</mi><mo>+</mo><mi>γ</mi>
+               <munder><mo>max</mo><msup><mi>a</mi><mo>′</mo></msup></munder>
+               <msup class="value-math"><mi>Q</mi><mo>*</mo></msup><mo>(</mo><msup><mi>φ</mi><mo>′</mo></msup><mo>,</mo><msup><mi>a</mi><mo>′</mo></msup><mo>)</mo>
+               <mo>|</mo><mi>φ</mi><mo>,</mo><mi>a</mi><mo>]</mo>
+             </mrow>
+           </math>
+         </div>
+         <p>The right-hand side is a <strong>Bellman backup</strong>. The first part is real evidence. The second part is a bootstrap: the learner borrows from its next-state prediction. This makes learning possible from sparse rewards, and also makes the labels self-generated and unstable.</p>
+
+         <div class="lab" aria-labelledby="target-lab-title">
+           <span class="figure-label">Lesson diagram</span>
+           <div class="lab-head"><h3 id="target-lab-title">Build a one-step target</h3><p>Move the discount and watch the future change today’s label.</p></div>
+           <div class="gamma-row"><label for="gamma">γ = <span id="gamma-label">0.90</span></label><input id="gamma" type="range" min="0" max="1" step="0.05" value="0.9"><output id="target-output" for="gamma">6.50</output></div>
+           <div class="worked" aria-live="polite">
+             <div><small>observed reward</small><b>2</b></div><div class="operator">+</div>
+             <div><small>future promise</small><b><span id="shown-gamma">0.90</span> × 5</b></div><div class="operator last-op">=</div>
+             <div class="last"><small>training target y</small><b id="worked-target">6.50</b></div>
+           </div>
+           <p class="small">For a terminal transition, there is no next state to bootstrap from: <strong>y = r</strong>. DQN must not hallucinate a future beyond the end of an episode.</p>
+         </div>
+         <p class="callout"><strong>Plain-language bridge:</strong> a Bellman target is an accountant’s estimate: a receipt already observed, plus a discounted forecast for what remains. That gives DQN a provisional answer sheet; next we need a network that can produce the current and next-state forecasts from pixels.</p>
+       </section>
+
+       <section id="pixels">
+         <p class="kicker">4 · Pixels to a decision</p>
+         <h2>One forward pass returns a value for every legal action.</h2>
+         <p class="lede">DQN does not predict “the best action” directly. Its network produces a small vector of Q-values, then the agent can choose the largest one - except when ε-greedy exploration deliberately tries a random legal action.</p>
+         <div class="pipeline" aria-label="DQN control loop diagram">
+           <div class="pipeline-label">Lesson diagram, based on the paper’s methods and Algorithm 1</div>
+           <svg viewBox="0 0 900 300" role="img" aria-label="Four stacked frames flow through convolutional layers into action values. A replay buffer feeds a live network while a frozen target network provides the next-state value.">
+             <defs>
+               <marker id="arrow" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L0,6 L7,3 z" fill="#dce5e8"/></marker>
+               <marker id="cyan-arrow" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L0,6 L7,3 z" fill="#55c4d0"/></marker>
+               <marker id="violet-arrow" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L0,6 L7,3 z" fill="#bda7ef"/></marker>
+             </defs>
+             <g font-family="ui-monospace, monospace" font-size="12" fill="#dce5e8">
+               <text x="25" y="23">four 84×84 grayscale frames</text>
+               <text x="282" y="23">online Q-network θ</text>
+               <text x="540" y="23">action values</text>
+               <text x="700" y="23">environment</text>
+             </g>
+             <g stroke="#dce5e8" fill="#233a48">
+               <rect x="28" y="40" width="90" height="90"/><rect x="38" y="50" width="90" height="90"/><rect x="48" y="60" width="90" height="90"/><rect x="58" y="70" width="90" height="90"/>
+               <circle cx="100" cy="105" r="10" fill="#e06d3c" stroke="none"/>
+               <rect x="275" y="52" width="170" height="110" fill="#187a8b"/><rect x="465" y="75" width="55" height="65" fill="#187a8b"/>
+               <rect x="545" y="57" width="115" height="100" fill="#233a48"/>
+               <rect x="705" y="55" width="145" height="105" fill="#233a48"/>
+             </g>
+             <g font-family="ui-monospace, monospace" font-size="12" fill="#fff">
+               <text x="302" y="93">conv features</text><text x="302" y="116">→ FC 512</text>
+               <text x="552" y="85">left: 1.8</text><text x="552" y="108">right: 2.6</text><text x="552" y="131">fire: 0.4</text>
+               <text x="727" y="100">act → reward</text><text x="727" y="122">next frames</text>
+             </g>
+             <path d="M150 105 H264" stroke="#dce5e8" stroke-width="2" marker-end="url(#arrow)"/>
+             <path d="M525 105 H536" stroke="#dce5e8" stroke-width="2" marker-end="url(#arrow)"/>
+             <path d="M665 105 H695" stroke="#dce5e8" stroke-width="2" marker-end="url(#arrow)"/>
+             <path d="M778 165 V215 H205" stroke="#55c4d0" stroke-width="2" fill="none" marker-end="url(#cyan-arrow)"/>
+             <rect x="50" y="204" width="154" height="62" fill="#233a48" stroke="#55c4d0"/>
+             <text x="72" y="229" font-family="ui-monospace, monospace" font-size="12" fill="#c7eff3">replay memory D</text>
+             <text x="70" y="248" font-family="ui-monospace, monospace" font-size="11" fill="#c7eff3">(φ,a,r,φ′)</text>
+             <path d="M205 235 H275" stroke="#55c4d0" stroke-width="2" marker-end="url(#cyan-arrow)"/>
+             <path d="M360 164 V230 H525" stroke="#bda7ef" stroke-width="2" fill="none" marker-end="url(#violet-arrow)"/>
+             <rect x="525" y="203" width="164" height="62" fill="#352c50" stroke="#bda7ef"/>
+             <text x="542" y="229" font-family="ui-monospace, monospace" font-size="12" fill="#eadfff">target network θ⁻</text>
+             <text x="545" y="248" font-family="ui-monospace, monospace" font-size="11" fill="#eadfff">frozen for C updates</text>
+             <text x="308" y="286" font-family="ui-monospace, monospace" font-size="11" fill="#c7eff3">random minibatch + gradient update</text>
+             <text x="703" y="286" font-family="ui-monospace, monospace" font-size="11" fill="#eadfff">r + γ max Qθ⁻(φ′,a′)</text>
+           </svg>
+           <div class="pipeline-mobile" aria-label="Mobile reading of the DQN control loop">
+             <div>four processed frames φ</div><div class="flow-arrow" aria-hidden="true">↓</div>
+             <div>live Q-network θ → one value per legal action</div><div class="flow-arrow" aria-hidden="true">↓</div>
+             <div>ε-greedy action → environment → reward r and next frames φ′</div><div class="flow-arrow" aria-hidden="true">↓</div>
+             <div>store (φ, a, r, φ′) in replay memory D; sample a minibatch</div><div class="flow-arrow" aria-hidden="true">↓</div>
+             <div>frozen target θ⁻ builds y; gradient updates only θ</div>
+           </div>
+           <div class="legend"><span><i style="background:#187a8b"></i>live, trainable network</span><span><i style="background:#7059a8"></i>delayed target snapshot</span><span><i style="background:#e06d3c"></i>immediate reward</span></div>
+         </div>
+
+         <div class="four-frame">
+           <div class="motion-stage">
+             <span class="figure-label">Lesson diagram</span>
+             <div class="screens" aria-label="Four frames showing a ball moving right">
+               <div class="screen"><span class="ball" style="--x:18%"></span><span class="paddle"></span></div>
+               <div class="screen"><span class="ball" style="--x:34%"></span><span class="paddle"></span></div>
+               <div class="screen"><span class="ball" style="--x:50%"></span><span class="paddle"></span></div>
+               <div class="screen"><span class="ball" style="--x:66%"></span><span class="paddle"></span></div>
+             </div>
+             <p class="small" style="color:#dce5e8;margin:.75rem 0 0">One frame says where the ball is. A short stack says which way it is moving.</p>
+           </div>
+           <div class="q-values"><b>Qθ(φ, ·)</b><br>move left: 0.7<br><strong>move right: 2.6</strong><br>wait: 0.1<br><br><span class="small">The largest value is selected when exploiting.</span></div>
+         </div>
+         <p class="small"><strong>Bridge forward:</strong> these outputs are expected future payoffs, not normalized confidence scores. The network supplies the forecasts; the Bellman rule turns one stored transition into a supervised-style update for the action actually taken.</p>
+       </section>
+
+       <section class="deep-dive" id="worked-trace">
+         <p class="kicker">5 · Two full updates, not just an equation</p>
+         <h2>Trace the value target, loss, and gradient direction.</h2>
+         <p class="lede">The target network answers a very particular question: from the next state, which action looks best according to a held snapshot? The online network is only evaluated at the action that was actually taken. That asymmetry is the heart of the update.</p>
+         <p class="callout"><strong>Read each trace in the same order:</strong> build target <em>y</em> from reward plus the frozen forecast; compare it with the live prediction; square the difference; then follow the loss gradient to see whether the selected Q-value rises or falls.</p>
+         <div class="deep-grid">
+           <div>
+             <h3>Trace A · underprediction, so the chosen value rises</h3>
+             <table class="math-table">
+               <thead><tr><th>Quantity</th><th>Given or computed value</th><th>Meaning</th></tr></thead>
+               <tbody>
+                 <tr><td>stored transition</td><td>(φ, right, +1, φ′)</td><td>One item sampled from replay.</td></tr>
+                 <tr><td>Q<sub>θ⁻</sub>(φ′, ·)</td><td><math class="math-inline" aria-label="row vector zero point two, one point six, zero point nine"><mrow><mo>[</mo><mtable columnspacing=".45em"><mtr><mtd><mn>0.2</mn></mtd><mtd><mn>1.6</mn></mtd><mtd><mn>0.9</mn></mtd></mtr></mtable><mo>]</mo></mrow></math></td><td>The frozen target network's values for next actions.</td></tr>
+                 <tr><td>max Q<sub>θ⁻</sub>(φ′, a′)</td><td>1.6</td><td>Use the best next action value, not the value for the old action “right”.</td></tr>
+                 <tr><td>y, γ = 0.9</td><td>1 + 0.9 × 1.6 = 2.44</td><td>The bootstrapped training label for this non-terminal transition.</td></tr>
+                 <tr><td>Q<sub>θ</sub>(φ, right)</td><td>1.94</td><td>The online network's present prediction for the chosen action.</td></tr>
+                 <tr><td>δ = y − Q<sub>θ</sub></td><td>+0.50</td><td>The prediction is too low. Gradient descent should push this chosen action-value upward.</td></tr>
+                 <tr><td>L = δ²</td><td>0.25</td><td>The squared-error contribution before the original implementation's error clipping becomes relevant.</td></tr>
+               </tbody>
+             </table>
+             <p class="math-note">For <math class="math-inline" aria-label="L equals the quantity y minus Q theta of phi comma a, squared"><mrow><mi>L</mi><mo>=</mo><msup><mrow><mo>(</mo><mi>y</mi><mo>−</mo><msub><mi>Q</mi><mi>θ</mi></msub><mo>(</mo><mi>φ</mi><mo>,</mo><mi>a</mi><mo>)</mo><mo>)</mo></mrow><mn>2</mn></msup></mrow></math> with y treated as fixed, the gradient is</p>
+             <div class="math-block">
+               <math display="block" aria-label="gradient with respect to theta of L equals negative two times y minus Q theta of phi comma a times the gradient with respect to theta of Q theta of phi comma a">
+                 <mrow>
+                   <msub><mo>∇</mo><mi>θ</mi></msub><mi>L</mi><mo>=</mo><mo>−</mo><mn>2</mn>
+                   <mrow><mo>(</mo><mi>y</mi><mo>−</mo><msub><mi>Q</mi><mi>θ</mi></msub><mo>(</mo><mi>φ</mi><mo>,</mo><mi>a</mi><mo>)</mo><mo>)</mo></mrow>
+                   <msub><mo>∇</mo><mi>θ</mi></msub><msub><mi>Q</mi><mi>θ</mi></msub><mo>(</mo><mi>φ</mi><mo>,</mo><mi>a</mi><mo>)</mo>
+                 </mrow>
+               </math>
+             </div>
+             <p class="math-note">Here δ is positive, so a gradient-descent step increases Q<sub>θ</sub>(φ, right). It does not take derivatives through the target snapshot θ⁻.</p>
+           </div>
+           <aside class="prediction">
+             <h3>Predict before reveal: terminal or not?</h3>
+             <p>Take the same values, but now the transition ends the episode after reward +1. Is the target still 2.44?</p>
+             <button type="button" data-reveal="terminal-answer" aria-expanded="false">Reveal answer</button>
+             <p class="reveal-answer" id="terminal-answer" hidden><strong>No: y = +1.</strong> A terminal transition has no next-state return within the episode, so Algorithm 1 uses reward alone. The max next Q-value is not “extra reward”; it is a forecast only when a next decision remains possible.</p>
+             <p class="math-note">This is a useful debugging test: bootstrapping past terminal states silently inflates values.</p>
+           </aside>
+         </div>
+         <div class="trace-pair">
+           <article class="trace-card">
+             <h3>Finish Trace A at one illustrative weight</h3>
+             <ol class="trace-steps">
+               <li>From the table:
+                 <div class="math-block"><math display="block" aria-label="delta equals two point four four minus one point nine four equals positive zero point five zero; L equals delta squared equals zero point two five"><mtable columnalign="right center left" rowspacing=".4em"><mtr><mtd><mi>δ</mi></mtd><mtd><mo>=</mo></mtd><mtd><mn>2.44</mn><mo>−</mo><mn>1.94</mn><mo>=</mo><mo>+</mo><mn>0.50</mn></mtd></mtr><mtr><mtd><mi>L</mi></mtd><mtd><mo>=</mo></mtd><mtd><msup><mi>δ</mi><mn>2</mn></msup><mo>=</mo><mn>0.25</mn></mtd></mtr></mtable></math></div>
+               </li>
+               <li>Because <math class="math-inline" aria-label="L equals y minus Q squared"><mrow><mi>L</mi><mo>=</mo><msup><mrow><mo>(</mo><mi>y</mi><mo>−</mo><mi>Q</mi><mo>)</mo></mrow><mn>2</mn></msup></mrow></math>,
+                 <div class="math-block"><math display="block" aria-label="partial L over partial Q equals negative two delta equals negative one point zero zero"><mrow><mfrac><mrow><mo>∂</mo><mi>L</mi></mrow><mrow><mo>∂</mo><mi>Q</mi></mrow></mfrac><mo>=</mo><mo>−</mo><mn>2</mn><mi>δ</mi><mo>=</mo><mo>−</mo><mn>1.00</mn></mrow></math></div>
+               </li>
+               <li>Suppose the local sensitivity is <math class="math-inline" aria-label="partial Q over partial w equals zero point four zero"><mrow><mfrac><mrow><mo>∂</mo><mi>Q</mi></mrow><mrow><mo>∂</mo><mi>w</mi></mrow></mfrac><mo>=</mo><mn>0.40</mn></mrow></math>. Then
+                 <div class="math-block"><math display="block" aria-label="partial L over partial w equals negative one point zero zero times zero point four zero equals negative zero point four zero"><mrow><mfrac><mrow><mo>∂</mo><mi>L</mi></mrow><mrow><mo>∂</mo><mi>w</mi></mrow></mfrac><mo>=</mo><mo>−</mo><mn>1.00</mn><mo>×</mo><mn>0.40</mn><mo>=</mo><mo>−</mo><mn>0.40</mn></mrow></math></div>
+               </li>
+               <li>With learning rate <math class="math-inline" aria-label="eta equals zero point one zero"><mrow><mi>η</mi><mo>=</mo><mn>0.10</mn></mrow></math>, gradient descent gives
+                 <div class="math-block"><math display="block" aria-label="w prime equals w minus eta times partial L over partial w equals w plus zero point zero four"><mrow><msup><mi>w</mi><mo>′</mo></msup><mo>=</mo><mi>w</mi><mo>−</mo><mi>η</mi><mfrac><mrow><mo>∂</mo><mi>L</mi></mrow><mrow><mo>∂</mo><mi>w</mi></mrow></mfrac><mo>=</mo><mi>w</mi><mo>+</mo><mn>0.04</mn></mrow></math></div>
+                 This local change pushes Q(φ, right) upward.
+               </li>
+             </ol>
+           </article>
+           <article class="trace-card">
+             <h3>Trace B · overprediction, so the chosen value falls</h3>
+             <ol class="trace-steps">
+               <li>Given <math class="math-inline" aria-label="r equals zero"><mrow><mi>r</mi><mo>=</mo><mn>0</mn></mrow></math>, <math class="math-inline" aria-label="gamma equals zero point nine zero"><mrow><mi>γ</mi><mo>=</mo><mn>0.90</mn></mrow></math>, and <math class="math-inline" aria-label="the maximum over a prime of Q theta minus of phi prime comma a prime equals one point zero zero"><mrow><munder><mo>max</mo><msup><mi>a</mi><mo>′</mo></msup></munder><msub><mi>Q</mi><msup><mi>θ</mi><mo>−</mo></msup></msub><mo>(</mo><msup><mi>φ</mi><mo>′</mo></msup><mo>,</mo><msup><mi>a</mi><mo>′</mo></msup><mo>)</mo><mo>=</mo><mn>1.00</mn></mrow></math>, the target is
+                 <div class="math-block"><math display="block" aria-label="y equals zero plus zero point nine zero times one point zero zero equals zero point nine zero"><mrow><mi>y</mi><mo>=</mo><mn>0</mn><mo>+</mo><mn>0.90</mn><mo>×</mo><mn>1.00</mn><mo>=</mo><mn>0.90</mn></mrow></math></div>
+               </li>
+               <li>If <math class="math-inline" aria-label="Q theta of phi comma fire equals one point three zero"><mrow><msub><mi>Q</mi><mi>θ</mi></msub><mo>(</mo><mi>φ</mi><mo>,</mo><mtext>fire</mtext><mo>)</mo><mo>=</mo><mn>1.30</mn></mrow></math>, then
+                 <div class="math-block"><math display="block" aria-label="delta equals zero point nine zero minus one point three zero equals negative zero point four zero; L equals zero point one six"><mtable columnalign="right center left" rowspacing=".4em"><mtr><mtd><mi>δ</mi></mtd><mtd><mo>=</mo></mtd><mtd><mn>0.90</mn><mo>−</mo><mn>1.30</mn><mo>=</mo><mo>−</mo><mn>0.40</mn></mtd></mtr><mtr><mtd><mi>L</mi></mtd><mtd><mo>=</mo></mtd><mtd><msup><mrow><mo>(</mo><mo>−</mo><mn>0.40</mn><mo>)</mo></mrow><mn>2</mn></msup><mo>=</mo><mn>0.16</mn></mtd></mtr></mtable></math></div>
+               </li>
+               <li>Now
+                 <div class="math-block"><math display="block" aria-label="partial L over partial Q equals negative two delta equals positive zero point eight zero; partial Q over partial w equals zero point five zero; partial L over partial w equals positive zero point four zero"><mtable columnalign="right center left" rowspacing=".4em"><mtr><mtd><mfrac><mrow><mo>∂</mo><mi>L</mi></mrow><mrow><mo>∂</mo><mi>Q</mi></mrow></mfrac></mtd><mtd><mo>=</mo></mtd><mtd><mo>−</mo><mn>2</mn><mi>δ</mi><mo>=</mo><mo>+</mo><mn>0.80</mn></mtd></mtr><mtr><mtd><mfrac><mrow><mo>∂</mo><mi>Q</mi></mrow><mrow><mo>∂</mo><mi>w</mi></mrow></mfrac></mtd><mtd><mo>=</mo></mtd><mtd><mn>0.50</mn></mtd></mtr><mtr><mtd><mfrac><mrow><mo>∂</mo><mi>L</mi></mrow><mrow><mo>∂</mo><mi>w</mi></mrow></mfrac></mtd><mtd><mo>=</mo></mtd><mtd><mo>+</mo><mn>0.40</mn></mtd></mtr></mtable></math></div>
+               </li>
+               <li>At <math class="math-inline" aria-label="eta equals zero point one zero"><mrow><mi>η</mi><mo>=</mo><mn>0.10</mn></mrow></math>,
+                 <div class="math-block"><math display="block" aria-label="w prime equals w minus zero point zero four"><mrow><msup><mi>w</mi><mo>′</mo></msup><mo>=</mo><mi>w</mi><mo>−</mo><mn>0.04</mn></mrow></math></div>
+                 The local change pushes Q(φ, fire) downward toward 0.90.
+               </li>
+             </ol>
+             <details><summary>Predict before reveal: what if δ were exactly zero?</summary><p>The squared-error gradient would be zero for this sample: the live value already matches the frozen Bellman target. That does not prove the policy is optimal; it only means this sampled transition supplies no local correction.</p></details>
+           </article>
+         </div>
+         <p class="math-note">Both traces use <math class="math-inline" aria-label="absolute delta is less than one"><mrow><mo>|</mo><mi>δ</mi><mo>|</mo><mo>&lt;</mo><mn>1</mn></mrow></math>, so they stay in the squared-error region of the original implementation’s clipped-error rule. The illustrative <math class="math-inline" aria-label="partial Q over partial w"><mfrac><mrow><mo>∂</mo><mi>Q</mi></mrow><mrow><mo>∂</mo><mi>w</mi></mrow></mfrac></math> values expose the chain rule; a real network applies the same logic across all contributing parameters.</p>
+         <figure class="architecture-figure">
+           <span class="figure-label">Lesson diagram</span>
+           <svg viewBox="0 0 960 280" role="img" aria-labelledby="arch-title arch-desc">
+             <title id="arch-title">The DQN architecture maps a stack of four frames to one value for each valid action</title>
+             <desc id="arch-desc">Four 84 by 84 processed frames pass through three convolutional layers, a fully connected layer of 512 rectifier units, and a linear output layer whose size matches the valid actions.</desc>
+             <defs><marker id="dqn-arrow" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L0,6 L7,3 z" fill="#187a8b"/></marker></defs>
+             <g font-family="ui-monospace, monospace" fill="#162431">
+               <text x="30" y="24" font-size="14">φ = 4 × 84 × 84 frames</text><text x="270" y="24" font-size="14">convolutional feature extractor</text><text x="651" y="24" font-size="14">512 rectifier units</text><text x="805" y="24" font-size="14">one Q per action</text>
+               <rect x="31" y="55" width="95" height="95" fill="#dce5e8" stroke="#187a8b"/><rect x="42" y="66" width="95" height="95" fill="#c8e0e2" stroke="#187a8b"/><rect x="53" y="77" width="95" height="95" fill="#b1d5d8" stroke="#187a8b"/><rect x="64" y="88" width="95" height="95" fill="#9fcbd0" stroke="#187a8b"/>
+               <path d="M165 120H248" stroke="#187a8b" stroke-width="2" marker-end="url(#dqn-arrow)"/>
+               <rect x="260" y="61" width="105" height="122" fill="#fff" stroke="#187a8b"/><text x="279" y="93" font-size="13">32 × 8×8</text><text x="282" y="113" font-size="13">stride 4</text><text x="286" y="146" font-size="12">ReLU</text>
+               <path d="M370 120H402" stroke="#187a8b" stroke-width="2" marker-end="url(#dqn-arrow)"/>
+               <rect x="414" y="61" width="105" height="122" fill="#fff" stroke="#187a8b"/><text x="433" y="93" font-size="13">64 × 4×4</text><text x="436" y="113" font-size="13">stride 2</text><text x="440" y="146" font-size="12">ReLU</text>
+               <path d="M524 120H556" stroke="#187a8b" stroke-width="2" marker-end="url(#dqn-arrow)"/>
+               <rect x="568" y="61" width="105" height="122" fill="#fff" stroke="#187a8b"/><text x="587" y="93" font-size="13">64 × 3×3</text><text x="590" y="113" font-size="13">stride 1</text><text x="594" y="146" font-size="12">ReLU</text>
+               <path d="M678 120H720" stroke="#187a8b" stroke-width="2" marker-end="url(#dqn-arrow)"/>
+               <rect x="732" y="61" width="88" height="122" fill="#e9f2f2" stroke="#187a8b"/><text x="749" y="112" font-size="13">FC 512</text><text x="753" y="143" font-size="12">ReLU</text>
+               <path d="M825 120H845" stroke="#187a8b" stroke-width="2" marker-end="url(#dqn-arrow)"/>
+               <rect x="856" y="61" width="80" height="122" fill="#fff1e9" stroke="#e06d3c"/><text x="866" y="96" font-size="12">left 1.8</text><text x="866" y="120" font-size="12">right 2.6</text><text x="866" y="144" font-size="12">fire 0.4</text>
+               <text x="31" y="232" font-size="12" fill="#566170">The paper's Methods specify these layer sizes. The output count varies with the game's legal action set.</text>
+             </g>
+           </svg>
+           <figcaption><strong>Lesson diagram.</strong> Unlike a classifier, this final vector is not normalized. DQN uses argmax to select the highest-valued legal action while exploiting; ε-greedy exploration can deliberately pick another action to collect new experience.</figcaption>
+         </figure>
+         <figure class="source-architecture">
+           <img src="original_dqn_architecture_figure.png" width="1670" height="755" alt="Original Figure 1 from the DQN paper: an Atari frame feeds convolutional stages, two fully connected stages, and one output for each joystick action.">
+           <figcaption><strong>Original paper Figure 1 (p. 530).</strong> The paper’s schematic makes the architectural commitment visible: only the processed state enters the network, and all valid action values emerge together. The Methods specify three convolutional layers followed by 512 rectifier units and a linear output layer.</figcaption>
+         </figure>
+       </section>
+
+       <section id="stability">
+         <p class="kicker">6 · Interrupt the feedback loops</p>
+         <h2>The learner is chasing labels that it helps create.</h2>
+         <p class="lede">A deep Q-network faces a difficult combination: nearby game frames are strongly correlated, the policy changes the data it sees, and each Q-update changes future training labels. DQN’s two famous mechanisms do different jobs.</p>
+         <div class="formula">
+           <math display="block" aria-label="y equals r plus gamma times the maximum over a prime of Q theta minus of phi prime comma a prime; L of theta equals the expectation over transitions sampled uniformly from D of y minus Q theta of phi comma a squared">
+             <mtable columnalign="right center left" rowspacing=".75em">
+               <mtr>
+                 <mtd><mi>y</mi></mtd><mtd><mo>=</mo></mtd>
+                 <mtd><mi class="reward-math">r</mi><mo>+</mo><mi>γ</mi><munder><mo>max</mo><msup><mi>a</mi><mo>′</mo></msup></munder><msub class="value-math"><mi>Q</mi><msup><mi>θ</mi><mo>−</mo></msup></msub><mo>(</mo><msup><mi>φ</mi><mo>′</mo></msup><mo>,</mo><msup><mi>a</mi><mo>′</mo></msup><mo>)</mo></mtd>
+               </mtr>
+               <mtr>
+                 <mtd><mi>L</mi><mo>(</mo><mi>θ</mi><mo>)</mo></mtd><mtd><mo>=</mo></mtd>
+                 <mtd><msub><mi mathvariant="double-struck">E</mi><mrow><mo>(</mo><mi>φ</mi><mo>,</mo><mi>a</mi><mo>,</mo><mi>r</mi><mo>,</mo><msup><mi>φ</mi><mo>′</mo></msup><mo>)</mo><mo>∼</mo><mi>U</mi><mo>(</mo><mi>D</mi><mo>)</mo></mrow></msub><mo>[</mo><msup><mrow><mo>(</mo><mi>y</mi><mo>−</mo><msub class="value-math"><mi>Q</mi><mi>θ</mi></msub><mo>(</mo><mi>φ</mi><mo>,</mo><mi>a</mi><mo>)</mo><mo>)</mo></mrow><mn>2</mn></msup><mo>]</mo></mtd>
+               </mtr>
+             </mtable>
+           </math>
+         </div>
+         <div class="symbol-grid">
+           <div><code>D</code><br>Replay memory containing old transitions.</div>
+           <div><code>U(D)</code><br>Uniformly sampled minibatch, not simply the newest few frames.</div>
+           <div><code>θ</code><br>The live network. Gradient descent changes these weights each update.</div>
+           <div><code>θ⁻</code><br>A periodically copied, frozen network used only to build the next-state target.</div>
+         </div>
+         <div class="stability">
+           <article><h3>Experience replay</h3><p>Changes <strong>which experiences teach</strong>. Sampling old and new transitions together reduces temporal correlation and lets useful rare events be reused. It does not magically make data perfectly i.i.d. or guarantee coverage.</p></article>
+           <article><h3>Fixed target network</h3><p>Changes <strong>how quickly labels move</strong>. The next-state value stays fixed for a while, so the learner is not chasing a new answer after every tiny update. It does not make the target correct or remove overestimation bias.</p></article>
+         </div>
+         <p class="callout"><strong>Why these mechanisms now:</strong> the traces assumed the target stayed meaningful long enough to learn from it. Replay mixes which experiences teach; the target network holds the answer sheet still for a while. They solve different parts of the unstable baseline from Section 1.</p>
+
+         <div class="lab" aria-labelledby="replay-lab-title">
+           <span class="figure-label">Lesson diagram</span>
+           <div class="lab-head"><h3 id="replay-lab-title">Replay tape + target ghost</h3><p>Step through one update, then decide when the frozen teacher copies the live student.</p></div>
+           <div class="replay-grid">
+             <div>
+               <div class="replay-tape" id="replay-tape" aria-live="polite">
+                 <div class="transition">φ₁<br>left<br>r:0</div><div class="transition">φ₂<br>fire<br>r:+1</div><div class="transition">φ₃<br>right<br>r:0</div><div class="transition">φ₄<br>wait<br>r:-1</div><div class="transition">φ₅<br>right<br>r:0</div><div class="transition">φ₆<br>fire<br>r:+3</div><div class="transition">φ₇<br>left<br>r:0</div>
+               </div>
+               <div class="replay-controls"><button type="button" id="step-update">Sample a transition + update θ</button><button type="button" id="sync-target">Synchronize θ → θ⁻</button></div>
+             </div>
+             <div class="target-console">
+               <div class="network online" id="online-network"><strong>LIVE NETWORK θ</strong>weights changed: 0</div>
+               <div class="network target" id="target-network"><strong>TARGET NETWORK θ⁻</strong>snapshot version: 0</div>
+               <div class="console-readout" id="console-readout">The target ghost is deliberately stale. That is the point.</div>
+             </div>
+           </div>
+         </div>
+         <p class="math-note">During a gradient update, DQN changes θ to reduce the TD error <math class="math-inline" aria-label="delta equals y minus Q theta of phi comma a"><mrow><mi>δ</mi><mo>=</mo><mi>y</mi><mo>−</mo><msub><mi>Q</mi><mi>θ</mi></msub><mo>(</mo><mi>φ</mi><mo>,</mo><mi>a</mi><mo>)</mo></mrow></math>. The target network supplies y but is not differentiated through. The original implementation also clipped large error signals for stability.</p>
+       </section>
+
+       <section id="evidence">
+         <p class="kicker">7 · What the 2015 paper actually showed</p>
+         <h2>From pixels and rewards to strong Atari play.</h2>
+         <p class="lede">The Nature paper trained a separate agent for each Atari 2600 game, using one broad architecture and setup. It was a landmark result, but not a single general-purpose agent and not a proof that deep RL will converge in arbitrary environments.</p>
+         <p class="small"><strong>Bridge to evidence:</strong> we now have the whole causal mechanism—Bellman target, convolutional value estimator, replay, and delayed target network. Read the result as evidence for that training recipe on this Atari protocol, not as a general-intelligence claim.</p>
+         <div class="evidence">
+           <figure class="paper-figure">
+             <img src="original_dqn_results_figure.png" width="1584" height="1665" alt="Original Figure 3 from the DQN paper: a bar chart comparing DQN and the best earlier linear learner across 49 Atari games, normalized relative to a professional human player.">
+             <figcaption>Original Figure 3 from Mnih et al. (2015), <em>Nature</em> 518, p.531. Bars compare DQN with the best prior linear learner across 49 games. The axis break for Video Pinball is enormous, so do not infer every relative difference from bar length alone.</figcaption>
+           </figure>
+           <aside class="evidence-numbers">
+             <p><strong>Interpret the result precisely.</strong></p>
+             <span class="big-number">49</span>
+             <p class="small">Atari games evaluated.</p>
+             <span class="big-number">29</span>
+             <p class="small">Games at or above 75% of a professional human player’s score.</p>
+             <span class="big-number">43</span>
+             <p class="small">Games where DQN outperformed the best previously reported reinforcement-learning method used in the comparison.</p>
+             <p class="small">This is “human-level” under the paper’s operational definition. It is not a claim that one agent became generally human-like.</p>
+           </aside>
+         </div>
+         <div class="callout" style="margin-top:1.4rem">
+           <p><strong>One paper detail worth retaining:</strong> reward clipping to [−1, 1] made a common setup work across games with wildly different score scales. It improves practical stability, but in edge cases it can change which long-term policy is preferred.</p>
+         </div>
+       </section>
+
+       <section>
+         <p class="kicker">8 · Debugging bench</p>
+         <h2>Three failures to recognize before you blame the network.</h2>
+         <div class="diagnoses">
+           <article class="diagnosis"><div class="tag">Moving answer</div><p><strong>“My target changes as fast as my prediction.”</strong> That is the unstable bootstrap loop. The DQN intervention is a periodically frozen target network. It slows down the teacher; it does not grant a correct answer.</p></article>
+           <article class="diagnosis"><div class="tag">Narrow streak</div><p><strong>“The last few frames all look nearly identical.”</strong> Training only on consecutive experience produces correlated updates and poor reuse of rare events. Replay samples across the stored tape; it cannot invent experience the agent never collected.</p></article>
+           <article class="diagnosis"><div class="tag">Ambiguous screen</div><p><strong>“The ball is here, but which way is it travelling?”</strong> A single image hides velocity. Four frames provide short-term motion evidence. This is still only a short history, not a universal cure for partial observability.</p></article>
+           <article class="diagnosis"><div class="tag">Misleading loss</div><p><strong>“TD loss fell, so the agent improved.”</strong> Not necessarily. TD loss is agreement with sampled, self-generated targets. Check actual episode returns and behaviour across states separately.</p></article>
+         </div>
+       </section>
+
+       <section>
+         <p class="kicker">9 · Compare the learning signals</p>
+         <h2>Same networks, different source of learning signal.</h2>
+         <table class="compare">
+           <thead><tr><th>Lesson</th><th>What the model outputs</th><th>Where the training signal comes from</th><th>Key distinction</th></tr></thead>
+           <tbody>
+             <tr><td><strong>ResNet</strong></td><td>Features or class predictions</td><td>Usually labels with a fixed supervised loss</td><td>Residual connections help gradients travel through a deep architecture. A DQN target network stabilizes a changing <em>label</em>; do not treat them as the same technique.</td></tr>
+             <tr><td><strong>Transformer</strong></td><td>Token logits, then probabilities</td><td>Known next-token targets</td><td>DQN’s Q-values are expected future reward, not probabilities. Its targets are partly made from a delayed copy of its own predictions.</td></tr>
+             <tr><td><strong>GAN</strong></td><td>Generated samples and a discriminator score</td><td>A learned adversary's changing judgement</td><td>Both systems learn from a target that is not a fixed dataset label. GAN training co-evolves two players; DQN deliberately slows its bootstrap teacher with a target snapshot.</td></tr>
+             <tr><td><strong>DQN</strong></td><td>One value per discrete action</td><td>Reward plus bootstrapped next-state value</td><td>The model must act to create future data, then learn from the consequences. That feedback loop is the central new difficulty.</td></tr>
+           </tbody>
+         </table>
+       </section>
+
+       <section id="recall">
+         <p class="kicker">10 · Close the loop</p>
+         <h2>Can you trace the method without the page?</h2>
+         <div class="recall">
+           <details><summary>1. If r = 2, γ = 0.9, and the best next Q-value is 5, what is the one-step target?</summary><p><strong>6.5.</strong> The backup is 2 + 0.9 × 5. This assumes the transition is not terminal.</p></details>
+           <details><summary>2. What target is used for a terminal transition?</summary><p><strong>y = r.</strong> There is no next state and therefore no future Q-value to bootstrap from.</p></details>
+           <details><summary>3. Why does DQN output values for all actions in one forward pass?</summary><p>For a discrete action set it can efficiently compare actions with argmax<sub>a</sub> Q(φ, a), rather than running a separate forward pass per action.</p></details>
+           <details><summary>4. What does replay fix that the target network does not?</summary><p>Replay reduces sequential correlation and reuses varied experience. The target network instead slows the motion of bootstrap labels.</p></details>
+           <details><summary>5. Why use four frames rather than one?</summary><p>A single screen often hides motion direction and velocity. A short stack supplies temporal evidence, though it is not a complete memory.</p></details>
+           <details><summary>6. Why is a low TD loss insufficient evidence of a good policy?</summary><p>It measures agreement with sampled, self-generated targets, not comprehensive game performance or coverage of important states. Evaluate episodes too.</p></details>
+         </div>
+       </section>
+
+       <section id="mental-map">
+         <p class="kicker">11 · Carry this forward</p>
+         <h2>Connect it to your mental map.</h2>
+         <p class="lede">ResNet, the Transformer, and DQN are a useful trio because each protects a valuable signal while learning a correction. They are not the same mechanism, but they cultivate the same habit: preserve a dependable baseline, then make the learned change explicit.</p>
+         <div class="signal-ledger">
+           <article class="signal-row">
+             <h3>ResNet</h3>
+             <p>A deep layer can revise an existing representation through <strong>x + F(x)</strong>. The shortcut is the baseline path; the learned branch only needs to add a useful correction. Visual feature maps can survive many layers because doing nothing is easy.</p>
+           </article>
+           <article class="signal-row">
+             <h3>Transformer</h3>
+             <p>Attention and feed-forward sublayers sit inside residual pathways around the token representation. The baseline token stream survives; attention can mix information across tokens and the feed-forward block can refine each token without having to rebuild the whole representation from scratch.</p>
+           </article>
+           <article class="signal-row">
+             <h3>GAN</h3>
+             <p>The generator learns from a discriminator whose judgement changes as the generator changes. That is another moving-target learning problem, but the two networks intentionally co-evolve. DQN instead holds its target snapshot still for many updates so a value learner can make a controlled correction.</p>
+           </article>
+           <article class="signal-row">
+             <h3>DQN</h3>
+             <p>The preserved baseline is not an identity activation. It is a forecast: immediate reward plus a delayed estimate of future value. The live Q-network learns a correction toward that Bellman target, while replay and the frozen target network stop the teaching signal from changing too chaotically.</p>
+           </article>
+         </div>
+         <div class="mental-question">
+           <p><strong>Question to hold onto:</strong> when you meet a new deep architecture, ask what baseline signal is being carried forward, what learned branch is allowed to change it, and what keeps the information or training target stable while many updates accumulate.</p>
+         </div>
+       </section>
+
+       <section class="takeaway">
+         <p class="kicker">12 · Takeaway</p>
+         <h2>A DQN is a delayed forecast trained from its own consequences.</h2>
+         <p>Pixels enter; one expected return leaves for each discrete action. A stored transition supplies the receipt, the frozen target network supplies the cautious forecast, and their Bellman sum becomes a temporary label for the live network.</p>
+         <p><strong>Native intuition:</strong> replay changes which memories teach, while the target network changes how quickly the answer sheet moves. DQN worked because it separated those two instability problems instead of treating “deep learning” as the entire solution.</p>
+       </section>
+     </main>
+   </div>
+
+   <footer>
+     <p class="source-title">Source and further exploration</p>
+     <ul class="source-list">
+       <li><a href="human_level_control_through_deep_reinforcement_learning.pdf">Original open-access paper PDF (local copy)</a></li>
+       <li><a href="https://www.nature.com/articles/nature14236">Nature 2015 publication record</a></li>
+       <li><a href="https://storage.googleapis.com/deepmind-media/dqn/DQNNaturePaper.pdf">Original DeepMind paper PDF source</a></li>
+       <li><a href="https://github.com/google-deepmind/dqn">DQN implementation repository</a></li>
+     </ul>
+   </footer>
+ </div>
+ <script>
+   (() => {
+     document.querySelectorAll('[data-reveal]').forEach(button => {
+       button.addEventListener('click', () => {
+         const answer = document.getElementById(button.dataset.reveal);
+         const opening = answer.hidden;
+         answer.hidden = !opening;
+         button.setAttribute('aria-expanded', String(opening));
+         button.textContent = opening ? 'Hide answer' : 'Reveal answer';
+       });
+     });
+     const choiceOutput = document.getElementById('choice-output');
+     document.querySelectorAll('.choice').forEach(button => {
+       button.addEventListener('click', () => {
+         document.querySelectorAll('.choice').forEach(b => b.classList.remove('active'));
+         button.classList.add('active');
+         choiceOutput.textContent = button.dataset.choice === 'future'
+           ? 'The useful action looks empty at first, then pays +8 two steps later.'
+           : 'The tempting action pays +2 now, then ends the run before the +8 can arrive.';
+       });
+     });
+
+     const gamma = document.getElementById('gamma');
+     const gammaLabel = document.getElementById('gamma-label');
+     const shownGamma = document.getElementById('shown-gamma');
+     const targetOutput = document.getElementById('target-output');
+     const workedTarget = document.getElementById('worked-target');
+     function updateTarget() {
+       const g = Number(gamma.value);
+       const target = 2 + g * 5;
+       gammaLabel.textContent = g.toFixed(2);
+       shownGamma.textContent = g.toFixed(2);
+       targetOutput.textContent = target.toFixed(2);
+       workedTarget.textContent = target.toFixed(2);
+     }
+     gamma.addEventListener('input', updateTarget);
+
+     let updates = 0;
+     let targetVersion = 0;
+     const transitions = Array.from(document.querySelectorAll('.transition'));
+     const online = document.getElementById('online-network');
+     const target = document.getElementById('target-network');
+     const readout = document.getElementById('console-readout');
+     document.getElementById('step-update').addEventListener('click', () => {
+       transitions.forEach(item => item.classList.remove('selected'));
+       const pick = (updates * 3 + 1) % transitions.length;
+       transitions[pick].classList.add('selected');
+       updates += 1;
+       online.innerHTML = '<strong>LIVE NETWORK θ</strong>weights changed: ' + updates;
+       readout.textContent = 'A random stored transition entered the minibatch. θ updated; θ⁻ remains snapshot ' + targetVersion + '.';
+     });
+     document.getElementById('sync-target').addEventListener('click', () => {
+       targetVersion = updates;
+       target.innerHTML = '<strong>TARGET NETWORK θ⁻</strong>snapshot version: ' + targetVersion;
+       target.classList.remove('sync-flash');
+       void target.offsetWidth;
+       target.classList.add('sync-flash');
+       readout.textContent = 'Snapshot synchronized. Future bootstrapped labels now use the current θ until the next sync.';
+     });
+   })();
+ </script>
+</body>
+</html>

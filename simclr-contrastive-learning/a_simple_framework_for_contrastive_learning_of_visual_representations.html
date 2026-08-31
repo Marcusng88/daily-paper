@@ -1,0 +1,384 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="A gradual one-hour university lesson on SimCLR, NT-Xent, temperature, and augmentation design.">
+  <title>SimCLR: Contrastive Learning of Visual Representations</title>
+  <style>
+    :root {
+      --ink: #14282f;
+      --muted: #52666d;
+      --paper: #f5f8f6;
+      --surface: #ffffff;
+      --rule: #bac8c5;
+      --view-a: #0c6974;
+      --view-a-soft: #e5f0ef;
+      --view-b: #9a5e1d;
+      --view-b-soft: #f3e8d8;
+      --negative: #6d7d82;
+      --focus: #e0a238;
+      --display: "Avenir Next Condensed", "Arial Narrow", Arial, sans-serif;
+      --body: "Palatino Linotype", Palatino, "Book Antiqua", Georgia, serif;
+      --utility: "Avenir Next", Avenir, Helvetica, Arial, sans-serif;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      color: var(--ink);
+      background: linear-gradient(90deg, transparent 49.87%, rgba(20, 40, 47, .055) 49.9%, rgba(20, 40, 47, .055) 50.1%, transparent 50.13%), var(--paper);
+      font: 18px/1.68 var(--body);
+      overflow-wrap: break-word;
+    }
+    a { color: var(--view-a); text-underline-offset: 3px; }
+    a:focus-visible, button:focus-visible, summary:focus-visible { outline: 3px solid var(--focus); outline-offset: 4px; }
+    button:focus:not(:focus-visible) { outline: none; }
+    .page { width: min(1080px, calc(100% - 40px)); margin: auto; }
+    .home { display: inline-block; margin: 24px 0 44px; font: 700 .78rem/1 var(--utility); letter-spacing: .04em; text-decoration: none; }
+    .home:hover { text-decoration: underline; }
+    header { padding-bottom: 48px; border-bottom: 1px solid var(--rule); }
+    .eyebrow { margin: 0 0 12px; color: var(--view-b); font: 700 .74rem/1.3 var(--utility); letter-spacing: .12em; text-transform: uppercase; }
+    h1, h2, h3, h4 { margin-top: 0; color: var(--ink); }
+    h1 { max-width: 13ch; margin-bottom: 18px; font: 750 clamp(3rem, 7.5vw, 6.6rem)/.92 var(--display); letter-spacing: -.045em; }
+    h2 { margin-bottom: 18px; font: 720 clamp(2rem, 4vw, 3.25rem)/1.02 var(--display); letter-spacing: -.025em; }
+    h3 { margin: 30px 0 10px; font: 700 1.2rem/1.25 var(--utility); }
+    h4 { margin: 22px 0 8px; font: 700 .96rem/1.3 var(--utility); }
+    p, li { max-width: 76ch; }
+    code { font-family: var(--mono); font-size: .88em; }
+    .dek { max-width: 50rem; margin: 0; color: var(--muted); font-size: 1.28rem; }
+    .paper-line { margin: 18px 0 0; color: var(--muted); font-size: .92rem; }
+    .hero-contract { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; margin-top: 38px; background: var(--rule); border: 1px solid var(--rule); }
+    .hero-contract > div { min-height: 140px; padding: 24px; background: var(--surface); }
+    .hero-contract b { display: block; margin-bottom: 7px; font: 700 .78rem var(--utility); text-transform: uppercase; letter-spacing: .08em; }
+    .hero-contract .same b { color: var(--view-a); }
+    .hero-contract .different b { color: var(--view-b); }
+    main { min-width: 0; padding: 52px 0 72px; }
+    section { min-width: 0; padding: 48px 0; border-bottom: 1px solid var(--rule); }
+    .section-grid { display: grid; grid-template-columns: minmax(145px, .28fr) minmax(0, 1fr); gap: 36px; }
+    .section-grid > * { min-width: 0; }
+    .section-label { color: var(--muted); font: 700 .74rem/1.4 var(--utility); letter-spacing: .08em; text-transform: uppercase; }
+    .route { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 11px; margin-top: 22px; }
+    .route div { min-width: 0; padding-top: 9px; border-top: 3px solid var(--view-a); font: .75rem/1.38 var(--utility); }
+    .route b { display: block; color: var(--view-a); }
+    .callout { margin: 24px 0; padding: 16px 20px; border-left: 4px solid var(--view-a); background: var(--view-a-soft); }
+    .callout.caution { border-left-color: var(--view-b); background: var(--view-b-soft); }
+    .bridge-grid, .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; }
+    .bridge-card { padding-top: 14px; border-top: 2px solid var(--rule); }
+    .bridge-card h3 { margin-top: 0; }
+    .causal-chain { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1px; margin: 28px 0; background: var(--rule); border: 1px solid var(--rule); }
+    .causal-chain div { min-width: 0; padding: 17px; background: var(--surface); }
+    .causal-chain b { display: block; margin-bottom: 5px; color: var(--view-a); font: 700 .78rem var(--utility); }
+    .table-scroll { max-width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    .table-scroll:focus-visible { outline: 3px solid var(--focus); outline-offset: 3px; }
+    table { width: 100%; margin: 22px 0; border-collapse: collapse; font-size: .92rem; }
+    th, td { padding: 11px 9px; text-align: left; vertical-align: top; border-bottom: 1px solid var(--rule); }
+    th { font: 700 .75rem var(--utility); letter-spacing: .02em; }
+    .actor-table { min-width: 690px; }
+    .actor-table td:first-child { color: var(--view-a); font-family: var(--mono); font-weight: 700; }
+    .reading-note { color: var(--muted); font-size: .94rem; }
+    figure { max-width: 100%; margin: 30px 0; }
+    figcaption { max-width: 78ch; margin-top: 10px; color: var(--muted); font-size: .93rem; }
+    .architecture { padding: 24px; background: var(--surface); border: 1px solid var(--rule); }
+    .pair-ledger { display: grid; grid-template-columns: minmax(88px, .65fr) repeat(2, minmax(110px, 1fr)) minmax(150px, 1.2fr); gap: 1px; background: var(--rule); border: 1px solid var(--rule); font: .82rem/1.35 var(--utility); }
+    .pair-ledger > div { min-width: 0; padding: 13px; background: #fff; }
+    .pair-ledger .head { color: var(--muted); font-weight: 700; }
+    .pair-ledger .view-a { color: var(--view-a); background: var(--view-a-soft); }
+    .pair-ledger .view-b { color: var(--view-b); background: var(--view-b-soft); }
+    .pair-ledger .anchor { box-shadow: inset 0 0 0 2px var(--view-a); }
+    .positive { color: var(--view-a); font-weight: 700; }
+    .negative { color: var(--negative); }
+    .pipeline { display: grid; grid-template-columns: minmax(95px, 1fr) 34px minmax(110px, 1fr) 34px minmax(110px, 1fr) 34px minmax(130px, 1fr); align-items: center; gap: 8px; margin-top: 26px; font: .8rem/1.35 var(--utility); }
+    .node { min-width: 0; padding: 14px; text-align: center; background: #fff; border: 1px solid var(--ink); }
+    .node strong { display: block; font-size: .9rem; }
+    .node.a { border-color: var(--view-a); background: var(--view-a-soft); }
+    .node.b { border-color: var(--view-b); background: var(--view-b-soft); }
+    .arrow { color: var(--negative); text-align: center; font: 700 1.3rem var(--utility); }
+    .branch-stack { display: grid; gap: 9px; }
+    .keep-discard { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 18px; font: .83rem/1.45 var(--utility); }
+    .keep-discard div { padding: 12px 14px; border-top: 2px solid var(--view-a); }
+    .keep-discard div:last-child { border-top-color: var(--view-b); }
+    math { font-family: "STIX Two Math", "Cambria Math", "Times New Roman", serif; }
+    .math-inline { display: inline-block; white-space: nowrap; vertical-align: -.16em; }
+    .formula { max-width: 100%; margin: 18px 0; padding: 16px 0; overflow-x: auto; border-top: 1px solid var(--rule); border-bottom: 1px solid var(--rule); text-align: center; -webkit-overflow-scrolling: touch; }
+    .formula math, .math-step math { display: inline-block; min-width: max-content; font-size: 1.04rem; }
+    .formula-label { display: block; margin-bottom: 8px; color: var(--muted); font: 700 .7rem var(--utility); letter-spacing: .06em; text-align: left; text-transform: uppercase; }
+    .math-step { max-width: 100%; margin: 12px 0; padding: 8px 0; overflow-x: auto; text-align: center; -webkit-overflow-scrolling: touch; }
+    .math-step.compact { margin: 8px 0 12px; padding: 2px 0; }
+    .math-cell { display: inline-block; min-width: max-content; font-size: .94rem; }
+    .term-map { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin: 22px 0; }
+    .term-map div { padding: 14px; border-top: 3px solid var(--rule); font-size: .92rem; }
+    .term-map div:first-child { border-top-color: var(--view-a); }
+    .term-map div:last-child { border-top-color: var(--view-b); }
+    .worked { margin: 28px 0; padding: 22px; background: var(--surface); border: 1px solid var(--rule); }
+    .worked h3 { margin-top: 0; }
+    .trace-label { display: block; margin-bottom: 8px; color: var(--view-b); font: 700 .72rem/1.3 var(--utility); letter-spacing: .09em; text-transform: uppercase; }
+    .steps { counter-reset: step; margin: 18px 0 0; padding: 0; list-style: none; }
+    .steps li { position: relative; padding: 0 0 16px 42px; }
+    .steps li::before { counter-increment: step; content: counter(step); position: absolute; left: 0; top: .14em; width: 26px; height: 26px; display: grid; place-items: center; border: 1px solid var(--view-a); color: var(--view-a); font: 700 .72rem var(--utility); }
+    .instrument { margin: 28px 0; padding: 22px; border: 1px solid var(--view-a); background: #edf4f3; }
+    .instrument h3 { margin-top: 0; }
+    .choices { display: flex; flex-wrap: wrap; gap: 10px; margin: 15px 0; }
+    button { max-width: 100%; padding: 10px 13px; color: var(--ink); background: transparent; border: 1px solid var(--ink); font: 700 .8rem var(--utility); cursor: pointer; }
+    button:hover, button[aria-pressed="true"] { color: white; background: var(--ink); }
+    .answer { min-height: 3.2em; margin: 14px 0 0; color: var(--view-a); }
+    .source-figure { padding: 16px; background: var(--surface); border: 1px solid var(--rule); }
+    .source-figure img { display: block; width: 100%; max-width: 100%; height: auto; }
+    .figure-scroll { max-width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    .figure-scroll:focus-visible { outline: 3px solid var(--focus); outline-offset: 3px; }
+    .evidence-read { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; margin: 24px 0; }
+    .evidence-read div { padding-top: 12px; border-top: 2px solid var(--rule); }
+    .evidence-read b { display: block; margin-bottom: 5px; font: 700 .8rem var(--utility); }
+    details { padding: 12px 0; border-bottom: 1px solid var(--rule); }
+    summary { cursor: pointer; font-weight: 700; }
+    details p { margin: 10px 0 3px; }
+    .takeaway { padding-left: 20px; border-left: 4px solid var(--view-b); font-size: 1.18rem; }
+    footer { padding: 42px 0 60px; color: var(--muted); }
+    footer h2 { font-size: 1.55rem; }
+    footer li { margin: 7px 0; }
+    @media (max-width: 860px) {
+      .route { grid-template-columns: repeat(4, 1fr); }
+      .causal-chain { grid-template-columns: repeat(2, 1fr); }
+      .evidence-read { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 760px) {
+      body { font-size: 17px; background: var(--paper); }
+      .section-grid, .hero-contract, .bridge-grid, .two-col { grid-template-columns: 1fr; }
+      .section-label { margin-bottom: -18px; }
+      .term-map { grid-template-columns: 1fr; }
+      h1 { font-size: clamp(3rem, 15vw, 5rem); }
+      .pair-ledger { grid-template-columns: minmax(68px, .55fr) repeat(2, minmax(100px, 1fr)); }
+      .pair-ledger > div:nth-child(4n) { display: none; }
+      .pipeline { grid-template-columns: 1fr; gap: 7px; }
+      .arrow { transform: rotate(90deg); }
+    }
+    @media (max-width: 460px) {
+      .page { width: min(100% - 24px, 1080px); }
+      .route, .causal-chain { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .worked, .instrument, .architecture { padding: 16px; }
+      .keep-discard { grid-template-columns: 1fr; }
+      th, td { padding: 8px 6px; }
+      .choices { align-items: stretch; flex-direction: column; }
+      button { width: 100%; text-align: left; }
+      .figure-scroll img { width: 680px; max-width: none; }
+    }
+    @media (max-width: 390px) {
+      .page { width: calc(100% - 20px); }
+      .route { grid-template-columns: 1fr 1fr; gap: 8px; }
+      .pair-ledger { grid-template-columns: 64px minmax(0, 1fr) minmax(0, 1fr); font-size: .72rem; }
+      .pair-ledger > div { padding: 9px 7px; }
+      .hero-contract > div { min-height: 0; padding: 18px; }
+      h1 { font-size: clamp(2.72rem, 14vw, 4rem); }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+      *, *::before, *::after { animation: none !important; transition: none !important; }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <a class="home" href="../index.html">← Daily AI Paper Lab</a>
+    <header>
+      <p class="eyebrow">Self-supervised visual representation learning</p>
+      <h1>Learn what may change—and what must survive.</h1>
+      <p class="dek">SimCLR turns two altered views of one image into supervision. Its deepest idea is not merely “pull positives together.” The augmentation policy decides which facts the representation is rewarded for forgetting.</p>
+      <p class="paper-line"><cite>A Simple Framework for Contrastive Learning of Visual Representations</cite> · Ting Chen, Simon Kornblith, Mohammad Norouzi, and Geoffrey Hinton · ICML 2020</p>
+      <div class="hero-contract" aria-label="The central contrastive learning contract">
+        <div class="same"><b>Same source</b>Crop, recolor, and blur two views. Their learned projections should still recognize a shared origin.</div>
+        <div class="different"><b>Different source</b>Other images in the minibatch become alternatives. Agreement must remain selective, or every representation could collapse to the same point.</div>
+      </div>
+    </header>
+    <main>
+      <section aria-labelledby="route-title">
+        <div class="section-grid"><div class="section-label">Study route</div><div>
+          <h2 id="route-title">One hour, one causal chain</h2>
+          <p>Follow the route in order. The loss will feel much less arbitrary once the missing label, the shortcut problem, and the actors in one minibatch are visible.</p>
+          <div class="route" aria-label="Sixty-minute study route">
+            <div><b>0–7 min</b>Bridge prerequisites</div><div><b>7–15 min</b>Find the missing signal</div><div><b>15–23 min</b>Name actors &amp; shapes</div><div><b>23–34 min</b>Build the objective</div><div><b>34–44 min</b>Work NT-Xent</div><div><b>44–53 min</b>Test τ &amp; views</div><div><b>53–60 min</b>Read evidence &amp; recall</div>
+          </div>
+        </div></div>
+      </section>
+      <section aria-labelledby="bridge-title">
+        <div class="section-grid"><div class="section-label">Prerequisite bridge</div><div>
+          <h2 id="bridge-title">Three familiar tools, one new relationship</h2>
+          <div class="bridge-grid">
+            <div class="bridge-card"><h3>Similarity becomes a logit</h3><p>For L2-normalized vectors, the dot product is cosine similarity:</p><div class="math-step compact"><math display="block" aria-label="similarity of u and v equals u transpose v divided by the product of the norms of u and v"><mrow><mi>sim</mi><mo>(</mo><mi>u</mi><mo>,</mo><mi>v</mi><mo>)</mo><mo>=</mo><mfrac><mrow><msup><mi>u</mi><mi>T</mi></msup><mi>v</mi></mrow><mrow><mo>‖</mo><mi>u</mi><mo>‖</mo><mo>‖</mo><mi>v</mi><mo>‖</mo></mrow></mfrac></mrow></math></div><p>It ranges from −1 to 1. SimCLR divides these similarities by a temperature <math class="math-inline" aria-label="tau"><mi>τ</mi></math> and treats them like classification logits.</p></div>
+            <div class="bridge-card"><h3>Cross-entropy asks for one winner</h3><p>A softmax turns logits into relative probabilities. If the desired view receives probability <math class="math-inline" aria-label="p"><mi>p</mi></math>, cross-entropy charges <math class="math-inline" aria-label="negative log p"><mrow><mo>−</mo><mi>log</mi><mo>(</mo><mi>p</mi><mo>)</mo></mrow></math>. Probability 1 is free; probability <math class="math-inline" aria-label="one third"><mfrac><mn>1</mn><mn>3</mn></mfrac></math> costs about 1.099.</p></div>
+          </div>
+          <div class="callout"><strong>Analogy: a photo-ID desk.</strong> You receive two altered photos of the same person and a lineup of other photos. The task is not to name the person. It is to pick the matching photo despite changes in crop, lighting, or blur. The choice of allowed alterations silently defines what “same identity” means.</div>
+        </div></div>
+      </section>
+      <section aria-labelledby="problem-title">
+        <div class="section-grid"><div class="section-label">1 · Problem</div><div>
+          <h2 id="problem-title">Remove labels, and the training target disappears</h2>
+          <p>A supervised ImageNet model receives an image <em>x</em> and a human class label <em>y</em>. Cross-entropy can then say which output should win. SimCLR wants a useful encoder before labels arrive, so it needs a target that can be constructed from the images themselves.</p>
+          <div class="causal-chain" aria-label="The causal teaching chain"><div><b>Missing</b>No human class label tells the encoder what to preserve.</div><div><b>Construct</b>Two random transformations of one source image define a positive pair.</div><div><b>Contrast</b>Other views in the same batch supply alternatives.</div><div><b>Learn</b>The encoder keeps features that identify the shared source across allowed changes.</div></div>
+          <p>This is <strong>instance discrimination</strong>, not semantic classification: two photographs of different dogs are negatives because they came from different source images, even though a human would assign them the same class.</p>
+        </div></div>
+      </section>
+      <section aria-labelledby="baseline-title">
+        <div class="section-grid"><div class="section-label">2 · Baseline failure</div><div>
+          <h2 id="baseline-title">An easy pretext task can teach the wrong skill</h2>
+          <p>The obvious hope is that any transformation creates useful paired views. The paper tests that idea and finds a failure: no single studied transformation is sufficient for a strong representation, even when the network can almost perfectly identify positives in the contrastive task.</p>
+          <p>With random crops alone, two crops of the same image often share a color distribution. A network can match color histograms instead of learning shapes or objects. It wins the constructed game without acquiring features that transfer well.</p>
+          <div class="callout caution"><strong>Baseline diagnosis.</strong> Pretext-task accuracy and representation quality are different outcomes. If the pair can be matched through a shortcut, making the contrastive prediction easier may make the representation worse.</div>
+          <p>That failure causes SimCLR’s central design choice: compose spatial and appearance transformations—especially crop with color distortion—so the cheap shortcut becomes unreliable.</p>
+        </div></div>
+      </section>
+      <section aria-labelledby="actors-title">
+        <div class="section-grid"><div class="section-label">3 · Actors &amp; shapes</div><div>
+          <h2 id="actors-title">Name every player before the equation</h2>
+          <div class="table-scroll" tabindex="0" aria-label="Scrollable table of SimCLR actors and tensor shapes">
+            <table class="actor-table"><thead><tr><th>Symbol</th><th>Meaning</th><th>Shape or count</th><th>Role</th></tr></thead><tbody>
+              <tr><td>x<sub>k</sub></td><td>One unlabeled source image</td><td>k = 1…N</td><td>Supplies identity for a positive pair.</td></tr>
+              <tr><td>t, t′ ∼ T</td><td>Independently sampled transformations</td><td>Functions on images</td><td>Define which changes should preserve identity.</td></tr>
+              <tr><td>x̃<sub>2k−1</sub>, x̃<sub>2k</sub></td><td>Two correlated views of x<sub>k</sub></td><td>Image tensors; 2N views total</td><td>Become a positive pair.</td></tr>
+              <tr><td><math class="math-inline" aria-label="f"><mi>f</mi></math></td><td>Shared ResNet encoder</td><td><math class="math-inline" aria-label="x tilde maps to h in R to the d"><mrow><mover><mi>x</mi><mo>~</mo></mover><mo>↦</mo><mi>h</mi><mo>∈</mo><msup><mi>R</mi><mi>d</mi></msup></mrow></math>; <math class="math-inline" aria-label="d equals 2048"><mrow><mi>d</mi><mo>=</mo><mn>2048</mn></mrow></math> for standard ResNet-50</td><td>Learns the representation retained after pretraining.</td></tr>
+              <tr><td><math class="math-inline" aria-label="g"><mi>g</mi></math></td><td>Shared two-layer nonlinear projection head</td><td><math class="math-inline" aria-label="h maps to z in R to the 128"><mrow><mi>h</mi><mo>↦</mo><mi>z</mi><mo>∈</mo><msup><mi>R</mi><mn>128</mn></msup></mrow></math> in the default setup</td><td>Creates the space where NT-Xent is applied.</td></tr>
+              <tr><td><math class="math-inline" aria-label="s sub i j"><msub><mi>s</mi><mrow><mi>i</mi><mo>,</mo><mi>j</mi></mrow></msub></math></td><td>Cosine similarity between <math class="math-inline" aria-label="z sub i"><msub><mi>z</mi><mi>i</mi></msub></math> and <math class="math-inline" aria-label="z sub j"><msub><mi>z</mi><mi>j</mi></msub></math></td><td>One scalar in [−1,1]</td><td>Acts as a logit before division by <math class="math-inline" aria-label="tau"><mi>τ</mi></math>.</td></tr>
+              <tr><td>N, 2N</td><td>Source images and augmented views</td><td>Default N=4096, so 2N=8192</td><td>For each anchor: 1 positive and 2N−2 negatives.</td></tr>
+            </tbody></table>
+          </div>
+          <p class="reading-note">The default dimensionalities and batch size above are the paper’s main ablation configuration. The framework itself permits other encoders and sizes.</p>
+        </div></div>
+      </section>
+      <section aria-labelledby="architecture-title">
+        <div class="section-grid"><div class="section-label">4 · Architecture</div><div>
+          <h2 id="architecture-title">Two views share weights, then compete in projection space</h2>
+          <figure class="architecture">
+            <div class="pair-ledger" role="img" aria-label="A batch ledger with two source images. View one is the anchor, view two from the same source is its positive, and both views from the other source are negatives.">
+              <div class="head">Source</div><div class="head">First view</div><div class="head">Second view</div><div class="head">Status for anchor z₁</div>
+              <div>x₁</div><div class="view-a anchor">x̃₁ → z₁ · anchor</div><div class="view-b">x̃₂ → z₂</div><div class="positive">z₂ is the one positive</div>
+              <div>x₂</div><div>x̃₃ → z₃</div><div>x̃₄ → z₄</div><div class="negative">z₃ and z₄ are negatives</div>
+            </div>
+            <div class="pipeline" aria-label="SimCLR architecture flow">
+              <div class="branch-stack"><div class="node a"><strong>view A</strong>x̃<sub>i</sub></div><div class="node b"><strong>view B</strong>x̃<sub>j</sub></div></div><div class="arrow" aria-hidden="true">→</div><div class="node"><strong>shared encoder f</strong>ResNet</div><div class="arrow" aria-hidden="true">→</div><div class="branch-stack"><div class="node a"><strong>h<sub>i</sub></strong>representation</div><div class="node b"><strong>h<sub>j</sub></strong>representation</div></div><div class="arrow" aria-hidden="true">→</div><div class="branch-stack"><div class="node"><strong>shared head g</strong>z<sub>i</sub>, z<sub>j</sub></div><div class="node"><strong>NT-Xent</strong>pair vs batch</div></div>
+            </div>
+            <div class="keep-discard"><div><strong>Keep after pretraining:</strong> encoder f and representation h for downstream tasks.</div><div><strong>Discard after pretraining:</strong> projection head g; z is the training workspace, not the paper’s deployed representation.</div></div>
+            <figcaption><strong>Lesson diagram.</strong> The batch ledger makes the positive/negative assignment explicit; the architecture below shows where each view travels. Both branches use the same f and g parameters.</figcaption>
+          </figure>
+          <p>The projection head is not decorative. Figure 8 reports that a nonlinear head improves linear evaluation of <em>h</em> by more than 10 percentage points relative to no head in that experiment. The paper’s interpretation is that <em>g</em> can discard transformation-specific information to satisfy the contrastive loss while <em>h</em> retains more information for later tasks.</p>
+        </div></div>
+      </section>
+      <section aria-labelledby="objective-title">
+        <div class="section-grid"><div class="section-label">5 · Executable behavior</div><div>
+          <h2 id="objective-title">Ask one anchor to identify its paired view</h2>
+          <p>Choose view <em>i</em> as the anchor and its sibling <em>j</em> as the correct answer. The anchor does not compare with itself. Every other one of the <em>2N−1</em> views enters the softmax denominator.</p>
+          <div class="formula"><span class="formula-label">Directional NT-Xent</span><math display="block" aria-label="ell sub i j equals negative log of exponential similarity z i z j over tau, divided by the sum from k equals 1 to 2 N, excluding i, of exponential similarity z i z k over tau"><mrow><msub><mi>ℓ</mi><mrow><mi>i</mi><mo>,</mo><mi>j</mi></mrow></msub><mo>=</mo><mo>−</mo><mi>log</mi><mo>(</mo><mfrac><mrow><mi>exp</mi><mo>(</mo><mfrac><mrow><mi>sim</mi><mo>(</mo><msub><mi>z</mi><mi>i</mi></msub><mo>,</mo><msub><mi>z</mi><mi>j</mi></msub><mo>)</mo></mrow><mi>τ</mi></mfrac><mo>)</mo></mrow><mrow><munderover><mo>∑</mo><mrow><mi>k</mi><mo>=</mo><mn>1</mn></mrow><mrow><mn>2</mn><mi>N</mi></mrow></munderover><mi>𝟙</mi><mo>[</mo><mi>k</mi><mo>≠</mo><mi>i</mi><mo>]</mo><mi>exp</mi><mo>(</mo><mfrac><mrow><mi>sim</mi><mo>(</mo><msub><mi>z</mi><mi>i</mi></msub><mo>,</mo><msub><mi>z</mi><mi>k</mi></msub><mo>)</mo></mrow><mi>τ</mi></mfrac><mo>)</mo></mrow></mfrac><mo>)</mo></mrow></math></div>
+          <div class="term-map"><div><strong>Numerator</strong><br>The designated positive’s exponentiated similarity.</div><div><strong>Denominator</strong><br>The positive plus all 2N−2 in-batch negatives.</div><div><strong>Temperature τ</strong><br>Scales every similarity before softmax; smaller τ sharpens rank differences.</div></div>
+          <p>Then reverse the direction so <em>j</em> must identify <em>i</em>. The full minibatch averages both directions for every source image:</p>
+          <div class="formula"><span class="formula-label">Full minibatch objective</span><math display="block" aria-label="L equals one over 2 N times the sum from k equals 1 to N of ell 2 k minus 1 comma 2 k plus ell 2 k comma 2 k minus 1"><mrow><mi>L</mi><mo>=</mo><mfrac><mn>1</mn><mrow><mn>2</mn><mi>N</mi></mrow></mfrac><munderover><mo>∑</mo><mrow><mi>k</mi><mo>=</mo><mn>1</mn></mrow><mi>N</mi></munderover><mo>[</mo><msub><mi>ℓ</mi><mrow><mn>2</mn><mi>k</mi><mo>−</mo><mn>1</mn><mo>,</mo><mn>2</mn><mi>k</mi></mrow></msub><mo>+</mo><msub><mi>ℓ</mi><mrow><mn>2</mn><mi>k</mi><mo>,</mo><mn>2</mn><mi>k</mi><mo>−</mo><mn>1</mn></mrow></msub><mo>]</mo></mrow></math></div>
+          <p>The loss rewards <em>relative</em> agreement. A positive similarity of .8 can be excellent when every negative is far away and poor when a negative is even closer.</p>
+        </div></div>
+      </section>
+      <section aria-labelledby="trace-a-title">
+        <div class="section-grid"><div class="section-label">6 · Worked trace A</div><div>
+          <h2 id="trace-a-title">Compute an entire four-view NT-Xent batch</h2>
+          <div class="worked"><span class="trace-label">N=2 sources · 2N=4 views · τ=.5</span><h3>Two positive pairs: (1,2) and (3,4)</h3>
+            <p>Use the following normalized projections. Because they are normalized, their dot products are cosine similarities.</p>
+            <div class="math-step"><math display="block" aria-label="z 1 equals row vector 1 0; z 2 equals row vector point 8 point 6; z 3 equals row vector negative 1 0; z 4 equals row vector negative point 8 negative point 6"><mtable columnalign="left center left" rowspacing=".45em"><mtr><mtd><msub><mi>z</mi><mn>1</mn></msub></mtd><mtd><mo>=</mo></mtd><mtd><mo>(</mo><mtable><mtr><mtd><mn>1</mn></mtd><mtd><mn>0</mn></mtd></mtr></mtable><mo>)</mo></mtd></mtr><mtr><mtd><msub><mi>z</mi><mn>2</mn></msub></mtd><mtd><mo>=</mo></mtd><mtd><mo>(</mo><mtable><mtr><mtd><mn>.8</mn></mtd><mtd><mn>.6</mn></mtd></mtr></mtable><mo>)</mo></mtd></mtr><mtr><mtd><msub><mi>z</mi><mn>3</mn></msub></mtd><mtd><mo>=</mo></mtd><mtd><mo>(</mo><mtable><mtr><mtd><mo>−</mo><mn>1</mn></mtd><mtd><mn>0</mn></mtd></mtr></mtable><mo>)</mo></mtd></mtr><mtr><mtd><msub><mi>z</mi><mn>4</mn></msub></mtd><mtd><mo>=</mo></mtd><mtd><mo>(</mo><mtable><mtr><mtd><mo>−</mo><mn>.8</mn></mtd><mtd><mo>−</mo><mn>.6</mn></mtd></mtr></mtable><mo>)</mo></mtd></mtr></mtable></math></div>
+            <ol class="steps">
+              <li><strong>Choose anchor 1.</strong> Its correct answer is view 2. Views 3 and 4 are negatives; view 1 itself is excluded.</li>
+              <li><strong>Compute similarities.</strong><div class="math-step compact"><math display="block" aria-label="s 1 2 equals point 8; s 1 3 equals negative 1; s 1 4 equals negative point 8"><mtable columnalign="right center left" rowspacing=".35em"><mtr><mtd><msub><mi>s</mi><mrow><mn>1</mn><mo>,</mo><mn>2</mn></mrow></msub></mtd><mtd><mo>=</mo></mtd><mtd><mn>.8</mn></mtd></mtr><mtr><mtd><msub><mi>s</mi><mrow><mn>1</mn><mo>,</mo><mn>3</mn></mrow></msub></mtd><mtd><mo>=</mo></mtd><mtd><mo>−</mo><mn>1</mn></mtd></mtr><mtr><mtd><msub><mi>s</mi><mrow><mn>1</mn><mo>,</mo><mn>4</mn></mrow></msub></mtd><mtd><mo>=</mo></mtd><mtd><mo>−</mo><mn>.8</mn></mtd></mtr></mtable></math></div></li>
+              <li><strong>Scale by <math class="math-inline" aria-label="tau equals point 5"><mrow><mi>τ</mi><mo>=</mo><mn>.5</mn></mrow></math> and exponentiate.</strong><div class="math-step compact"><math display="block" aria-label="e to point 8 over point 5 equals 4 point 953; e to negative 1 over point 5 equals point 135; e to negative point 8 over point 5 equals point 202"><mtable columnalign="right center left" rowspacing=".35em"><mtr><mtd><msup><mi>e</mi><mfrac><mn>.8</mn><mn>.5</mn></mfrac></msup></mtd><mtd><mo>=</mo></mtd><mtd><mn>4.953</mn></mtd></mtr><mtr><mtd><msup><mi>e</mi><mfrac><mrow><mo>−</mo><mn>1</mn></mrow><mn>.5</mn></mfrac></msup></mtd><mtd><mo>=</mo></mtd><mtd><mn>.135</mn></mtd></mtr><mtr><mtd><msup><mi>e</mi><mfrac><mrow><mo>−</mo><mn>.8</mn></mrow><mn>.5</mn></mfrac></msup></mtd><mtd><mo>=</mo></mtd><mtd><mn>.202</mn></mtd></mtr></mtable></math></div></li>
+              <li><strong>Normalize.</strong><div class="math-step compact"><math display="block" aria-label="probability of 2 given 1 equals 4 point 953 divided by 4 point 953 plus point 135 plus point 202 equals point 9363"><mrow><mi>p</mi><mo>(</mo><mn>2</mn><mo>|</mo><mn>1</mn><mo>)</mo><mo>=</mo><mfrac><mn>4.953</mn><mrow><mn>4.953</mn><mo>+</mo><mn>.135</mn><mo>+</mo><mn>.202</mn></mrow></mfrac><mo>=</mo><mn>.9363</mn></mrow></math></div></li>
+              <li><strong>Charge cross-entropy.</strong><div class="math-step compact"><math display="block" aria-label="ell 1 2 equals negative log of point 9363 equals point 0659"><mrow><msub><mi>ℓ</mi><mrow><mn>1</mn><mo>,</mo><mn>2</mn></mrow></msub><mo>=</mo><mo>−</mo><mi>log</mi><mo>(</mo><mn>.9363</mn><mo>)</mo><mo>=</mo><mn>.0659</mn></mrow></math></div></li>
+              <li><strong>Reverse the pair.</strong> Anchor 2 sees similarities <math class="math-inline" aria-label="point 8, negative point 8, negative 1"><mrow><mo>(</mo><mn>.8</mn><mo>,</mo><mo>−</mo><mn>.8</mn><mo>,</mo><mo>−</mo><mn>1</mn><mo>)</mo></mrow></math>, the same three values in a different order, so <math class="math-inline" aria-label="ell 2 1 equals point 0659"><mrow><msub><mi>ℓ</mi><mrow><mn>2</mn><mo>,</mo><mn>1</mn></mrow></msub><mo>=</mo><mn>.0659</mn></mrow></math>.</li>
+              <li><strong>Finish the other source.</strong> By symmetry, <math class="math-inline" aria-label="ell 3 4 equals ell 4 3 equals point 0659"><mrow><msub><mi>ℓ</mi><mrow><mn>3</mn><mo>,</mo><mn>4</mn></mrow></msub><mo>=</mo><msub><mi>ℓ</mi><mrow><mn>4</mn><mo>,</mo><mn>3</mn></mrow></msub><mo>=</mo><mn>.0659</mn></mrow></math>.</li>
+              <li><strong>Average all anchors.</strong><div class="math-step compact"><math display="block" aria-label="L equals the fraction point 0659 plus point 0659 plus point 0659 plus point 0659 over 4 equals point 0659"><mrow><mi>L</mi><mo>=</mo><mfrac><mrow><mn>.0659</mn><mo>+</mo><mn>.0659</mn><mo>+</mo><mn>.0659</mn><mo>+</mo><mn>.0659</mn></mrow><mn>4</mn></mfrac><mo>=</mo><mn>.0659</mn></mrow></math></div></li>
+            </ol>
+          </div>
+          <div class="instrument" aria-labelledby="collapse-predict-title"><h3 id="collapse-predict-title">Predict before reveal: if every <math class="math-inline" aria-label="z"><mi>z</mi></math> collapses to the same normalized vector, what is <math class="math-inline" aria-label="L"><mi>L</mi></math> here?</h3><p>Each anchor would see three indistinguishable candidates.</p><div class="choices"><button type="button" aria-pressed="false" data-feedback="Not zero. The positive cannot be identified when all three candidates have equal similarity.">0</button><button type="button" aria-pressed="false" data-feedback="Correct. The positive gets probability 1/3, so every directional loss and the batch average are −log(1/3)=log 3≈1.099.">log 3 ≈ 1.099</button><button type="button" aria-pressed="false" data-feedback="Not log 4: the anchor is excluded, leaving three candidates in the denominator.">log 4 ≈ 1.386</button></div><p class="answer" aria-live="polite">Answer: <math class="math-inline" aria-label="log 3 is approximately 1 point 099"><mrow><mi>log</mi><mo>(</mo><mn>3</mn><mo>)</mo><mo>≈</mo><mn>1.099</mn></mrow></math>, because the anchor is excluded and the positive receives probability <math class="math-inline" aria-label="one over 2 N minus 1 equals one third"><mrow><mfrac><mn>1</mn><mrow><mn>2</mn><mi>N</mi><mo>−</mo><mn>1</mn></mrow></mfrac><mo>=</mo><mfrac><mn>1</mn><mn>3</mn></mfrac></mrow></math>.</p></div>
+        </div></div>
+      </section>
+      <section aria-labelledby="trace-b-title">
+        <div class="section-grid"><div class="section-label">7 · Worked trace B</div><div>
+          <h2 id="trace-b-title">Temperature sharpens both correct and incorrect rankings</h2>
+          <p>Hold the similarities fixed: positive=.8, hard negative=.6, easy negative=−.5. Only τ changes.</p>
+          <div class="table-scroll" tabindex="0" aria-label="Scrollable temperature calculation table"><table><thead><tr><th><math class="math-inline" aria-label="tau"><mi>τ</mi></math></th><th>Exponentiated terms</th><th>Positive probability</th><th>Loss</th></tr></thead><tbody>
+            <tr><td>.1</td><td><math class="math-cell" aria-label="e to 8 equals 2980 point 958; e to 6 equals 403 point 429; e to negative 5 equals point 0067"><mtable columnalign="right center left" rowspacing=".22em"><mtr><mtd><msup><mi>e</mi><mn>8</mn></msup></mtd><mtd><mo>=</mo></mtd><mtd><mn>2980.958</mn></mtd></mtr><mtr><mtd><msup><mi>e</mi><mn>6</mn></msup></mtd><mtd><mo>=</mo></mtd><mtd><mn>403.429</mn></mtd></mtr><mtr><mtd><msup><mi>e</mi><mrow><mo>−</mo><mn>5</mn></mrow></msup></mtd><mtd><mo>=</mo></mtd><mtd><mn>.0067</mn></mtd></mtr></mtable></math></td><td><math class="math-cell" aria-label="2980 point 958 over 3384 point 394 equals point 8808"><mrow><mfrac><mn>2980.958</mn><mn>3384.394</mn></mfrac><mo>=</mo><mn>.8808</mn></mrow></math></td><td><math class="math-cell" aria-label="negative log point 8808 equals point 1269"><mrow><mo>−</mo><mi>log</mi><mo>(</mo><mn>.8808</mn><mo>)</mo><mo>=</mo><mn>.1269</mn></mrow></math></td></tr>
+            <tr><td>.5</td><td><math class="math-cell" aria-label="e to 1 point 6 equals 4 point 953; e to 1 point 2 equals 3 point 320; e to negative 1 equals point 368"><mtable columnalign="right center left" rowspacing=".22em"><mtr><mtd><msup><mi>e</mi><mn>1.6</mn></msup></mtd><mtd><mo>=</mo></mtd><mtd><mn>4.953</mn></mtd></mtr><mtr><mtd><msup><mi>e</mi><mn>1.2</mn></msup></mtd><mtd><mo>=</mo></mtd><mtd><mn>3.320</mn></mtd></mtr><mtr><mtd><msup><mi>e</mi><mrow><mo>−</mo><mn>1</mn></mrow></msup></mtd><mtd><mo>=</mo></mtd><mtd><mn>.368</mn></mtd></mtr></mtable></math></td><td><math class="math-cell" aria-label="4 point 953 over 8 point 641 equals point 5732"><mrow><mfrac><mn>4.953</mn><mn>8.641</mn></mfrac><mo>=</mo><mn>.5732</mn></mrow></math></td><td><math class="math-cell" aria-label="negative log point 5732 equals point 5565"><mrow><mo>−</mo><mi>log</mi><mo>(</mo><mn>.5732</mn><mo>)</mo><mo>=</mo><mn>.5565</mn></mrow></math></td></tr>
+            <tr><td>1</td><td><math class="math-cell" aria-label="e to point 8 equals 2 point 226; e to point 6 equals 1 point 822; e to negative point 5 equals point 607"><mtable columnalign="right center left" rowspacing=".22em"><mtr><mtd><msup><mi>e</mi><mn>.8</mn></msup></mtd><mtd><mo>=</mo></mtd><mtd><mn>2.226</mn></mtd></mtr><mtr><mtd><msup><mi>e</mi><mn>.6</mn></msup></mtd><mtd><mo>=</mo></mtd><mtd><mn>1.822</mn></mtd></mtr><mtr><mtd><msup><mi>e</mi><mrow><mo>−</mo><mn>.5</mn></mrow></msup></mtd><mtd><mo>=</mo></mtd><mtd><mn>.607</mn></mtd></mtr></mtable></math></td><td><math class="math-cell" aria-label="2 point 226 over 4 point 654 equals point 4782"><mrow><mfrac><mn>2.226</mn><mn>4.654</mn></mfrac><mo>=</mo><mn>.4782</mn></mrow></math></td><td><math class="math-cell" aria-label="negative log point 4782 equals point 7378"><mrow><mo>−</mo><mi>log</mi><mo>(</mo><mn>.4782</mn><mo>)</mo><mo>=</mo><mn>.7378</mn></mrow></math></td></tr>
+          </tbody></table></div>
+          <p>Here the positive already ranks first, so lower τ concentrates probability on it and lowers the loss. That observation does <em>not</em> justify “smaller is always better.” Now let the hard negative rise slightly above the positive, from .6 to .81.</p>
+          <div class="instrument" aria-labelledby="temperature-predict-title"><h3 id="temperature-predict-title">Predict before reveal: which temperature reacts more strongly to the .01 ranking error?</h3><div class="choices"><button type="button" aria-pressed="false" data-feedback="Correct. At τ=.1, the loss jumps from .1269 to .7444, an increase of .6175. The small logit ranking error is magnified.">τ=.1</button><button type="button" aria-pressed="false" data-feedback="Not here. At τ=1, the loss rises from .7378 to .8253, an increase of only .0875.">τ=1</button><button type="button" aria-pressed="false" data-feedback="They are not equal because dividing by different temperatures changes the relative softmax mass.">They react equally</button></div><p class="answer" aria-live="polite">Answer: τ=.1 reacts more strongly. Its loss rises by about .618, versus about .088 at τ=1.</p></div>
+          <p>Table 5 in the paper confirms that τ must be tuned together with normalization: among the reported L2-normalized settings, τ=.1 gives 64.4% linear-evaluation top-1, while τ=.05 gives 59.7%, τ=.5 gives 60.7%, and τ=1 gives 58.0%. “Sharper” is useful only at an appropriate scale.</p>
+        </div></div>
+      </section>
+      <section aria-labelledby="augmentation-title">
+        <div class="section-grid"><div class="section-label">8 · Worked trace C</div><div>
+          <h2 id="augmentation-title">The augmentation pipeline writes the invariance contract</h2>
+          <div class="worked"><span class="trace-label">A causal augmentation trace</span><h3>From source image to learned shortcut—or transferable cue</h3><ol class="steps"><li><strong>Start with one bird photograph x.</strong> Its label is unavailable; source identity is the only pairing signal.</li><li><strong>Sample two crops.</strong> One contains the bird and branch; the other contains a different region. They are declared positive because both came from x.</li><li><strong>Consider the crop-only shortcut.</strong> Patches from one photograph often share color statistics, so matching histograms can identify the source without recognizing bird structure.</li><li><strong>Add strong color distortion.</strong> Shared color statistics become unreliable while some shape and spatial cues remain. The easiest route to matching must change.</li><li><strong>Apply the pair objective.</strong> NT-Xent rewards whatever cues still distinguish the sibling crop from other images in the batch.</li><li><strong>Check transfer, not pretext ease.</strong> In the paper’s asymmetric Figure 5 ablation, crop alone reports 33.1% ImageNet linear-evaluation top-1, while the crop→color composition reports 56.3%. The measurement supports the shortcut diagnosis; it does not prove that every stronger transformation is safe.</li></ol></div>
+          <div class="instrument" aria-labelledby="bird-predict-title"><h3 id="bird-predict-title">Predict before reveal: which “same-image” view is most dangerous for bird-species transfer?</h3><p>The bird is small and perched on a branch.</p><div class="choices"><button type="button" aria-pressed="false" data-feedback="Moderate color jitter may be reasonable when species identity should survive lighting variation, although task needs still matter.">Moderate color jitter</button><button type="button" aria-pressed="false" data-feedback="Correct. A crop containing only the branch removes the object whose identity should survive. Source identity alone does not guarantee task-relevant overlap.">Crop showing only the branch</button><button type="button" aria-pressed="false" data-feedback="Moderate blur belongs to the paper's default policy. It can still be risky when fine markings are essential, but a crop that removes the bird is the clearest failure here.">Moderate Gaussian blur</button></div><p class="answer" aria-live="polite">Answer: the branch-only crop. “Same source image” does not guarantee “same task-relevant content.”</p></div>
+          <p>SimCLR’s default sequence uses random crop and resize (with flip), color distortion, and Gaussian blur. Each choice is a claim about nuisance variation. A different downstream task—color-sensitive disease detection, text recognition, or fine-grained plumage classification—may need a different contract.</p>
+        </div></div>
+      </section>
+      <section aria-labelledby="evidence-title">
+        <div class="section-grid"><div class="section-label">9 · Evidence</div><div>
+          <h2 id="evidence-title">Large batches buy alternatives; long training narrows the gap</h2>
+          <figure class="source-figure"><div class="figure-scroll" tabindex="0" aria-label="Scrollable full-resolution Figure 9 chart"><img src="original_figure_9_batch_size_and_epochs.png" alt="SimCLR Figure 9 grouped bar chart. ImageNet linear-evaluation top-1 accuracy rises with training epochs for batch sizes 256 through 8192. Larger batches lead at 100 epochs, while the differences become much smaller by 1000 epochs."></div><figcaption><strong>Original paper, Figure 9, PDF page 7.</strong> ResNet-50 ImageNet linear evaluation for batch sizes 256–8192 across 100–1000 pretraining epochs. Each bar is one run from scratch; the experiment uses linear learning-rate scaling. On a narrow screen, scroll the chart horizontally to inspect the full-resolution labels.</figcaption></figure>
+          <div class="evidence-read"><div><b>Read the left edge</b>At 100 epochs, batch 256 is about 57.5% top-1 while batch 8192 is about 64.8%: a gap of roughly seven points.</div><div><b>Read the right edge</b>By 1000 epochs, the curves cluster around roughly 67–69%; the largest batch is not uniquely best.</div><div><b>Read the claim narrowly</b>Larger batches facilitate convergence by supplying more in-batch negatives. With randomly resampled batches, more epochs reduce or remove much of the gap.</div></div>
+          <div class="callout caution"><strong>Do not overread the bars.</strong> Figure 9 does not establish that batch 8192 is always optimal, that more negatives are always semantically better, or that the small differences at long schedules are statistically reliable. The caption states that each bar is a single run.</div>
+          <h3>The surrounding evidence completes the recipe</h3>
+          <div class="table-scroll" tabindex="0" aria-label="Scrollable table of SimCLR evidence and scope"><table><thead><tr><th>Paper evidence</th><th>What it supports</th><th>What it does not prove</th></tr></thead><tbody><tr><td>Figure 5: crop→color reaches 56.3% in the asymmetric augmentation ablation; crop alone is 33.1%.</td><td>Composed augmentations can block shortcuts and materially improve transfer.</td><td>Any composition or any stronger augmentation will help every task.</td></tr><tr><td>Figure 8: the nonlinear projection head is about 3 points better than a linear head and more than 10 points better than no projection in the reported setup.</td><td>The loss space and retained representation can benefit from being different.</td><td>z is useless, or every later contrastive method needs this exact head.</td></tr><tr><td>Table 5: L2 normalization with τ=.1 reaches 64.4% top-1 versus 58.0% at τ=1; removing normalization gives about 57%.</td><td>Normalization and temperature jointly shape useful hard-example weighting.</td><td>τ=.1 is universally optimal.</td></tr><tr><td>Table 6: standard ResNet-50 reaches 69.3%; the 4×-width, 375M-parameter model reaches 76.5% after 1000 epochs.</td><td>SimCLR can learn strong frozen features and benefits from scale.</td><td>76.5% is the result of the default 24M-parameter, 100-epoch model.</td></tr></tbody></table></div>
+          <p>The default ablation setup uses batch size 4096, 100 epochs, a two-layer projection MLP, LARS, linear warmup, cosine learning-rate decay, and global BatchNorm. The paper reports about 1.5 hours on 128 TPU v3 cores for ResNet-50 at that setting. Its strongest comparison models use wider networks and 1000 epochs, so the headline result is not evidence that the recipe is cheap.</p>
+        </div></div>
+      </section>
+      <section aria-labelledby="limits-title">
+        <div class="section-grid"><div class="section-label">10 · Limits &amp; diagnostics</div><div>
+          <h2 id="limits-title">Separate instance identity, semantic meaning, and evaluation</h2>
+          <h3>Limitations to keep attached to the result</h3>
+          <ul><li><strong>False negatives:</strong> different images of the same semantic class are treated as negatives, so the instance objective can oppose class-level similarity.</li><li><strong>Augmentation bias:</strong> the encoder is encouraged to discard variation introduced by T. If that variation carries downstream meaning, invariance becomes information loss.</li><li><strong>Batch and systems dependence:</strong> in-batch negatives, distributed global BatchNorm, LARS, large TPU counts, and long schedules are part of the reported system.</li><li><strong>Evaluation scope:</strong> the main ablations are ImageNet-centered and use frozen-feature linear evaluation as a proxy for representation quality.</li><li><strong>Leakage risk:</strong> when both positives sit on one device, local BatchNorm statistics can reveal pairing structure. The paper aggregates statistics globally to prevent this shortcut.</li></ul>
+          <h3>Misconception checks</h3>
+          <details><summary>“A negative is always a different semantic class.”</summary><p>No. It is a view from a different source image. A second dog photograph is a negative to the first dog photograph in original SimCLR.</p></details><details><summary>“The objective directly pulls every positive to cosine similarity 1.”</summary><p>Not exactly. NT-Xent minimizes a relative softmax loss: the positive must outrank the alternatives. Its pressure depends on every candidate and on τ.</p></details><details><summary>“A lower temperature is always better.”</summary><p>No. Lower τ sharpens ranking differences, including mistakes. Table 5’s τ=.05 result is worse than τ=.1 in the reported setting.</p></details><details><summary>“The projection z is the representation to deploy.”</summary><p>Not in the paper’s protocol. The contrastive loss acts on z=g(h); SimCLR discards g and evaluates h from the encoder.</p></details><details><summary>“Near-perfect contrastive accuracy means the representation is good.”</summary><p>No. The paper’s single-augmentation experiments can make the pretext task easy while producing poor linear-evaluation features. A shortcut can solve the task without learning transferable semantics.</p></details>
+        </div></div>
+      </section>
+      <section aria-labelledby="recall-title">
+        <div class="section-grid"><div class="section-label">11 · Active recall</div><div>
+          <h2 id="recall-title">Close the traces, then retrieve the mechanism</h2>
+          <details><summary>What exactly supplies supervision in SimCLR?</summary><p>Source identity under stochastic augmentation: two views from one source image are designated as a positive pair, while views from other source images in the minibatch become negatives.</p></details><details><summary>For <math class="math-inline" aria-label="N"><mi>N</mi></math> source images, how many candidates does one anchor classify over?</summary><p>There are <math class="math-inline" aria-label="2 N"><mrow><mn>2</mn><mi>N</mi></mrow></math> total views. Excluding the anchor leaves <math class="math-inline" aria-label="2 N minus 1"><mrow><mn>2</mn><mi>N</mi><mo>−</mo><mn>1</mn></mrow></math> candidates: one positive and <math class="math-inline" aria-label="2 N minus 2"><mrow><mn>2</mn><mi>N</mi><mo>−</mo><mn>2</mn></mrow></math> negatives.</p></details><details><summary>Why are both <math class="math-inline" aria-label="ell i j"><msub><mi>ℓ</mi><mrow><mi>i</mi><mo>,</mo><mi>j</mi></mrow></msub></math> and <math class="math-inline" aria-label="ell j i"><msub><mi>ℓ</mi><mrow><mi>j</mi><mo>,</mo><mi>i</mi></mrow></msub></math> computed?</summary><p>Each view serves as the anchor in turn. Their denominators exclude different self-views, and the two directions provide symmetric training pressure.</p></details><details><summary>What does temperature change?</summary><p>It divides every cosine similarity before softmax. Lower <math class="math-inline" aria-label="tau"><mi>τ</mi></math> sharpens relative rankings, increasing confidence when the positive leads and increasing sensitivity when a hard negative rivals or exceeds it.</p></details><details><summary>Why combine crop with color distortion?</summary><p>Crop-only pairs may share easy color-histogram cues. Color distortion weakens that shortcut, pushing the network toward features that better survive appearance changes.</p></details><details><summary>Why does SimCLR apply the loss to <math class="math-inline" aria-label="z"><mi>z</mi></math> but retain <math class="math-inline" aria-label="h"><mi>h</mi></math>?</summary><p>The projection head can specialize <math class="math-inline" aria-label="z"><mi>z</mi></math> for transformation invariance while allowing <math class="math-inline" aria-label="h"><mi>h</mi></math> to retain information that may be useful downstream. The paper’s Figure 8 and Table 3 support that separation.</p></details><details><summary>What does complete collapse cost in a batch with <math class="math-inline" aria-label="N"><mi>N</mi></math> source images?</summary><p>Every candidate has equal similarity, so the positive probability is <math class="math-inline" aria-label="one over 2 N minus 1"><mfrac><mn>1</mn><mrow><mn>2</mn><mi>N</mi><mo>−</mo><mn>1</mn></mrow></mfrac></math> and each directional loss is <math class="math-inline" aria-label="log of 2 N minus 1"><mrow><mi>log</mi><mo>(</mo><mn>2</mn><mi>N</mi><mo>−</mo><mn>1</mn><mo>)</mo></mrow></math>, not zero.</p></details><details><summary>What is Figure 9’s safest conclusion?</summary><p>At short schedules, larger batches converge faster in the reported ResNet-50/ImageNet setup; with more epochs and randomly resampled batches, performance gaps between batch sizes shrink or disappear.</p></details>
+        </div></div>
+      </section>
+      <section aria-labelledby="map-title">
+        <div class="section-grid"><div class="section-label">Mental map</div><div>
+          <h2 id="map-title">Connect it to your mental map</h2>
+          <div class="two-col"><div><h3>Reuse the encoder; change the supervision</h3><p>The earlier ResNet lesson explains how residual blocks make a deep visual encoder trainable. SimCLR keeps that machinery and changes where the target comes from: relationships between views replace class labels.</p><p>The BatchNorm lesson also returns with a warning. Statistics are not neutral when positive pairs share a device; local statistics can leak pairing information, so SimCLR uses global BatchNorm.</p></div><div><h3>Similarity and temperature do different jobs elsewhere</h3><p>Transformer attention uses similarity to route information within a forward pass. SimCLR uses similarity as logits for a learning signal across examples. DPO’s β and SimCLR’s τ both rescale a logistic-style comparison, but β weights policy-relative preference margins while τ divides representation similarities.</p><p>A VAE learns through reconstruction plus latent regularization. SimCLR avoids reconstructing pixels; it learns by identifying which view belongs with which source. They are different solutions to the broader problem of finding supervision when labels are absent.</p></div></div>
+        </div></div>
+      </section>
+      <section aria-labelledby="takeaway-title">
+        <div class="section-grid"><div class="section-label">Takeaway</div><div>
+          <h2 id="takeaway-title">The positive pair writes the lesson; the batch grades it.</h2>
+          <p class="takeaway"><strong>Native intuition:</strong> SimCLR says, “these two altered views should still identify one source, and they should outrank every other view.” Augmentations decide what may change, NT-Xent turns the sibling view into the answer among in-batch alternatives, temperature controls how sharply ranking differences matter, and the projection head absorbs the invariance pressure so the encoder representation can remain useful.</p>
+        </div></div>
+      </section>
+    </main>
+    <footer><h2>Source and further exploration</h2><ul><li><a href="a_simple_framework_for_contrastive_learning_of_visual_representations.pdf">Original paper PDF</a></li><li><a href="https://proceedings.mlr.press/v119/chen20j.html">ICML 2020 proceedings record</a></li><li><a href="https://github.com/google-research/simclr">Official SimCLR repository</a></li></ul></footer>
+  </div>
+  <script>
+    document.querySelectorAll('[data-feedback]').forEach((button) => {
+      button.addEventListener('click', () => {
+        const instrument = button.closest('.instrument');
+        const answer = instrument ? instrument.querySelector('.answer') : null;
+        if (!answer) return;
+        instrument.querySelectorAll('[data-feedback]').forEach((choice) => choice.setAttribute('aria-pressed', String(choice === button)));
+        answer.textContent = button.dataset.feedback;
+      });
+      button.addEventListener('keydown', (event) => {
+        if (event.key !== 'Enter' && event.key !== ' ') return;
+        event.preventDefault();
+        button.click();
+      });
+    });
+    document.querySelectorAll('details > summary').forEach((summary) => {
+      summary.addEventListener('keydown', (event) => {
+        if (event.key !== 'Enter' && event.key !== ' ') return;
+        event.preventDefault();
+        const details = summary.parentElement;
+        if (details) details.open = !details.open;
+      });
+    });
+  </script>
+</body>
+</html>

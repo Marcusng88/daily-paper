@@ -1,0 +1,342 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="A one-hour lesson on the Lottery Ticket Hypothesis: masks, original initialization, iterative magnitude pruning, evidence, and limitations.">
+  <title>The Lottery Ticket Hypothesis — Daily AI Paper Lab</title>
+  <style>
+    :root {
+      --carbon: #151b1e; --graphite: #465056; --ground: #e9e6dc; --ticket: #f8f6ed;
+      --ticket-deep: #e8ddbd; --cyan: #1e7182; --cut: #9d4339; --rule: #b9b5aa; --focus: #d19a2d;
+      --display: "Avenir Next Condensed", "Arial Narrow", "Helvetica Neue", sans-serif;
+      --body: Charter, "Iowan Old Style", "Palatino Linotype", Georgia, serif;
+      --utility: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body { margin: 0; color: var(--carbon); background: linear-gradient(90deg, transparent 0 28px, rgba(21,27,30,.035) 28px 29px, transparent 29px), var(--ground); font: 18px/1.68 var(--body); }
+    img, svg { max-width: 100%; }
+    a { color: var(--cyan); text-underline-offset: .18em; }
+    a:hover { text-decoration-thickness: 2px; }
+    button, input { font: inherit; }
+    button { min-height: 44px; }
+    :focus-visible { outline: 3px solid var(--focus); outline-offset: 4px; }
+    .skip { position: fixed; left: 16px; top: 12px; z-index: 10; padding: 8px 12px; background: var(--carbon); color: white; transform: translateY(-180%); }
+    .skip:focus { transform: translateY(0); }
+    .page { width: min(1180px, calc(100% - 40px)); margin: 0 auto; }
+    .collection-nav { padding: 22px 0 18px; }
+    .home { display: inline-block; color: var(--carbon); font: 700 .76rem/1.3 var(--utility); letter-spacing: .035em; text-decoration: none; }
+    .home:hover { color: var(--cyan); }
+    .ticket-hero { position: relative; display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(300px, .8fr); gap: clamp(34px, 7vw, 96px); align-items: end; margin: 0 0 34px; padding: clamp(42px, 7vw, 86px) clamp(26px, 5vw, 64px); overflow: hidden; background: var(--ticket); border: 1px solid var(--rule); box-shadow: 10px 12px 0 rgba(21,27,30,.07); }
+    .ticket-hero::before, .ticket-hero::after { content: ""; position: absolute; left: -13px; top: 12px; width: 26px; height: 26px; border-radius: 50%; background: var(--ground); box-shadow: 0 48px 0 var(--ground), 0 96px 0 var(--ground), 0 144px 0 var(--ground), 0 192px 0 var(--ground), 0 240px 0 var(--ground), 0 288px 0 var(--ground), 0 336px 0 var(--ground), 0 384px 0 var(--ground), 0 432px 0 var(--ground); }
+    .ticket-hero::after { left: auto; right: -13px; top: 36px; }
+    .paper-line, .section-mark, .rail-title, .figure-kind { font: 750 .72rem/1.35 var(--utility); letter-spacing: .105em; text-transform: uppercase; }
+    .paper-line { margin: 0 0 18px; color: var(--cut); }
+    h1, h2, h3 { font-family: var(--display); letter-spacing: -.026em; }
+    h1 { max-width: 12ch; margin: 0; font-size: clamp(3.25rem, 7.8vw, 6.8rem); line-height: .92; font-weight: 650; text-transform: uppercase; }
+    .hero-dek { max-width: 39rem; margin: 26px 0 0; color: var(--graphite); font-size: 1.22rem; line-height: 1.5; }
+    .hero-stamp { align-self: stretch; display: grid; align-content: center; gap: 18px; padding: 24px; border: 1px dashed var(--graphite); background: radial-gradient(circle at center, transparent 0 6px, rgba(30,113,130,.12) 6px 8px, transparent 8px) 0 0 / 42px 42px, rgba(255,255,255,.36); }
+    .hero-stamp strong { display: block; font: 700 clamp(1.8rem, 4vw, 3.5rem)/1 var(--display); color: var(--cyan); }
+    .hero-stamp p { margin: 0; font-size: .96rem; }
+    .weight-strip { display: grid; grid-template-columns: repeat(8, 1fr); gap: 6px; align-items: end; min-height: 132px; }
+    .weight-strip i { display: block; height: var(--h); min-height: 18px; background: var(--cyan); border-top: 5px solid var(--carbon); }
+    .weight-strip i:nth-child(2), .weight-strip i:nth-child(6), .weight-strip i:nth-child(8) { background: repeating-linear-gradient(135deg, transparent 0 5px, var(--cut) 5px 7px); border-color: var(--cut); }
+    .lesson-grid { display: grid; grid-template-columns: 190px minmax(0, 1fr); gap: clamp(30px, 6vw, 80px); align-items: start; }
+    .route-rail { position: sticky; top: 22px; padding: 20px 0 20px 18px; border-left: 3px solid var(--carbon); }
+    .rail-title { margin: 0 0 15px; color: var(--cut); }
+    .route-rail ol { margin: 0; padding: 0; list-style: none; }
+    .route-rail li { display: grid; grid-template-columns: 48px 1fr; gap: 7px; margin: 0 0 13px; }
+    .route-rail time { color: var(--cyan); font: 700 .73rem/1.45 var(--utility); }
+    .route-rail span { font-size: .82rem; line-height: 1.35; }
+    main { min-width: 0; padding-bottom: 72px; }
+    section { padding: 46px 0 52px; }
+    section + section { border-top: 1px solid var(--rule); }
+    .section-mark { margin: 0 0 11px; color: var(--cut); }
+    h2 { max-width: 21ch; margin: 0 0 22px; font-size: clamp(2.1rem, 4.6vw, 4rem); line-height: 1.02; font-weight: 620; }
+    h3 { margin: 26px 0 8px; font-size: 1.5rem; line-height: 1.15; }
+    .prose { max-width: 68ch; }
+    .prose > :first-child { margin-top: 0; }
+    .prose p { margin: 0 0 1em; }
+    .lead { color: var(--graphite); font-size: 1.18rem; }
+    .callout { max-width: 68ch; margin: 28px 0; padding: 18px 20px; background: var(--ticket-deep); border-left: 5px solid var(--cut); }
+    .callout p { margin: 0; }
+    .math-inline { font: .9em/1.2 var(--utility); white-space: nowrap; }
+    math { color: inherit; font-family: "STIX Two Math", "Cambria Math", "Latin Modern Math", serif; }
+    math.math-inline-native { display: inline-block; margin-inline: .08em; vertical-align: -.16em; white-space: nowrap; }
+    math.math-inline-native mtable { display: inline-table; }
+    .math-display { max-width: 100%; margin: 22px 0; padding: 16px 18px; overflow-x: auto; color: var(--carbon); background: rgba(255,255,255,.38); border-top: 1px solid var(--carbon); border-bottom: 1px solid var(--carbon); }
+    .math-display math[display="block"] { display: block; width: max-content; min-width: min(100%, max-content); margin-inline: auto; font-size: 1.08rem; }
+    .math-display mtable { row-gap: .42em; }
+    .math-display .derivation { font-size: 1.12rem; }
+    .math-block { max-width: 68ch; margin: 22px 0; padding: 16px 18px; overflow-x: auto; color: var(--carbon); background: rgba(255,255,255,.38); border-top: 1px solid var(--carbon); border-bottom: 1px solid var(--carbon); font: .9rem/1.65 var(--utility); }
+    .notation { max-width: 760px; margin: 26px 0; border-collapse: collapse; }
+    .notation th, .notation td { padding: 12px 10px; text-align: left; border-bottom: 1px solid var(--rule); }
+    .notation th { width: 125px; color: var(--cyan); font: 700 .83rem/1.4 var(--utility); }
+    figure { margin: 34px 0; }
+    .figure-kind { margin: 0 0 10px; color: var(--cyan); }
+    figcaption { max-width: 74ch; margin-top: 12px; color: var(--graphite); font-size: .92rem; }
+    .source-figure { padding: 18px; background: #fff; border: 1px solid var(--rule); }
+    .source-figure img { display: block; width: 100%; height: auto; }
+    .wide-scroll { overflow-x: auto; padding-bottom: 5px; }
+    .instrument { margin: 32px 0; padding: clamp(22px, 4vw, 36px); background: var(--carbon); color: var(--ticket); border-top: 8px solid var(--cyan); }
+    .instrument h3 { margin-top: 0; color: white; }
+    .instrument fieldset { margin: 0 0 24px; padding: 18px; border: 1px solid #718086; }
+    .instrument legend { padding: 0 7px; font-weight: 700; }
+    .choice-row { display: flex; flex-wrap: wrap; gap: 10px; }
+    .choice-row button, .reset-button { padding: 10px 15px; color: var(--ticket); background: transparent; border: 1px solid #a9b2b5; cursor: pointer; font: 700 .78rem/1.25 var(--utility); }
+    .choice-row button[aria-pressed="true"] { color: var(--carbon); background: var(--ticket-deep); border-color: var(--ticket-deep); }
+    .instrument .answer { min-height: 3.2em; margin: 14px 0 0; color: #b7e2e9; }
+    .instrument label { display: block; margin-bottom: 8px; font: 700 .82rem/1.4 var(--utility); }
+    .range-line { display: grid; grid-template-columns: 1fr auto; gap: 16px; align-items: center; }
+    input[type="range"] { width: 100%; accent-color: var(--cyan); }
+    output { color: #b7e2e9; font: 700 .83rem/1 var(--utility); }
+    .mask-readout { display: grid; grid-template-columns: repeat(8, minmax(68px, 1fr)); gap: 8px; min-width: 680px; margin: 22px 0; }
+    .weight-cell { position: relative; display: grid; gap: 7px; min-height: 116px; padding: 13px 9px; border: 1px solid #758187; text-align: center; font: .76rem/1.2 var(--utility); }
+    .weight-cell .index { color: #aeb8bb; }
+    .weight-cell .value { color: white; font-size: .92rem; }
+    .weight-cell .mask { color: #b7e2e9; }
+    .weight-cell.pruned { color: #cd918b; background: repeating-linear-gradient(135deg, rgba(157,67,57,.22) 0 8px, transparent 8px 16px); }
+    .weight-cell.pruned::after { content: "cut"; color: #f0b4ad; }
+    .instrument-note { color: #d3d8da; font-size: .92rem; }
+    .comparison-grid, .calculation-grid, .scope-grid, .map-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin: 30px 0; }
+    .comparison-card, .calculation, .scope-card, .map-card { padding: 22px; background: rgba(255,255,255,.38); border-top: 5px solid var(--cyan); }
+    .comparison-card.baseline, .calculation.gradient, .scope-card.limit { border-color: var(--cut); }
+    .comparison-card h3, .calculation h3, .scope-card h3, .map-card h3 { margin-top: 0; }
+    .comparison-card p:last-child, .calculation p:last-child, .scope-card p:last-child, .map-card p:last-child { margin-bottom: 0; }
+    .calculation.gradient { grid-column: 1 / -1; }
+    .mechanism-steps { display: grid; grid-template-columns: repeat(5, 1fr); gap: 0; margin: 31px 0; border-top: 1px solid var(--rule); border-bottom: 1px solid var(--rule); }
+    .mechanism-step { padding: 18px 16px 18px 0; }
+    .mechanism-step + .mechanism-step { padding-left: 18px; border-left: 1px solid var(--rule); }
+    .mechanism-step strong { display: block; margin: 7px 0; font-family: var(--display); font-size: 1.15rem; }
+    .mechanism-step p { margin: 0; color: var(--graphite); font-size: .86rem; line-height: 1.45; }
+    .step-label { color: var(--cut); font: 750 .72rem/1.35 var(--utility); letter-spacing: .095em; text-transform: uppercase; }
+    .diagram-frame { padding: clamp(14px, 3vw, 26px); background: var(--ticket); border: 1px solid var(--rule); }
+    .diagram-scroll, .source-scroll { overflow-x: auto; padding-bottom: 6px; }
+    .architecture-svg { min-width: 760px; }
+    .source-figure img { min-width: 900px; }
+    .prediction { max-width: 72ch; margin: 26px 0; padding: 20px; border: 1px solid var(--rule); background: rgba(255,255,255,.4); }
+    .prediction legend { padding: 0 8px; font-weight: 700; }
+    .prediction label { display: block; margin: 10px 0; }
+    .answer-details { margin-top: 12px; padding-left: 14px; background: #dcebed; border-left: 4px solid var(--cyan); border-bottom: 0; }
+    .instrument .answer-details summary, .instrument .answer-details p { color: var(--carbon); }
+    .panel-guide { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; margin: 0 0 28px; background: var(--rule); border: 1px solid var(--rule); }
+    .panel-guide article { padding: 17px; background: var(--ticket); }
+    .panel-guide h3 { margin: 0 0 7px; font-size: 1.15rem; }
+    .panel-guide p { margin: 0; color: var(--graphite); font-size: .9rem; }
+    .answer-box { padding: 13px 16px; background: #dcebed; border-left: 4px solid var(--cyan); }
+    .trace-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin: 30px 0; }
+    .trace { padding: 22px; background: rgba(255,255,255,.38); border-top: 5px solid var(--cyan); }
+    .trace:nth-child(2) { border-color: var(--cut); }
+    .trace h3 { margin-top: 0; }
+    .trace ol { padding-left: 1.25em; }
+    .trace li + li { margin-top: 8px; }
+    .table-scroll { max-width: 100%; overflow-x: auto; }
+    .evidence-table { width: 100%; min-width: 660px; border-collapse: collapse; font-size: .93rem; }
+    .evidence-table caption { padding: 0 0 12px; text-align: left; color: var(--graphite); font-style: italic; }
+    .evidence-table th, .evidence-table td { padding: 13px 11px; text-align: left; vertical-align: top; border-bottom: 1px solid var(--rule); }
+    .evidence-table th { color: var(--carbon); font: 750 .78rem/1.35 var(--utility); }
+    details { max-width: 68ch; padding: 15px 0; border-bottom: 1px solid var(--rule); }
+    summary { cursor: pointer; font-weight: 700; }
+    details p { margin: 10px 0 0; color: var(--graphite); }
+    .takeaway { margin-top: 18px; padding: clamp(26px, 5vw, 48px); color: var(--ticket); background: var(--carbon); border-left: 10px solid var(--cyan); }
+    .takeaway h2 { color: white; }
+    .takeaway p { max-width: 62ch; margin-bottom: 0; font-size: 1.12rem; }
+    footer { margin: 0 0 40px 270px; padding: 34px 0 50px; border-top: 3px solid var(--carbon); }
+    footer h2 { font-size: 1.7rem; text-transform: none; }
+    footer ul { max-width: 68ch; padding-left: 1.2em; }
+    footer li + li { margin-top: 8px; }
+    @media (max-width: 840px) {
+      .ticket-hero { grid-template-columns: 1fr; }
+      .hero-stamp { min-height: 260px; }
+      .lesson-grid { grid-template-columns: 1fr; }
+      .route-rail { position: static; border-left: 0; border-top: 3px solid var(--carbon); }
+      .route-rail ol { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+      .route-rail li { display: block; }
+      .route-rail time, .route-rail span { display: block; }
+      footer { margin-left: 0; }
+    }
+    @media (max-width: 600px) {
+      body { font-size: 17px; }
+      .page { width: min(100% - 24px, 1180px); }
+      .ticket-hero { padding: 34px 25px; box-shadow: 6px 7px 0 rgba(21,27,30,.07); }
+      h1 { font-size: clamp(2.55rem, 14vw, 4.2rem); overflow-wrap: anywhere; }
+      h2 { font-size: clamp(2rem, 10vw, 3rem); }
+      .route-rail ol { grid-template-columns: repeat(2, 1fr); }
+      .trace-grid { grid-template-columns: 1fr; }
+      .comparison-grid, .calculation-grid, .scope-grid, .map-grid, .panel-guide { grid-template-columns: 1fr; }
+      .calculation.gradient { grid-column: auto; }
+      .mechanism-steps { grid-template-columns: 1fr; }
+      .mechanism-step, .mechanism-step + .mechanism-step { padding: 15px 0; border-left: 0; border-top: 1px solid var(--rule); }
+      .mechanism-step:first-child { border-top: 0; }
+      .source-figure { padding: 8px; }
+      section { padding: 38px 0 42px; }
+    }
+    @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; } }
+  </style>
+</head>
+<body>
+  <a class="skip" href="#lesson">Skip to lesson</a>
+  <div class="page">
+    <nav class="collection-nav" aria-label="Collection"><a class="home" href="../../index.html">← Daily AI Paper Lab</a></nav>
+    <header class="ticket-hero">
+      <div>
+        <p class="paper-line">Frankle and Carbin · ICLR 2019</p>
+        <h1>The Lottery Ticket Hypothesis</h1>
+        <p class="hero-dek">A dense network may hide a much smaller trainable route. The surprising part is not only which connections survive, but which random values those connections started with.</p>
+      </div>
+      <div class="hero-stamp" aria-label="Eight initial weights, with three marked as candidates for removal">
+        <div><span class="figure-kind">The thesis in one line</span><strong>mask + θ₀</strong><p>The learned mask chooses the route. The original initialization gives that route its starting point.</p></div>
+        <div class="weight-strip" aria-hidden="true"><i style="--h:76%"></i><i style="--h:28%"></i><i style="--h:92%"></i><i style="--h:58%"></i><i style="--h:68%"></i><i style="--h:22%"></i><i style="--h:47%"></i><i style="--h:17%"></i></div>
+      </div>
+    </header>
+    <div class="lesson-grid">
+      <aside class="route-rail" aria-label="One-hour study route">
+        <p class="rail-title">One-hour route</p>
+        <ol><li><time>0–7</time><span>Build the bridge</span></li><li><time>7–15</time><span>Problem and baseline</span></li><li><time>15–24</time><span>Symbols and shapes</span></li><li><time>24–39</time><span>Prune, rewind, update</span></li><li><time>39–49</time><span>Read Figure 3</span></li><li><time>49–60</time><span>Limits, recall, map</span></li></ol>
+      </aside>
+      <main id="lesson">
+        <section aria-labelledby="bridge-title">
+          <p class="section-mark">Prerequisite bridge · 0–7 min</p><h2 id="bridge-title">First separate compression from trainability.</h2>
+          <div class="prose"><p class="lead">You already know that gradient descent changes weights to reduce loss. Add one new object—a fixed binary mask—and you have the vocabulary needed for this paper.</p><p><strong>Dense training</strong> gives every permitted weight a chance to move. <strong>Post-training pruning</strong> removes weights after the dense model has learned, usually keeping the survivors’ trained values. <strong>Sparse-from-start training</strong> begins with only a subset of connections and asks whether that smaller network can learn by itself.</p><p>The paper studies the third setting, but it uses dense training to search for the subnetwork. That time ordering matters: train dense, use trained magnitudes to choose a mask, restore the survivors to their original initialization, then train the masked network alone.</p></div>
+          <aside class="callout"><p><strong>Lottery-ticket analogy.</strong> Think of the dense initialization as one printed ticket with a unique serial number. Training scratches it and reveals which positions mattered. The mask is the pattern of revealed positions; <span class="math-inline">θ₀</span> is the number printed at each position on this particular ticket. Copying the same hole pattern onto a fresh ticket keeps the shape but changes the numbers. The paper tests whether that copied ticket behaves differently.</p></aside>
+        </section>
+        <section aria-labelledby="claim-title">
+          <p class="section-mark">Problem and causal test · 7–15 min</p><h2 id="claim-title">A small trained model does not imply a small trainable model.</h2>
+          <div class="prose"><p>Pruning had already shown that more than 90% of parameters could sometimes be removed from a trained network without harming accuracy. The unresolved problem was that the resulting sparse architectures were often difficult to train from a fresh random start. Keeping trained values confounds two explanations: the sparse topology may be good, or dense training may have placed its weights in a good state.</p><p>Frankle and Carbin break that ambiguity with a controlled comparison. They keep the discovered mask fixed and change only the values assigned to its surviving coordinates.</p></div>
+          <div class="comparison-grid"><article class="comparison-card baseline"><h3>Ordinary pruning baseline</h3><p>Train <math class="math-inline-native" aria-label="theta zero to theta T"><mrow><msub><mi>θ</mi><mn>0</mn></msub><mo>→</mo><msub><mi>θ</mi><mi>T</mi></msub></mrow></math>, prune small trained weights, then fine-tune <math class="math-inline-native" aria-label="m elementwise multiplied by theta T"><mrow><mi>m</mi><mo>⊙</mo><msub><mi>θ</mi><mi>T</mi></msub></mrow></math>. This shows that a learned function can often be compressed.</p></article><article class="comparison-card"><h3>Winning-ticket test</h3><p>Use <math class="math-inline-native" aria-label="theta T"><msub><mi>θ</mi><mi>T</mi></msub></math> only to discover <math class="math-inline-native" aria-label="mask m"><mi>m</mi></math>, restore <math class="math-inline-native" aria-label="m elementwise multiplied by theta zero"><mrow><mi>m</mi><mo>⊙</mo><msub><mi>θ</mi><mn>0</mn></msub></mrow></math>, then retrain. This tests whether the sparse subnetwork was trainable from its original start.</p></article></div>
+          <div class="math-display" role="math" aria-label="Dense network and winning-ticket comparison">
+            <math display="block">
+              <mtable columnalign="left left" rowspacing="0.7em" columnspacing="1.2em">
+                <mtr><mtd><mtext>Dense run</mtext></mtd><mtd><mrow><mi>f</mi><mo>(</mo><mi>x</mi><mo>;</mo><msub><mi>θ</mi><mn>0</mn></msub><mo>)</mo><mo>→</mo><mtext>minimum validation loss at step </mtext><mi>j</mi><mo>→</mo><mtext>test accuracy </mtext><mi>a</mi></mrow></mtd></mtr>
+                <mtr><mtd><mtext>Ticket run</mtext></mtd><mtd><mrow><mi>f</mi><mo>(</mo><mi>x</mi><mo>;</mo><mi>m</mi><mo>⊙</mo><msub><mi>θ</mi><mn>0</mn></msub><mo>)</mo><mo>→</mo><mtext>minimum validation loss at step </mtext><msup><mi>j</mi><mo>′</mo></msup><mo>→</mo><mtext>test accuracy </mtext><msup><mi>a</mi><mo>′</mo></msup></mrow></mtd></mtr>
+                <mtr><mtd><mtext>Winning criterion</mtext></mtd><mtd><mrow><msup><mi>j</mi><mo>′</mo></msup><mo>≤</mo><mi>j</mi><mo>,</mo><mspace width="0.5em"/><msup><mi>a</mi><mo>′</mo></msup><mo>≥</mo><mi>a</mi><mo>,</mo><mspace width="0.5em"/><mtext>and</mtext><mspace width="0.5em"/><msub><mrow><mo>‖</mo><mi>m</mi><mo>‖</mo></mrow><mn>0</mn></msub><mo>≪</mo><mo>|</mo><mi>θ</mi><mo>|</mo></mrow></mtd></mtr>
+              </mtable>
+            </math>
+          </div>
+          <div class="prose"><p><strong>The hypothesis.</strong> A randomly initialized dense network contains a much smaller subnetwork that, when trained in isolation from its original initialization, matches the dense network’s test accuracy in no more training iterations.</p></div>
+          <aside class="callout"><p><strong>Keep hypothesis and conjecture separate.</strong> The experiments support the existence of winning tickets in the studied networks. The stronger idea that SGD actively seeks and trains a well-initialized subnetwork is labeled a conjecture by the authors; this paper does not test it directly.</p></aside>
+        </section>
+        <section aria-labelledby="objects-title">
+          <p class="section-mark">Symbols, shapes, architecture · 15–24 min</p><h2 id="objects-title">Name the objects before following the mechanism.</h2>
+          <div class="table-scroll" tabindex="0" aria-label="Scrollable notation table"><table class="notation"><caption>Objects used in the ticket experiment</caption><thead><tr><th scope="col">Symbol</th><th scope="col">Shape</th><th scope="col">Role</th></tr></thead><tbody>
+            <tr><th scope="row"><math class="math-inline-native" aria-label="theta zero"><msub><mi>θ</mi><mn>0</mn></msub></math></th><td><math class="math-inline-native" aria-label="real vectors of length d"><msup><mi>ℝ</mi><mi>d</mi></msup></math></td><td>The original random draw for all <math class="math-inline-native" aria-label="d"><mi>d</mi></math> scalar parameters. Rewinding always returns surviving coordinates here.</td></tr>
+            <tr><th scope="row"><math class="math-inline-native" aria-label="theta T"><msub><mi>θ</mi><mi>T</mi></msub></math></th><td><math class="math-inline-native" aria-label="real vectors of length d"><msup><mi>ℝ</mi><mi>d</mi></msup></math></td><td>The parameters after a training round. Their final magnitudes rank candidates for pruning.</td></tr>
+            <tr><th scope="row"><math class="math-inline-native" aria-label="mask m"><mi>m</mi></math></th><td><math class="math-inline-native" aria-label="binary vectors of length d"><msup><mrow><mo>{</mo><mn>0</mn><mo>,</mo><mn>1</mn><mo>}</mo></mrow><mi>d</mi></msup></math></td><td>A fixed binary mask. Coordinate <math class="math-inline-native" aria-label="m sub i equals one"><mrow><msub><mi>m</mi><mi>i</mi></msub><mo>=</mo><mn>1</mn></mrow></math> survives; <math class="math-inline-native" aria-label="m sub i equals zero"><mrow><msub><mi>m</mi><mi>i</mi></msub><mo>=</mo><mn>0</mn></mrow></math> remains absent.</td></tr>
+            <tr><th scope="row"><math class="math-inline-native" aria-label="W superscript ell and M superscript ell"><mrow><msup><mi>W</mi><mi>ℓ</mi></msup><mo>,</mo><msup><mi>M</mi><mi>ℓ</mi></msup></mrow></math></th><td><math class="math-inline-native" aria-label="real and binary matrices with n out rows and n in columns"><mrow><msup><mi>ℝ</mi><mrow><msub><mi>n</mi><mi>out</mi></msub><mo>×</mo><msub><mi>n</mi><mi>in</mi></msub></mrow></msup><mo>,</mo><msup><mrow><mo>{</mo><mn>0</mn><mo>,</mo><mn>1</mn><mo>}</mo></mrow><mrow><msub><mi>n</mi><mi>out</mi></msub><mo>×</mo><msub><mi>n</mi><mi>in</mi></msub></mrow></msup></mrow></math></td><td>A layer’s matrix and its same-shaped mask. <math class="math-inline-native" aria-label="M superscript ell elementwise multiplied by W superscript ell"><mrow><msup><mi>M</mi><mi>ℓ</mi></msup><mo>⊙</mo><msup><mi>W</mi><mi>ℓ</mi></msup></mrow></math> preserves input/output dimensions while removing individual connections.</td></tr>
+            <tr><th scope="row"><math class="math-inline-native" aria-label="P sub m"><msub><mi>P</mi><mi>m</mi></msub></math></th><td>scalar</td><td>The fraction remaining, <math class="math-inline-native" aria-label="L zero norm of m divided by d"><mfrac><msub><mrow><mo>‖</mo><mi>m</mi><mo>‖</mo></mrow><mn>0</mn></msub><mi>d</mi></mfrac></math>. The paper calls this mask sparsity, while its labels report the percentage of weights still present.</td></tr>
+          </tbody></table></div>
+          <figure aria-labelledby="architecture-caption"><p class="figure-kind">Lesson diagram</p><div class="diagram-frame diagram-scroll" tabindex="0" aria-label="Scrollable dense-to-ticket architecture diagram"><svg class="architecture-svg" viewBox="0 0 920 430" role="img" aria-labelledby="arch-title arch-desc"><title id="arch-title">A dense layer and its winning-ticket subnetwork</title><desc id="arch-desc">The left panel shows all connections between three input units, four hidden units, and two output units. The right panel keeps only a sparse teal route. Red crosses mark removed coordinates. Layer dimensions remain unchanged while scalar connections are masked.</desc><defs><marker id="arch-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="#465056"/></marker></defs><rect x="10" y="18" width="395" height="350" fill="#fffdf7" stroke="#b9b5aa"/><rect x="515" y="18" width="395" height="350" fill="#fffdf7" stroke="#b9b5aa"/><text x="32" y="51" font-family="Arial,sans-serif" font-size="18" font-weight="700" fill="#151b1e">Dense candidate network</text><text x="537" y="51" font-family="Arial,sans-serif" font-size="18" font-weight="700" fill="#151b1e">One masked ticket</text><g stroke="#aeb4b6" stroke-width="1.7" opacity=".85"><path d="M80 115L205 90M80 115L205 150M80 115L205 210M80 115L205 270M80 200L205 90M80 200L205 150M80 200L205 210M80 200L205 270M80 285L205 90M80 285L205 150M80 285L205 210M80 285L205 270"/><path d="M225 90L345 150M225 90L345 235M225 150L345 150M225 150L345 235M225 210L345 150M225 210L345 235M225 270L345 150M225 270L345 235"/></g><g stroke="#1e7182" stroke-width="4" fill="none"><path d="M585 115L710 90M585 200L710 210M585 285L710 270M585 115L710 210"/><path d="M730 90L850 150M730 210L850 150M730 270L850 235"/></g><g fill="#f8f6ed" stroke="#151b1e" stroke-width="2"><circle cx="80" cy="115" r="14"/><circle cx="80" cy="200" r="14"/><circle cx="80" cy="285" r="14"/><circle cx="205" cy="90" r="14"/><circle cx="205" cy="150" r="14"/><circle cx="205" cy="210" r="14"/><circle cx="205" cy="270" r="14"/><circle cx="345" cy="150" r="14"/><circle cx="345" cy="235" r="14"/><circle cx="585" cy="115" r="14"/><circle cx="585" cy="200" r="14"/><circle cx="585" cy="285" r="14"/><circle cx="710" cy="90" r="14"/><circle cx="710" cy="150" r="14"/><circle cx="710" cy="210" r="14"/><circle cx="710" cy="270" r="14"/><circle cx="850" cy="150" r="14"/><circle cx="850" cy="235" r="14"/></g><g stroke="#9d4339" stroke-width="3"><path d="M645 143l14 14m0-14l-14 14M646 241l14 14m0-14l-14 14M773 130l14 14m0-14l-14 14M780 235l14 14m0-14l-14 14"/></g><g font-family="Arial,sans-serif" font-size="13" fill="#465056"><text x="53" y="337">input, n=3</text><text x="176" y="337">hidden, n=4</text><text x="321" y="337">output, n=2</text><text x="558" y="337">input, n=3</text><text x="681" y="337">hidden, n=4</text><text x="826" y="337">output, n=2</text><text x="32" y="394">W¹ ∈ ℝ⁴ˣ³ and W² ∈ ℝ²ˣ⁴</text><text x="537" y="394">M¹ ⊙ W¹ and M² ⊙ W² keep those matrix shapes</text></g><path d="M423 193H493" stroke="#465056" stroke-width="2" marker-end="url(#arch-arrow)"/><text x="433" y="181" font-family="Arial,sans-serif" font-size="13" fill="#465056">mask</text></svg></div><figcaption id="architecture-caption"><strong>Lesson diagram.</strong> Unstructured pruning removes scalar connections, not whole neurons or channels. The layer dimensions stay compatible, but the count of trainable nonzero weights falls. Teal lines survive; red crosses mark examples of removed coordinates.</figcaption></figure>
+        </section>
+        <section aria-labelledby="mechanism-title">
+          <p class="section-mark">Mechanism and execution · 24–31 min</p><h2 id="mechanism-title">Training discovers the mask; rewinding tests the ticket.</h2>
+          <div class="mechanism-steps" aria-label="Five-step causal sequence"><article class="mechanism-step"><span class="step-label">Step 1</span><strong>Initialize</strong><p>Sample one dense <span class="math-inline">θ₀</span> and keep a copy.</p></article><article class="mechanism-step"><span class="step-label">Step 2</span><strong>Train dense</strong><p>Optimize to <span class="math-inline">θ<sub>T</sub></span>; every active coordinate may move.</p></article><article class="mechanism-step"><span class="step-label">Step 3</span><strong>Rank and prune</strong><p>Within the chosen scope, remove the smallest <span class="math-inline">|θ<sub>T,i</sub>|</span> values.</p></article><article class="mechanism-step"><span class="step-label">Step 4</span><strong>Rewind</strong><p>Keep <span class="math-inline">m</span>, discard trained values, restore <span class="math-inline">m ⊙ θ₀</span>.</p></article><article class="mechanism-step"><span class="step-label">Step 5</span><strong>Retrain alone</strong><p>Compare speed and accuracy against the dense run and controls.</p></article></div>
+          <div class="prose"><p>This ordering is the paper’s causal spine. Dense training supplies information for selecting the mask. Rewinding removes the learned values. Retraining asks whether the paired mask and original coordinates were already an effective starting subnetwork.</p><p>Work with eight toy weights below. The mask is selected by the smallest absolute values in <span class="math-inline">θ<sub>T</sub></span>. The numbers shown after pruning depend on whether you are inspecting the trained network or the ticket’s reset state.</p></div>
+          <div class="instrument" aria-labelledby="instrument-heading">
+            <p class="figure-kind">Lesson diagram</p>
+            <h3 id="instrument-heading">Prune-and-rewind instrument</h3>
+            <fieldset><legend>Predict before interacting: after cutting the four smallest trained magnitudes, which values should the survivors use for the ticket test?</legend><div class="choice-row" id="ticket-choices"><button type="button" data-ticket-answer="That keeps learned values, so it tests fine-tuning a pruned model. A ticket instead restores the surviving coordinates from θ₀." aria-pressed="false">surviving θ<sub>T</sub></button><button type="button" data-ticket-answer="Correct. The mask is discovered from θT, but the surviving coordinates reset to their matching values in θ₀." aria-pressed="false">matching θ₀</button><button type="button" data-ticket-answer="That tests the mask with a fresh random draw. The paper compares against this, but it is not the original winning-ticket test." aria-pressed="false">fresh θ′<sub>0</sub></button></div><p class="answer" id="ticket-answer" aria-live="polite">Choose an option to check the intervention.</p><details class="answer-details"><summary>Reveal the answer without using the controls</summary><p><strong>Answer: matching θ₀.</strong> The mask is discovered from trained magnitudes, while the ticket’s starting values come from the same coordinates of the original dense initialization.</p></details></fieldset>
+            <label for="prune-count">Coordinates pruned by trained magnitude</label><div class="range-line"><input id="prune-count" type="range" min="0" max="6" step="1" value="4"><output id="prune-output" for="prune-count">4 of 8</output></div>
+            <div class="wide-scroll" tabindex="0" aria-label="Scrollable eight-coordinate mask"><div class="mask-readout" id="mask-readout"></div></div>
+            <button class="reset-button" id="value-mode" type="button" aria-pressed="false">Show reset values from θ₀</button><p class="answer" id="mask-summary" aria-live="polite"></p>
+            <p class="instrument-note"><strong>Static reading.</strong> At the default setting, trained magnitudes cut coordinates 2, 4, 6, and 8. The retained trained values are not the ticket’s starting values; reset mode restores coordinates 1, 3, 5, and 7 from θ₀ while the others remain fixed at zero. This is a teaching example, not a paper result.</p>
+          </div>
+        </section>
+        <section aria-labelledby="traces-title">
+          <p class="section-mark">Worked calculations · 31–39 min</p><h2 id="traces-title">Compute the mask, the rewind, and the update.</h2>
+          <div class="calculation-grid">
+            <article class="calculation"><h3>1. Magnitude prune and rewind</h3><ol>
+              <li>Initialize <math class="math-inline-native" aria-label="theta zero equals row vector point two zero, negative point one zero, point three zero, point zero five"><mrow><msub><mi>θ</mi><mn>0</mn></msub><mo>=</mo><mo>[</mo><mtable columnspacing=".45em"><mtr><mtd><mn>.20</mn></mtd><mtd><mo>−</mo><mn>.10</mn></mtd><mtd><mn>.30</mn></mtd><mtd><mn>.05</mn></mtd></mtr></mtable><mo>]</mo></mrow></math>.</li>
+              <li>Train to <math class="math-inline-native" aria-label="theta T equals row vector point eight five, negative point zero one, point four two, point zero eight"><mrow><msub><mi>θ</mi><mi>T</mi></msub><mo>=</mo><mo>[</mo><mtable columnspacing=".45em"><mtr><mtd><mn>.85</mn></mtd><mtd><mo>−</mo><mn>.01</mn></mtd><mtd><mn>.42</mn></mtd><mtd><mn>.08</mn></mtd></mtr></mtable><mo>]</mo></mrow></math>.</li>
+              <li>Rank magnitudes: <math class="math-inline-native" aria-label="point zero one less than point zero eight less than point four two less than point eight five"><mrow><mn>.01</mn><mo>&lt;</mo><mn>.08</mn><mo>&lt;</mo><mn>.42</mn><mo>&lt;</mo><mn>.85</mn></mrow></math>.</li>
+              <li>Prune two smallest coordinates: <math class="math-inline-native" aria-label="m equals row vector one zero one zero"><mrow><mi>m</mi><mo>=</mo><mo>[</mo><mtable columnspacing=".45em"><mtr><mtd><mn>1</mn></mtd><mtd><mn>0</mn></mtd><mtd><mn>1</mn></mtd><mtd><mn>0</mn></mtd></mtr></mtable><mo>]</mo></mrow></math>.</li>
+              <li>Rewind: <math class="math-inline-native" aria-label="m elementwise multiplied by theta zero equals row vector point two zero, zero, point three zero, zero"><mrow><mi>m</mi><mo>⊙</mo><msub><mi>θ</mi><mn>0</mn></msub><mo>=</mo><mo>[</mo><mtable columnspacing=".45em"><mtr><mtd><mn>.20</mn></mtd><mtd><mn>0</mn></mtd><mtd><mn>.30</mn></mtd><mtd><mn>0</mn></mtd></mtr></mtable><mo>]</mo></mrow></math>.</li>
+            </ol><p class="answer-box"><strong>Result.</strong> <math class="math-inline-native" aria-label="P sub m equals two fourths equals fifty percent"><mrow><msub><mi>P</mi><mi>m</mi></msub><mo>=</mo><mfrac><mn>2</mn><mn>4</mn></mfrac><mo>=</mo><mn>50</mn><mo>%</mo></mrow></math>. Neither <math class="math-inline-native" aria-label="row vector point eight five, zero, point four two, zero"><mrow><mo>[</mo><mtable columnspacing=".45em"><mtr><mtd><mn>.85</mn></mtd><mtd><mn>0</mn></mtd><mtd><mn>.42</mn></mtd><mtd><mn>0</mn></mtd></mtr></mtable><mo>]</mo></mrow></math> nor a new random vector is the ticket start.</p></article>
+            <article class="calculation"><h3>2. Iterative pruning compounds</h3><p>In a simplified equal-rate example, remove 20% of all current survivors each round, starting from 100,000 weights.</p><div class="math-display" role="math" aria-label="Iterative pruning calculation"><math display="block"><mtable columnalign="right center left" rowspacing="0.65em" columnspacing=".55em"><mtr><mtd><mtext>Round 1</mtext></mtd><mtd><mo>:</mo></mtd><mtd><mrow><mn>100000</mn><mo>×</mo><mn>.8</mn><mo>=</mo><mn>80000</mn></mrow></mtd></mtr><mtr><mtd><mtext>Round 2</mtext></mtd><mtd><mo>:</mo></mtd><mtd><mrow><mn>80000</mn><mo>×</mo><mn>.8</mn><mo>=</mo><mn>64000</mn></mrow></mtd></mtr><mtr><mtd><mtext>Round 3</mtext></mtd><mtd><mo>:</mo></mtd><mtd><mrow><mn>64000</mn><mo>×</mo><mn>.8</mn><mo>=</mo><mn>51200</mn></mrow></mtd></mtr><mtr><mtd><mtext>General</mtext></mtd><mtd><mo>:</mo></mtd><mtd><mrow><msub><mi>P</mi><mi>k</mi></msub><mo>=</mo><msup><mrow><mo>(</mo><mn>1</mn><mo>−</mo><mi>p</mi><mo>)</mo></mrow><mi>k</mi></msup></mrow></mtd></mtr></mtable></math></div><p class="answer-box"><strong>Result.</strong> Three 20% rounds leave 51.2%, not 40%. The paper’s Lenet labels differ slightly because it prunes the small output layer at half the rate of other layers.</p></article>
+            <article class="calculation gradient"><h3>3. A masked SGD update</h3><p>Continue from the rewound ticket. Let <math class="math-inline-native" aria-label="g equals row vector negative point four zero, point three zero, point one zero, negative point two zero"><mrow><mi>g</mi><mo>=</mo><mo>[</mo><mtable columnspacing=".45em"><mtr><mtd><mo>−</mo><mn>.40</mn></mtd><mtd><mn>.30</mn></mtd><mtd><mn>.10</mn></mtd><mtd><mo>−</mo><mn>.20</mn></mtd></mtr></mtable><mo>]</mo></mrow></math> and <math class="math-inline-native" aria-label="eta equals point one zero"><mrow><mi>η</mi><mo>=</mo><mn>.10</mn></mrow></math>.</p><div class="math-display" role="math" aria-label="Masked stochastic gradient descent derivation"><math class="derivation" display="block"><mtable columnalign="right center left" rowspacing="0.75em" columnspacing=".6em"><mtr><mtd><mrow><mi>m</mi><mo>⊙</mo><mi>g</mi></mrow></mtd><mtd><mo>=</mo></mtd><mtd><mrow><mo>[</mo><mtable columnspacing=".45em"><mtr><mtd><mo>−</mo><mn>.40</mn></mtd><mtd><mn>0</mn></mtd><mtd><mn>.10</mn></mtd><mtd><mn>0</mn></mtd></mtr></mtable><mo>]</mo></mrow></mtd></mtr><mtr><mtd><mrow><mo>(</mo><mi>m</mi><mo>⊙</mo><mi>θ</mi><mo>)</mo><mo>−</mo><mi>η</mi><mo>(</mo><mi>m</mi><mo>⊙</mo><mi>g</mi><mo>)</mo></mrow></mtd><mtd><mo>=</mo></mtd><mtd><mrow><mo>[</mo><mtable columnspacing=".45em"><mtr><mtd><mn>.20</mn></mtd><mtd><mn>0</mn></mtd><mtd><mn>.30</mn></mtd><mtd><mn>0</mn></mtd></mtr></mtable><mo>]</mo><mo>−</mo><mn>.10</mn><mo>[</mo><mtable columnspacing=".45em"><mtr><mtd><mo>−</mo><mn>.40</mn></mtd><mtd><mn>0</mn></mtd><mtd><mn>.10</mn></mtd><mtd><mn>0</mn></mtd></mtr></mtable><mo>]</mo></mrow></mtd></mtr><mtr><mtd></mtd><mtd><mo>=</mo></mtd><mtd><mrow><mo>[</mo><mtable columnspacing=".45em"><mtr><mtd><mn>.24</mn></mtd><mtd><mn>0</mn></mtd><mtd><mn>.29</mn></mtd><mtd><mn>0</mn></mtd></mtr></mtable><mo>]</mo></mrow></mtd></mtr></mtable></math></div><p class="answer-box"><strong>Result.</strong> Coordinates 2 and 4 remain zero; only survivors move. This is the conceptual SGD rule. A masked optimizer must likewise prevent pruned coordinates—or stale optimizer state—from making them reappear.</p></article>
+          </div>
+          <div class="prose"><h3>One-shot versus iterative discovery</h3><p><strong>One-shot pruning</strong> trains once, removes the target percentage, rewinds once, and tests the subnetwork. It is cheaper to discover. <strong>Iterative magnitude pruning</strong> repeats train → prune a smaller fraction → rewind, producing nested masks <math class="math-inline-native" aria-label="m zero contains m one contains m two and so on"><mrow><msub><mi>m</mi><mn>0</mn></msub><mo>⊇</mo><msub><mi>m</mi><mn>1</mn></msub><mo>⊇</mo><msub><mi>m</mi><mn>2</mn></msub><mo>⋯</mo></mrow></math>. The paper focuses on the iterative version because it found smaller winning tickets, while explicitly noting the repeated-training cost.</p><p>Magnitude therefore has two jobs at different times: after a training round it ranks coordinates for removal; during the next round the resulting mask becomes a hard structural constraint.</p></div>
+        </section>
+        <section aria-labelledby="evidence-title">
+          <p class="section-mark">Original evidence · 39–49 min</p><h2 id="evidence-title">Figure 3 separates useful pruning from too much pruning.</h2>
+          <fieldset class="prediction"><legend>Predict before reading the curves: which comparison best isolates the role of the original initialization?</legend><label><input type="radio" name="evidence-prediction"> Same mask, matching <span class="math-inline">θ₀</span> versus the same mask, fresh <span class="math-inline">θ′₀</span></label><label><input type="radio" name="evidence-prediction"> Dense architecture versus a different random sparse mask</label><label><input type="radio" name="evidence-prediction"> One optimizer versus another optimizer</label><details class="answer-details"><summary>Reveal the answer</summary><p><strong>Answer: hold the mask fixed and replace only its initialization.</strong> Then a difference in the reported curves can be attributed to that initialization intervention within this experimental setup. This does not prove that initialization is the only factor in every architecture or training regime.</p></details></fieldset>
+          <figure><p class="figure-kind">Original paper figure</p><div class="source-figure source-scroll" tabindex="0" aria-label="Scrollable original Figure 3"><img src="original_figure_3_training_curves.png" width="1667" height="510" alt="Original Figure 3 with three Lenet test-accuracy plots. The left panel compares 100, 51.3, and 21.1 percent of weights remaining; 21.1 percent rises fastest. The middle adds 7.0, 3.6, and 1.9 percent, showing that excessive pruning slows learning. The right compares matching original initialization with random reinitialization at 51.3 and 21.1 percent, where reinitialized networks rise more slowly."></div><figcaption><strong>Frankle and Carbin, Figure 3, paper p. 4.</strong> Lenet test accuracy during iterative pruning, averaged over five trials. Labels are <span class="math-inline">P<sub>m</sub></span>, the percentage of weights remaining; error bars show the minimum and maximum trial. On a narrow screen, scroll horizontally to keep labels sharp. <a href="the_lottery_ticket_hypothesis.pdf#page=4">Open the source page in the local PDF.</a></figcaption></figure>
+          <div class="panel-guide" aria-label="How to read the three panels"><article><h3>Left · useful pruning</h3><p>The 51.3%- and 21.1%-remaining tickets rise sooner than the dense 100% run; 21.1% is fastest among these curves.</p></article><article><h3>Middle · turning point</h3><p>Below 21.1%, further pruning slows learning. At 3.6%, the paper reports a return to roughly the dense network’s learning speed; 1.9% is worse.</p></article><article><h3>Right · initialization control</h3><p>At the same 51.3% and 21.1% masks, fresh random values rise more slowly than matching original values, especially at 21.1%.</p></article></div>
+          <div class="prose"><p><strong>What the figure supports.</strong> In this Lenet/MNIST setup, moderate iterative pruning uncovers subnetworks that learn faster, and keeping the mask while randomizing surviving values erases much of that advantage. This supports the importance of the mask–initialization pairing.</p><p><strong>What the figure does not support.</strong> It does not show that sparsity monotonically helps, that every sparse mask is trainable, or that random reinitialization always fails. It also does not make ticket discovery cheap: the mask was found using repeated dense or masked training rounds.</p></div>
+          <div class="table-scroll" tabindex="0" aria-label="Scrollable evidence scope table"><table class="evidence-table"><caption>Evidence beyond the displayed curves</caption><thead><tr><th scope="col">Paper result</th><th scope="col">Exact scope</th><th scope="col">Careful interpretation</th></tr></thead><tbody><tr><td>At about 21% remaining, the Lenet ticket reached minimum validation loss 2.51× faster and was 0.5 percentage point more accurate than its random reinitialization.</td><td>Lenet-300-100 on MNIST with the paper’s iterative-pruning and Adam setup.</td><td>The same discovered topology benefited from its matching original coordinates in this setting.</td></tr><tr><td>The abstract reports winning tickets below 10–20% of original size.</td><td>Several fully connected and convolutional feed-forward architectures on MNIST and CIFAR-10.</td><td>Broad empirical evidence inside the tested vision settings, not a universal theorem.</td></tr><tr><td>Deeper VGG-19 and ResNet-18 experiments required lower learning rates or warmup to expose strong tickets.</td><td>CIFAR-10, stated schedules, global convolutional pruning, and selected hyperparameters.</td><td>The discovery method is coupled to optimization; failure to find a ticket is not proof that none exists.</td></tr></tbody></table></div>
+        </section>
+        <section aria-labelledby="diagnostics-title">
+          <p class="section-mark">Scope, limits, misconceptions · 49–53 min</p><h2 id="diagnostics-title">Existence is clearer than efficient discovery.</h2>
+          <div class="scope-grid"><article class="scope-card"><h3>What is established</h3><p>Iterative magnitude pruning can expose sparse subnetworks whose original initialization lets them match the dense model’s speed and accuracy in the reported experiments.</p></article><article class="scope-card limit"><h3>Small vision settings</h3><p>The study covers MNIST and CIFAR-10, not ImageNet or language models. Architecture, data, optimizer, and schedule define the scope.</p></article><article class="scope-card limit"><h3>Expensive search</h3><p>The authors note that iterative pruning can require training a network 15 or more times consecutively for multiple trials. Smaller retraining does not imply a cheaper end-to-end pipeline.</p></article><article class="scope-card limit"><h3>Unstructured sparsity</h3><p>Removing scalar weights lowers parameter count, but the irregular pattern was not optimized for contemporary libraries or hardware. Parameter sparsity is not automatically wall-clock speedup.</p></article><article class="scope-card limit"><h3>One discovery family</h3><p>The paper uses magnitude-based unstructured pruning. It does not show that this heuristic finds the smallest ticket or that final magnitude causally measures each weight’s usefulness.</p></article><article class="scope-card limit"><h3>Optimization sensitivity</h3><p>For VGG-19 and ResNet-18, finding tickets depended on learning rate and warmup. The intervention is coupled to the training recipe.</p></article></div>
+          <h3>Misconception checks</h3>
+          <details><summary>Is a final pruned model automatically a winning ticket?</summary><p><strong>No.</strong> A conventional pruned model usually keeps <span class="math-inline">m ⊙ θ<sub>T</sub></span>. A ticket must be reset to <span class="math-inline">m ⊙ θ₀</span> and retrained successfully.</p></details>
+          <details><summary>Does the mask alone explain the reported performance?</summary><p><strong>No.</strong> Random reinitialization keeps the mask and changes its starting values; it generally performs worse in the reported settings. Ticket identity is the topology paired with matching original coordinates.</p></details>
+          <details><summary>Were winning weights already close to their final solution?</summary><p><strong>The appendix evidence points the other way.</strong> Winning-ticket weights tended to move farther than other weights. Magnitude pruning may bias which changing weights survive, so this is not a complete mechanism.</p></details>
+          <details><summary>Is random reinitialization the same as random sparsity?</summary><p><strong>No.</strong> Random reinitialization preserves the discovered mask and resamples its values. Random sparsity also changes which connections exist; the interventions answer different questions.</p></details>
+          <details><summary>Is dropout already a lottery-ticket search?</summary><p><strong>No.</strong> Dropout samples temporary masks during training. A ticket is one fixed, discovered mask paired with a specific initialization. The paper finds complementary behavior with dropout but does not equate the methods.</p></details>
+          <details><summary>Does “90% sparse” mean P<sub>m</sub>=90%?</summary><p><strong>No.</strong> In ordinary language, 90% sparse often means 90% zeros, so 10% remains. In the paper’s plots, <span class="math-inline">P<sub>m</sub></span> is percentage remaining: <span class="math-inline">P<sub>m</sub>=10%</span> corresponds to 90% pruned.</p></details>
+        </section>
+        <section aria-labelledby="recall-title">
+          <p class="section-mark">Active recall · 53–57 min</p><h2 id="recall-title">Answer aloud, then open the key.</h2>
+          <details><summary>What two objects define the paper’s winning ticket?</summary><p><strong>Answer:</strong> a binary connectivity mask and the matching surviving coordinates from the original initialization <span class="math-inline">θ₀</span>.</p></details>
+          <details><summary>If the ticket starts at θ₀, what is θ<sub>T</sub> used for?</summary><p><strong>Answer:</strong> trained magnitudes in <span class="math-inline">θ<sub>T</sub></span> rank coordinates for pruning and thereby discover the mask.</p></details>
+          <details><summary>Why is <span class="math-inline">m ⊙ θ<sub>T</sub></span> a different experiment?</summary><p><strong>Answer:</strong> it retains learned values and fine-tunes a compressed model; it does not test whether the originally initialized sparse subnetwork can learn alone.</p></details>
+          <details><summary>After four equal rounds that each prune 20% of survivors, what percentage remains?</summary><p><strong>Answer:</strong> <math class="math-inline-native" aria-label="point eight to the fourth power equals point four zero nine six"><mrow><msup><mn>.8</mn><mn>4</mn></msup><mo>=</mo><mn>.4096</mn></mrow></math>, so 40.96% remains.</p></details>
+          <details><summary>With <math class="math-inline-native" aria-label="m equals row vector one zero one"><mrow><mi>m</mi><mo>=</mo><mo>[</mo><mtable columnspacing=".4em"><mtr><mtd><mn>1</mn></mtd><mtd><mn>0</mn></mtd><mtd><mn>1</mn></mtd></mtr></mtable><mo>]</mo></mrow></math> and <math class="math-inline-native" aria-label="g equals row vector point two, negative point seven, point four"><mrow><mi>g</mi><mo>=</mo><mo>[</mo><mtable columnspacing=".4em"><mtr><mtd><mn>.2</mn></mtd><mtd><mo>−</mo><mn>.7</mn></mtd><mtd><mn>.4</mn></mtd></mtr></mtable><mo>]</mo></mrow></math>, which gradient reaches the update?</summary><p><strong>Answer:</strong> <math class="math-inline-native" aria-label="m elementwise multiplied by g equals row vector point two, zero, point four"><mrow><mi>m</mi><mo>⊙</mo><mi>g</mi><mo>=</mo><mo>[</mo><mtable columnspacing=".4em"><mtr><mtd><mn>.2</mn></mtd><mtd><mn>0</mn></mtd><mtd><mn>.4</mn></mtd></mtr></mtable><mo>]</mo></mrow></math>. The second coordinate remains absent.</p></details>
+          <details><summary>What is Figure 3’s important non-monotonic pattern?</summary><p><strong>Answer:</strong> moderate pruning accelerates the displayed winning tickets, but excessive pruning reverses the benefit and slows learning.</p></details>
+          <details><summary>What practical cost is hidden by “small trainable network”?</summary><p><strong>Answer:</strong> finding the network may require dense training plus many iterative train–prune–rewind rounds; discovery can cost more than one sparse run.</p></details>
+        </section>
+        <section aria-labelledby="map-title">
+          <p class="section-mark">Connect it to your mental map · 57–59 min</p><h2 id="map-title">Place tickets between architecture, optimization, and compression.</h2>
+          <div class="map-grid"><article class="map-card"><h3>Dropout</h3><p>Both use masks. Dropout resamples temporary masks as regularization; a ticket is one fixed mask discovered with training evidence and paired with exact initial values.</p></article><article class="map-card"><h3>Adam and SGD</h3><p>The mask decides which coordinates exist. The optimizer decides how active coordinates move. The paper finds tickets across optimizers, but the accessible sparsity range depends on the recipe.</p></article><article class="map-card"><h3>ResNet</h3><p>Residual architecture deliberately supplies identity paths. The ticket view asks which scalar paths inside an overparameterized network were sufficient; the ResNet-18 result also exposes warmup sensitivity.</p></article><article class="map-card"><h3>Knowledge distillation</h3><p>Distillation trains a smaller student to imitate a teacher’s behavior. Ticket pruning searches inside the original parameterization for a sparse subnetwork; it does not transfer soft targets to a separate student.</p></article></div>
+          <aside class="callout"><p><strong>Compression-reading habit.</strong> Separate four facts: when topology was chosen, which values survivors use, whether the sparse model retrains from the start, and whether discovery cost is included.</p></aside>
+        </section>
+        <section class="takeaway" aria-labelledby="takeaway-title"><p class="section-mark">Takeaway · 59–60 min</p><h2 id="takeaway-title">A sparse network is not only a shape.</h2><p>Dense training can act as a search over subnetworks. Magnitude pruning reveals a candidate route; rewinding restores that route’s original coordinates; retraining tests whether the paired mask and initialization could learn alone. Remember the ticket as <strong>where the connections are + what those exact connections started as</strong>—and keep discovery cost separate from training or inference cost.</p></section>
+      </main>
+    </div>
+    <footer><h2>Source and further exploration</h2><ul><li><a href="the_lottery_ticket_hypothesis.pdf">Original paper PDF</a></li><li><a href="https://arxiv.org/abs/1803.03635">Canonical arXiv record</a> — Jonathan Frankle and Michael Carbin</li><li><a href="https://openreview.net/forum?id=rJl-b3RcF7">ICLR 2019 conference record</a></li></ul></footer>
+  </div>
+  <script>
+    (() => {
+      const theta0 = [0.41, -0.02, 0.76, 0.15, -0.33, 0.08, 0.52, -0.11];
+      const thetaT = [1.20, 0.01, 0.55, 0.08, -0.42, 0.03, 0.61, -0.05];
+      const order = thetaT.map((value, index) => ({ index, magnitude: Math.abs(value) })).sort((a, b) => a.magnitude - b.magnitude).map(item => item.index);
+      const slider = document.querySelector('#prune-count');
+      const sliderOutput = document.querySelector('#prune-output');
+      const readout = document.querySelector('#mask-readout');
+      const modeButton = document.querySelector('#value-mode');
+      const summary = document.querySelector('#mask-summary');
+      let resetMode = false;
+      function format(value) { if (value === 0) return '0'; return `${value < 0 ? '−' : ''}${Math.abs(value).toFixed(2)}`; }
+      function renderMask() {
+        const pruneCount = Number(slider.value);
+        const cut = new Set(order.slice(0, pruneCount));
+        sliderOutput.textContent = `${pruneCount} of 8`;
+        readout.replaceChildren();
+        thetaT.forEach((trained, index) => {
+          const pruned = cut.has(index);
+          const value = pruned ? 0 : (resetMode ? theta0[index] : trained);
+          const cell = document.createElement('div');
+          cell.className = `weight-cell${pruned ? ' pruned' : ''}`;
+          cell.innerHTML = `<span class="index">w${index + 1}</span><strong class="value">${format(value)}</strong><span class="mask">m=${pruned ? 0 : 1}</span>`;
+          readout.append(cell);
+        });
+        const survivors = 8 - pruneCount;
+        summary.textContent = `${survivors} of 8 coordinates remain (${(survivors / 8 * 100).toFixed(1)}%). Values shown: ${resetMode ? 'matching original θ₀ coordinates' : 'trained θT coordinates used to rank the mask'}.`;
+        modeButton.textContent = resetMode ? 'Show trained values from θT' : 'Show reset values from θ₀';
+        modeButton.setAttribute('aria-pressed', String(resetMode));
+      }
+      slider.addEventListener('input', renderMask);
+      modeButton.addEventListener('click', () => { resetMode = !resetMode; renderMask(); });
+      document.querySelectorAll('[data-ticket-answer]').forEach(button => {
+        button.addEventListener('click', () => {
+          document.querySelectorAll('[data-ticket-answer]').forEach(choice => choice.setAttribute('aria-pressed', 'false'));
+          button.setAttribute('aria-pressed', 'true');
+          document.querySelector('#ticket-answer').textContent = button.dataset.ticketAnswer;
+        });
+      });
+      renderMask();
+    })();
+  </script>
+</body>
+</html>

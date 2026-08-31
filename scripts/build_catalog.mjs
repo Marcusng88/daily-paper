@@ -1,0 +1,57 @@
+import fs from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+
+const scriptDir = path.dirname(fileURLToPath(import.meta.url));
+const root = path.resolve(scriptDir, "..");
+const curriculum = JSON.parse(fs.readFileSync(path.join(root, "curriculum.json"), "utf8"));
+
+const presentation = {
+  "denoising-diffusion-probabilistic-models": ["generative", "Generative modeling", "Ho, Jain & Abbeel", "NeurIPS 2020"],
+  "distilling-the-knowledge-in-a-neural-network": ["compression", "Model compression", "Hinton, Vinyals & Dean", "NeurIPS Workshop 2015"],
+  "simclr-contrastive-learning": ["self-supervised", "Self-supervised learning", "Chen et al.", "ICML 2020"],
+  "semi-supervised-classification-with-graph-convolutional-networks": ["graphs", "Graph machine learning", "Kipf & Welling", "ICLR 2017"],
+  "the-lottery-ticket-hypothesis": ["efficient", "Efficient ML", "Frankle & Carbin", "ICLR 2019"],
+  "auto-encoding-variational-bayes": ["generative", "Generative modeling", "Kingma & Welling", "ICLR 2014"],
+  "dropout-a-simple-way-to-prevent-neural-networks-from-overfitting": ["regularization", "Regularization", "Srivastava et al.", "JMLR 2014"],
+  "direct-preference-optimization": ["post-training", "Post-training", "Rafailov et al.", "NeurIPS 2023"],
+  "adam-a-method-for-stochastic-optimization": ["optimization", "Optimization", "Kingma & Ba", "ICLR 2015"],
+  "batch-normalization": ["normalization", "Normalization", "Ioffe & Szegedy", "ICML 2015"],
+  "generative-adversarial-nets": ["generative", "Generative modeling", "Goodfellow et al.", "NeurIPS 2014"],
+  "attention-is-all-you-need": ["language", "Language modeling", "Vaswani et al.", "NeurIPS 2017"],
+  "deep-residual-learning-for-image-recognition": ["vision", "Computer vision", "He et al.", "CVPR 2016"],
+  "human-level-control-through-deep-reinforcement-learning": ["reinforcement", "Reinforcement learning", "Mnih et al.", "Nature 2015"]
+};
+
+const catalog = curriculum.completed_lessons.map(lesson => {
+  const display = presentation[lesson.slug];
+  if (!display) throw new Error(`No catalog presentation mapping for ${lesson.slug}`);
+  const [topic, topicLabel, authors, venue] = display;
+  const areas = (lesson.areas || []).filter(Boolean);
+  const concepts = (lesson.concepts_introduced || []).filter(Boolean);
+  const tokens = [lesson.title, lesson.slug, authors, venue, topic, topicLabel, lesson.description,
+    lesson.domain, lesson.mental_map_connection, lesson.canonical_url, ...areas, ...concepts]
+    .filter(Boolean).join(" ").toLowerCase();
+  return {
+    date: lesson.date,
+    slug: lesson.slug,
+    topic,
+    topicLabel,
+    title: lesson.title,
+    description: lesson.description,
+    authors,
+    venue,
+    paperFile: lesson.paper_file,
+    lessonFile: lesson.lesson_file,
+    canonicalUrl: lesson.canonical_url,
+    domain: lesson.domain || null,
+    areas,
+    concepts,
+    mentalMapConnection: lesson.mental_map_connection || null,
+    search: tokens
+  };
+});
+
+const content = `/* Generated from curriculum.json by scripts/build_catalog.mjs. */\nwindow.DAILY_PAPER_CATALOG = ${JSON.stringify(catalog, null, 2)};\n`;
+fs.writeFileSync(path.join(root, "catalog.js"), content, "utf8");
+console.log(`Wrote ${catalog.length} lessons to catalog.js`);

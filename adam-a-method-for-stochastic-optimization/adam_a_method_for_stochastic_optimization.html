@@ -1,0 +1,389 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="A one-hour active lesson on Adam, adaptive moment estimation, bias correction, and coordinate-wise optimization.">
+<title>Adam: Learning to Step on Uneven Ground</title>
+<style>
+:root{
+  --ink:#172226;
+  --muted:#5d635f;
+  --paper:#f2f1eb;
+  --sheet:#fbfaf5;
+  --rule:#cbc8bc;
+  --direction:#275d73;
+  --direction-pale:#e6f0f3;
+  --scale:#984b2f;
+  --scale-pale:#f4e9e2;
+  --terrain:#657153;
+  --terrain-pale:#e9ece2;
+  --focus:#bd7200;
+  --display:Palatino,"Palatino Linotype","Book Antiqua",serif;
+  --body:Charter,"Bitstream Charter",Georgia,serif;
+  --utility:"Avenir Next",Avenir,"Helvetica Neue",Arial,sans-serif;
+  --mono:"SFMono-Regular",Consolas,"Liberation Mono",monospace;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--paper);color:var(--ink);font:18px/1.68 var(--body)}
+a{color:var(--direction);text-decoration-thickness:1px;text-underline-offset:.18em}
+a:hover{color:var(--scale)}
+a:focus-visible,button:focus-visible,input:focus-visible,summary:focus-visible,.source-image-scroll:focus-visible{outline:3px solid var(--focus);outline-offset:4px}
+.page{width:min(1120px,calc(100% - 40px));margin:0 auto;padding:26px 0 76px}
+.home{display:inline-block;font:700 .72rem/1 var(--utility);letter-spacing:.09em;text-transform:uppercase}
+.hero{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(360px,.95fr);gap:clamp(32px,6vw,76px);align-items:center;padding:66px 0 52px}
+.eyebrow,.section-no,.label{font:700 .69rem/1.35 var(--utility);letter-spacing:.11em;text-transform:uppercase}
+.eyebrow{color:var(--scale);margin:0 0 18px}
+h1,h2,h3{font-family:var(--display);line-height:1.08;font-weight:600}
+h1{font-size:clamp(3rem,7.7vw,6.3rem);letter-spacing:-.055em;margin:0;max-width:760px}
+h1 em{color:var(--direction);font-weight:500}
+.dek{font-size:clamp(1.12rem,2.3vw,1.42rem);line-height:1.48;max-width:680px;margin:25px 0 20px;color:#394246}
+.byline{font-size:.88rem;line-height:1.5;color:var(--muted);max-width:690px}
+.hero-figure{margin:0}
+.hero-figure svg{display:block;width:100%;height:auto}
+.hero-figure figcaption{margin-top:12px;font-size:.78rem;color:var(--muted)}
+.cap-label{color:var(--terrain);font:700 .68rem/1 var(--utility);letter-spacing:.08em;text-transform:uppercase;margin-right:.55em}
+.route{display:grid;grid-template-columns:repeat(4,1fr);border-block:1px solid var(--rule);margin:10px 0 0}
+.route div{padding:18px 20px 19px;border-right:1px solid var(--rule)}
+.route div:last-child{border-right:0}
+.route b{display:block;color:var(--scale);font:700 .7rem/1.35 var(--utility);letter-spacing:.08em;text-transform:uppercase;margin-bottom:5px}
+.route span{font-size:.87rem;line-height:1.38;color:#424b4d}
+main{padding-top:24px}
+.lesson-section{display:grid;grid-template-columns:145px minmax(0,1fr);gap:clamp(24px,5vw,70px);padding:72px 0;border-bottom:1px solid var(--rule)}
+.section-no{color:var(--terrain);padding-top:9px}
+.section-body{min-width:0;max-width:830px}
+h2{font-size:clamp(2rem,4.4vw,3.45rem);letter-spacing:-.025em;margin:0 0 26px}
+h3{font-size:1.38rem;margin:34px 0 12px}
+p{margin:0 0 1.1em}
+.lead{font-size:1.18rem;line-height:1.56;color:#364044}
+.analogy{margin:28px 0;padding:20px 0 20px 24px;border-left:4px solid var(--terrain);background:linear-gradient(90deg,var(--terrain-pale),transparent 70%)}
+.analogy strong,.note strong{color:var(--terrain)}
+.equation{overflow-x:auto;margin:22px 0;padding:17px 20px;background:#202b2f;color:#f7f5ec;border-left:5px solid var(--direction)}
+math{font-family:"STIX Two Math","Cambria Math","Latin Modern Math",serif;color:inherit}
+math *{color:inherit}
+math[display="block"]{display:block;width:max-content;max-width:none;margin:.25rem auto;font-size:1.08rem}
+.inline-math{font-size:1em;vertical-align:-.18em}
+.math-scroll{max-width:100%;overflow-x:auto;padding:.35rem 0}
+.arithmetic .math-scroll{padding:.2rem .1rem}
+.arithmetic math[display="block"]{margin:.1rem 0;font-size:1rem}
+.step-pair{display:grid;grid-template-columns:1fr 1fr;gap:22px;margin:24px 0}
+.step{background:var(--sheet);border-top:3px solid var(--rule);padding:20px}
+.step.bad{border-color:var(--scale)}
+.step.cautious{border-color:var(--terrain)}
+.step .label{color:var(--muted)}
+.step p:last-child{margin-bottom:0}
+.symbol-table,.trace-table,.evidence-table,.instrument-table{width:100%;border-collapse:collapse;margin:25px 0;font-size:.92rem}
+.table-scroll{overflow-x:auto;max-width:100%}
+th,td{text-align:left;vertical-align:top;padding:11px 13px;border-bottom:1px solid var(--rule)}
+th{color:var(--muted);font:700 .68rem/1.35 var(--utility);letter-spacing:.07em;text-transform:uppercase}
+td code{white-space:nowrap}
+code{font-family:var(--mono);font-size:.88em;background:#e8e8e1;padding:.08em .28em}
+.shape{font:700 .75rem/1.25 var(--mono);color:var(--direction)}
+.mechanism-figure{margin:34px 0;background:var(--sheet);border-block:1px solid var(--rule);padding:28px}
+.mechanism{display:grid;grid-template-columns:135px 35px 1fr 150px;gap:14px;align-items:stretch}
+.mechanism-node{display:flex;flex-direction:column;justify-content:center;min-height:112px;padding:15px;border:1px solid var(--rule)}
+.mechanism-node strong{font-family:var(--display);font-size:1.12rem}
+.mechanism-node small{display:block;color:var(--muted);line-height:1.4;margin-top:6px}
+.mechanism-node.input{background:var(--terrain-pale);border-color:var(--terrain)}
+.mechanism-node.m{background:var(--direction-pale);border-color:var(--direction)}
+.mechanism-node.v{background:var(--scale-pale);border-color:var(--scale)}
+.mechanism-node.output{background:#232e31;color:#fff;border-color:#232e31}
+.mechanism-node.output small{color:#d6dddc}
+.mechanism-arrow{font:700 1.2rem/1 var(--utility);align-self:center;color:var(--muted);text-align:center}
+.mechanism-branches{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.mechanism-figure figcaption,.source-figure figcaption,.instrument figcaption{font-size:.86rem;line-height:1.55;color:var(--muted);margin-top:15px}
+.note{margin:25px 0;padding:18px 20px;background:var(--terrain-pale);border-left:4px solid var(--terrain)}
+.trace{margin:34px 0 46px}
+.trace-title{display:flex;align-items:baseline;gap:12px;padding-bottom:10px;border-bottom:2px solid var(--ink)}
+.trace-title .label{color:var(--scale)}
+.trace-title h3{margin:0}
+.arithmetic{display:grid;grid-template-columns:84px minmax(0,1fr);border-bottom:1px solid var(--rule);padding:13px 0;gap:18px}
+.arithmetic b{font:.78rem/1.4 var(--mono);color:var(--direction)}
+.arithmetic div{min-width:0}
+.arithmetic p{margin:0 0 5px}
+.arithmetic p:last-child{margin-bottom:0}
+.result-line{color:#27393f;font-weight:700}
+.instrument{margin:30px 0;background:var(--sheet);border:1px solid var(--rule)}
+.instrument-head{display:grid;grid-template-columns:1.08fr .92fr;gap:24px;padding:26px 28px;border-bottom:1px solid var(--rule)}
+.instrument-head h3{margin:3px 0 10px}
+.controls{display:grid;gap:18px;align-content:center}
+.control label{display:flex;justify-content:space-between;gap:18px;color:var(--muted);font:700 .76rem/1.4 var(--utility);letter-spacing:.04em;text-transform:uppercase}
+.control output{color:var(--scale);font-family:var(--mono)}
+input[type="range"]{display:block;width:100%;max-width:100%;accent-color:var(--direction);margin:8px 0 0}
+.terrain-stage{padding:18px 28px 4px}
+.terrain-stage svg{display:block;width:100%;height:auto;max-height:360px}
+.arrow-key{display:flex;gap:22px;flex-wrap:wrap;margin:4px 0 2px;font:700 .75rem/1.3 var(--utility);color:var(--muted)}
+.arrow-key span::before{content:"";display:inline-block;width:27px;border-top:4px solid;margin:0 8px 3px 0}
+.arrow-key .raw::before{border-color:#7b817d}.arrow-key .adam::before{border-color:var(--direction)}
+.instrument-readout{padding:0 28px 26px}
+.instrument-table{margin:18px 0 12px}
+.status{margin:0;padding:13px 15px;background:var(--direction-pale);border-left:4px solid var(--direction);font-size:.91rem}
+details{border-top:1px solid var(--rule);padding:14px 0;margin:0}
+summary{cursor:pointer;font-weight:700}
+details p,details ol{margin:11px 0 2px}
+.prediction{margin:28px 0;border-block:2px solid var(--ink);padding:18px 0}
+.prediction summary{font-family:var(--display);font-size:1.22rem}
+.source-figure{margin:32px 0}
+.source-figure img{display:block;width:100%;height:auto;background:#fff}
+.source-image-scroll{max-width:100%}
+.scroll-hint{display:none;color:var(--muted);font:700 .72rem/1.4 var(--utility);letter-spacing:.04em}
+.reading-steps{counter-reset:read;display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin:26px 0}
+.reading-step{counter-increment:read;border-top:3px solid var(--rule);padding-top:13px}
+.reading-step::before{content:counter(read);display:block;color:var(--scale);font:700 .75rem/1 var(--mono);margin-bottom:7px}
+.reading-step strong{display:block;font-family:var(--display);font-size:1.08rem;margin-bottom:4px}
+.reading-step p{font-size:.91rem;line-height:1.53;margin:0}
+.scope{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin:28px 0}
+.scope section{padding:20px;border-top:3px solid var(--rule);background:var(--sheet)}
+.scope h3{font-size:1.2rem;margin:0 0 9px}
+.scope p{margin:0}
+.misconceptions details,.recall details{background:var(--sheet);padding:15px 18px;border:1px solid var(--rule);margin:10px 0}
+.recall{counter-reset:q}
+.recall details{counter-increment:q}
+.recall summary::before{content:"Q" counter(q) " · ";color:var(--scale);font:700 .72rem/1 var(--utility);letter-spacing:.06em}
+.map-grid{display:grid;grid-template-columns:150px minmax(0,1fr);gap:0 24px;margin:28px 0}
+.map-grid dt,.map-grid dd{padding:13px 0;border-bottom:1px solid var(--rule)}
+.map-grid dt{font:700 .76rem/1.45 var(--utility);letter-spacing:.05em;text-transform:uppercase;color:var(--direction)}
+.map-grid dd{margin:0}
+.takeaway{margin-top:36px;padding:30px;border:1px solid var(--ink);background:#1d292d;color:#f6f4eb}
+.takeaway h2{font-size:2.15rem;color:#b9d5de;margin-bottom:14px}
+.takeaway p{font-size:1.12rem;margin:0}
+.sources{padding:42px 0 10px}
+.sources h2{font-size:1.65rem;margin:0 0 14px}
+.sources ul{padding-left:1.25rem;margin:0}
+.sources li{margin:.45rem 0;color:var(--muted)}
+@media(max-width:820px){
+  .hero{grid-template-columns:1fr;padding:48px 0 38px}.hero-figure{max-width:600px}
+  .route{grid-template-columns:1fr 1fr}.route div:nth-child(2){border-right:0}.route div:nth-child(-n+2){border-bottom:1px solid var(--rule)}
+  .lesson-section{grid-template-columns:1fr;gap:10px;padding:55px 0}.section-no{padding:0}
+  .mechanism{grid-template-columns:1fr}.mechanism-arrow{transform:rotate(90deg)}
+  .mechanism-branches{grid-template-columns:1fr 1fr}
+  .instrument-head{grid-template-columns:1fr}.reading-steps{grid-template-columns:1fr}.scope{grid-template-columns:1fr}
+}
+@media(max-width:560px){
+  body{font-size:17px}.page{width:min(100% - 28px,1120px);padding-top:20px}
+  h1{font-size:clamp(2.8rem,16vw,4.5rem)}.route{grid-template-columns:1fr}.route div{border-right:0;border-bottom:1px solid var(--rule)!important}.route div:last-child{border-bottom:0!important}
+  .step-pair,.mechanism-branches{grid-template-columns:1fr}.mechanism-figure{padding:20px 16px}
+  .arithmetic{grid-template-columns:1fr;gap:4px}.instrument-head,.terrain-stage,.instrument-readout{padding-left:17px;padding-right:17px}
+  .instrument-table{font-size:.74rem;table-layout:fixed}.instrument-table th,.instrument-table td{padding:8px 4px}.instrument-table th:first-child{width:30%}
+  .map-grid{grid-template-columns:1fr}.map-grid dt{padding-bottom:2px;border-bottom:0}.map-grid dd{padding-top:2px}
+  .takeaway{padding:23px 20px}.source-figure figcaption{font-size:.82rem}
+  .source-image-scroll{overflow-x:auto;scrollbar-color:var(--terrain) var(--paper)}.source-image-scroll img{width:760px;max-width:none}.scroll-hint{display:block;margin:8px 0 0}
+}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<div class="page">
+<a class="home" href="../index.html">&larr; Daily AI Paper Lab</a>
+
+<header class="hero">
+  <div>
+    <p class="eyebrow">Optimization field lesson · 60 minutes</p>
+    <h1>Learning to step on <em>uneven ground</em></h1>
+    <p class="dek">Adam gives every parameter two memories: one for where gradients have pointed, and one for how large they have been. Their ratio turns one global learning rate into coordinate-wise steps.</p>
+    <p class="byline"><cite>Adam: A Method for Stochastic Optimization</cite> · Diederik P. Kingma and Jimmy Lei Ba · ICLR 2015</p>
+  </div>
+  <figure class="hero-figure">
+    <svg viewBox="0 0 620 440" role="img" aria-labelledby="hero-title hero-desc">
+      <title id="hero-title">Two optimization routes through a narrow valley</title>
+      <desc id="hero-desc">Tall narrow contour lines surround a minimum. A gray stochastic-gradient route bounces from side to side, while a blue Adam route advances with smaller sideways oscillations.</desc>
+      <defs>
+        <marker id="hero-gray-arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0L8 4L0 8z" fill="#7b817d"/></marker>
+        <marker id="hero-blue-arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0L8 4L0 8z" fill="#275d73"/></marker>
+      </defs>
+      <rect width="620" height="440" fill="#fbfaf5"/>
+      <g fill="none" stroke="#9ca38f" stroke-width="1.6">
+        <ellipse cx="315" cy="224" rx="252" ry="188" transform="rotate(-8 315 224)"/>
+        <ellipse cx="315" cy="224" rx="205" ry="151" transform="rotate(-8 315 224)"/>
+        <ellipse cx="315" cy="224" rx="158" ry="114" transform="rotate(-8 315 224)"/>
+        <ellipse cx="315" cy="224" rx="111" ry="78" transform="rotate(-8 315 224)"/>
+        <ellipse cx="315" cy="224" rx="63" ry="43" transform="rotate(-8 315 224)"/>
+      </g>
+      <circle cx="315" cy="224" r="6" fill="#657153"/>
+      <path d="M115 70 L486 111 L139 151 L464 184 L178 211 L419 228 L231 235 L364 229 L315 224" fill="none" stroke="#7b817d" stroke-width="3" stroke-dasharray="7 7" marker-end="url(#hero-gray-arrow)"/>
+      <path d="M115 70 C195 92 222 137 247 160 C270 184 270 209 315 224" fill="none" stroke="#275d73" stroke-width="5" marker-end="url(#hero-blue-arrow)"/>
+      <g font-family="Avenir Next,Arial,sans-serif" font-size="15" font-weight="700">
+        <text x="462" y="87" fill="#686f6b">SGD: one scale</text>
+        <text x="122" y="112" fill="#275d73">Adam: calibrated coordinates</text>
+        <text x="329" y="246" fill="#657153">minimum</text>
+      </g>
+    </svg>
+    <figcaption><span class="cap-label">Lesson diagram</span>A conceptual contour map: raw gradients can make one global step length awkward on a narrow valley; Adam rescales coordinates using gradient history.</figcaption>
+  </figure>
+</header>
+
+<nav class="route" aria-label="One-hour study route">
+  <div><b>0-12 min</b><span>Meet the uneven terrain and watch one-rate SGD fail.</span></div>
+  <div><b>12-28 min</b><span>Name the symbols, build the two memories, correct their start.</span></div>
+  <div><b>28-45 min</b><span>Work two update traces, then test the coordinate instrument.</span></div>
+  <div><b>45-60 min</b><span>Read the paper's evidence, challenge the claims, recall, connect.</span></div>
+</nav>
+
+<main>
+<section class="lesson-section" aria-labelledby="problem-title">
+  <div class="section-no">01 · The problem</div>
+  <div class="section-body">
+    <h2 id="problem-title">One step size meets a warped landscape</h2>
+    <p class="lead">A gradient is a local arrow: it points uphill, so an optimizer moves against it. The learning rate decides the length of that move. Plain SGD uses the same length rule for every parameter—even when the surface is steep in one coordinate and shallow in another.</p>
+    <div class="analogy"><strong>Intuition bridge.</strong> Imagine descending a foggy mountain while feeling the slope only under each boot. On a narrow ridge, an east-west tilt may be one hundred times stronger than the north-south tilt. A stride safe in the steep direction barely moves you along the gentle one; a stride useful along the gentle one can throw you across the ridge.</div>
+
+    <h3>A failed baseline, with numbers</h3>
+    <p>Use the two-dimensional bowl <math class="inline-math" aria-label="L of x comma y equals one half times the quantity 100 x squared plus y squared"><mrow><mi>L</mi><mo>(</mo><mi>x</mi><mo>,</mo><mi>y</mi><mo>)</mo><mo>=</mo><mfrac><mn>1</mn><mn>2</mn></mfrac><mo>(</mo><mn>100</mn><msup><mi>x</mi><mn>2</mn></msup><mo>+</mo><msup><mi>y</mi><mn>2</mn></msup><mo>)</mo></mrow></math>. Its gradient is <math class="inline-math" aria-label="gradient of L equals the row vector 100 x comma y"><mrow><mo>∇</mo><mi>L</mi><mo>=</mo><mo>[</mo><mtable><mtr><mtd><mn>100</mn><mi>x</mi></mtd><mtd><mi>y</mi></mtd></mtr></mtable><mo>]</mo></mrow></math>. At <code>θ₀=(1,1)</code>, the two coordinates report gradients on very different scales.</p>
+    <div class="step-pair">
+      <div class="step bad"><span class="label">Useful for y, unstable for x</span><p><math class="inline-math" aria-label="alpha equals 0.02"><mrow><mi>α</mi><mo>=</mo><mn>0.02</mn></mrow></math> gives <math class="inline-math" aria-label="theta one equals the row vector negative 1 comma 0.98"><mrow><msub><mi>θ</mi><mn>1</mn></msub><mo>=</mo><mo>(</mo><mtable><mtr><mtd><mo>−</mo><mn>1</mn></mtd><mtd><mn>0.98</mn></mtd></mtr></mtable><mo>)</mo></mrow></math>.</p><p>The next x-gradient changes from +100 to −100, so x returns to +1. It ping-pongs while y crawls.</p></div>
+      <div class="step cautious"><span class="label">Safe for x, slow for y</span><p><math class="inline-math" aria-label="alpha equals 0.005"><mrow><mi>α</mi><mo>=</mo><mn>0.005</mn></mrow></math> gives <math class="inline-math" aria-label="theta one equals the row vector 0.5 comma 0.995"><mrow><msub><mi>θ</mi><mn>1</mn></msub><mo>=</mo><mo>(</mo><mtable><mtr><mtd><mn>0.5</mn></mtd><mtd><mn>0.995</mn></mtd></mtr></mtable><mo>)</mo></mrow></math>.</p><p>The steep coordinate behaves, but the shallow coordinate moves only 0.005 toward zero.</p></div>
+    </div>
+    <p>This toy does not prove Adam wins on every loss. It isolates the design pressure: <strong>a useful optimizer should remember direction while calibrating scale separately for each coordinate.</strong></p>
+  </div>
+</section>
+
+<section class="lesson-section" aria-labelledby="ingredients-title">
+  <div class="section-no">02 · Ingredients</div>
+  <div class="section-body">
+    <h2 id="ingredients-title">Name every symbol before combining them</h2>
+    <p>Let a model have <code>d</code> trainable numbers. Adam stores two extra numbers beside each one. Every vector below has the same shape as the parameter vector; the decay rates and base step size are scalars.</p>
+    <div class="table-scroll"><table class="symbol-table"><thead><tr><th>Symbol and shape</th><th>Job</th><th>Plain-language reading</th></tr></thead><tbody>
+      <tr><td><math class="inline-math" aria-label="theta t is in R to the d"><mrow><msub><mi>θ</mi><mi>t</mi></msub><mo>∈</mo><msup><mi>ℝ</mi><mi>d</mi></msup></mrow></math><br><span class="shape">d coordinates</span></td><td>Current parameters</td><td>The location we are changing.</td></tr>
+      <tr><td><math class="inline-math" aria-label="g t is in R to the d"><mrow><msub><mi>g</mi><mi>t</mi></msub><mo>∈</mo><msup><mi>ℝ</mi><mi>d</mi></msup></mrow></math><br><span class="shape">same as θ</span></td><td>Stochastic gradient</td><td>Today's noisy local slope, often from one minibatch.</td></tr>
+      <tr><td><math class="inline-math" aria-label="m t is in R to the d"><mrow><msub><mi>m</mi><mi>t</mi></msub><mo>∈</mo><msup><mi>ℝ</mi><mi>d</mi></msup></mrow></math><br><span class="shape">same as θ</span></td><td>First-moment estimate</td><td>A signed direction memory; opposite signs can cancel.</td></tr>
+      <tr><td><math class="inline-math" aria-label="v t is in R to the d"><mrow><msub><mi>v</mi><mi>t</mi></msub><mo>∈</mo><msup><mi>ℝ</mi><mi>d</mi></msup></mrow></math><br><span class="shape">same as θ</span></td><td>Second raw-moment estimate</td><td>A squared scale memory; signs disappear before averaging.</td></tr>
+      <tr><td><math class="inline-math" aria-label="beta one and beta two are in the interval zero inclusive to one exclusive"><mrow><msub><mi>β</mi><mn>1</mn></msub><mo>,</mo><msub><mi>β</mi><mn>2</mn></msub><mo>∈</mo><mo>[</mo><mn>0</mn><mo>,</mo><mn>1</mn><mo>)</mo></mrow></math><br><span class="shape">scalars</span></td><td>Memory decay rates</td><td>How slowly the direction and scale ledgers forget.</td></tr>
+      <tr><td><math class="inline-math" aria-label="alpha and epsilon"><mrow><mi>α</mi><mo>,</mo><mi>ε</mi></mrow></math><br><span class="shape">scalars</span></td><td>Base step and stabilizer</td><td><math class="inline-math" aria-label="alpha"><mi>α</mi></math> sets the overall scale; <math class="inline-math" aria-label="epsilon"><mi>ε</mi></math> prevents an unstable division near zero.</td></tr>
+    </tbody></table></div>
+
+    <figure class="mechanism-figure">
+      <div class="mechanism" role="img" aria-label="A current gradient branches into a signed first-moment memory and a squared second raw-moment memory. Both are bias corrected, then combined in a coordinate-wise parameter update.">
+        <div class="mechanism-node input"><strong>gradient gₜ</strong><small>one noisy slope per coordinate</small></div><div class="mechanism-arrow" aria-hidden="true">→</div>
+        <div class="mechanism-branches"><div class="mechanism-node m"><strong>direction mₜ</strong><small>EMA of signed gradients</small></div><div class="mechanism-node v"><strong>scale vₜ</strong><small>EMA of squared gradients</small></div></div>
+        <div class="mechanism-node output"><strong>Δθₜ</strong><small><math class="inline-math" aria-label="negative alpha times m hat t divided by square root of v hat t plus epsilon"><mrow><mo>−</mo><mi>α</mi><mo>·</mo><mfrac><msub><mover><mi>m</mi><mo>^</mo></mover><mi>t</mi></msub><mrow><msqrt><msub><mover><mi>v</mi><mo>^</mo></mover><mi>t</mi></msub></msqrt><mo>+</mo><mi>ε</mi></mrow></mfrac></mrow></math>, coordinate by coordinate</small></div>
+      </div>
+      <figcaption><span class="cap-label">Lesson diagram</span>The numerator asks “which way has this coordinate tended to point?” The denominator asks “how large has this coordinate tended to be?” Adam is a diagonal historical rescaling, not a full curvature model.</figcaption>
+    </figure>
+  </div>
+</section>
+
+<section class="lesson-section" aria-labelledby="mechanism-title">
+  <div class="section-no">03 · Mechanism</div><div class="section-body">
+    <h2 id="mechanism-title">Two memories, then one calibrated step</h2>
+    <p class="lead">Adam combines momentum-like direction memory with RMS-style scale memory. The causal chain matters: observe a gradient, update both ledgers, repair their zero-start bias, then divide.</p>
+    <div class="equation">
+      <math display="block" aria-label="Adam first moment, second raw moment, bias corrections, and parameter update equations">
+        <mtable columnalign="right center left" rowspacing=".7em">
+          <mtr><mtd><msub><mi>m</mi><mi>t</mi></msub></mtd><mtd><mo>=</mo></mtd><mtd><mstyle mathcolor="#a7d8e6"><mrow><msub><mi>β</mi><mn>1</mn></msub><msub><mi>m</mi><mrow><mi>t</mi><mo>−</mo><mn>1</mn></mrow></msub><mo>+</mo><mo>(</mo><mn>1</mn><mo>−</mo><msub><mi>β</mi><mn>1</mn></msub><mo>)</mo><msub><mi>g</mi><mi>t</mi></msub></mrow></mstyle></mtd></mtr>
+          <mtr><mtd><msub><mi>v</mi><mi>t</mi></msub></mtd><mtd><mo>=</mo></mtd><mtd><mstyle mathcolor="#efb69a"><mrow><msub><mi>β</mi><mn>2</mn></msub><msub><mi>v</mi><mrow><mi>t</mi><mo>−</mo><mn>1</mn></mrow></msub><mo>+</mo><mo>(</mo><mn>1</mn><mo>−</mo><msub><mi>β</mi><mn>2</mn></msub><mo>)</mo><msubsup><mi>g</mi><mi>t</mi><mn>2</mn></msubsup></mrow></mstyle></mtd></mtr>
+          <mtr><mtd><msub><mover><mi>m</mi><mo>^</mo></mover><mi>t</mi></msub></mtd><mtd><mo>=</mo></mtd><mtd><mfrac><msub><mi>m</mi><mi>t</mi></msub><mrow><mn>1</mn><mo>−</mo><msubsup><mi>β</mi><mn>1</mn><mi>t</mi></msubsup></mrow></mfrac></mtd></mtr>
+          <mtr><mtd><msub><mover><mi>v</mi><mo>^</mo></mover><mi>t</mi></msub></mtd><mtd><mo>=</mo></mtd><mtd><mfrac><msub><mi>v</mi><mi>t</mi></msub><mrow><mn>1</mn><mo>−</mo><msubsup><mi>β</mi><mn>2</mn><mi>t</mi></msubsup></mrow></mfrac></mtd></mtr>
+          <mtr><mtd><msub><mi>θ</mi><mi>t</mi></msub></mtd><mtd><mo>=</mo></mtd><mtd><mrow><msub><mi>θ</mi><mrow><mi>t</mi><mo>−</mo><mn>1</mn></mrow></msub><mo>−</mo><mi>α</mi><mo>·</mo><mfrac><msub><mover><mi>m</mi><mo>^</mo></mover><mi>t</mi></msub><mrow><msqrt><msub><mover><mi>v</mi><mo>^</mo></mover><mi>t</mi></msub></msqrt><mo>+</mo><mi>ε</mi></mrow></mfrac></mrow></mtd></mtr>
+        </mtable>
+      </math>
+    </div>
+    <p>All products, squares, square roots, and divisions involving vectors are elementwise. No matrix inverse appears; coordinate <code>i</code> uses only the history stored for coordinate <code>i</code>.</p>
+    <h3>Why the hats are necessary</h3>
+    <p>Both memories begin at zero. If the mean gradient stayed at <math class="inline-math" aria-label="mu"><mi>μ</mi></math>, then the expected first ledger after <math class="inline-math" aria-label="t"><mi>t</mi></math> steps would be <math class="inline-math" aria-label="one minus beta one to the t times mu"><mrow><mo>(</mo><mn>1</mn><mo>−</mo><msubsup><mi>β</mi><mn>1</mn><mi>t</mi></msubsup><mo>)</mo><mi>μ</mi></mrow></math>, not <math class="inline-math" aria-label="mu"><mi>μ</mi></math>. Dividing by <math class="inline-math" aria-label="one minus beta one to the t"><mrow><mn>1</mn><mo>−</mo><msubsup><mi>β</mi><mn>1</mn><mi>t</mi></msubsup></mrow></math> removes that initialization shrinkage; the same logic applies to the second raw moment.</p>
+    <div class="note"><strong>Default settings in Algorithm 1.</strong> For the tested problems, the paper gives <code>α=0.001</code>, <code>β₁=0.9</code>, <code>β₂=0.999</code>, and <code>ε=10⁻⁸</code> as good defaults. “Good defaults” is an empirical starting point, not a universal optimum.</div>
+  </div>
+</section>
+
+<section class="lesson-section" aria-labelledby="traces-title"><div class="section-no">04 · Work it</div><div class="section-body">
+  <h2 id="traces-title">Two update traces, fully opened</h2>
+  <p>Use the paper's default decay rates, <code>α=0.001</code>, and <code>m₀=v₀=0</code>. We omit <code>ε</code> only where every denominator is safely nonzero, so the arithmetic exposes the mechanism.</p>
+  <article class="trace"><div class="trace-title"><span class="label">Worked trace A</span><h3>One coordinate meets a reversal</h3></div>
+    <p>The gradient is <code>+4</code> at step 1 and <code>−2</code> at step 2. Will one opposing observation instantly reverse the update?</p>
+    <div class="arithmetic"><b>t = 1</b><div class="math-scroll"><math display="block" aria-label="First Adam update for gradient plus four"><mtable columnalign="right center left" rowspacing=".55em">
+      <mtr><mtd><msub><mi>m</mi><mn>1</mn></msub></mtd><mtd><mo>=</mo></mtd><mtd><mrow><mn>0.9</mn><mo>(</mo><mn>0</mn><mo>)</mo><mo>+</mo><mn>0.1</mn><mo>(</mo><mn>4</mn><mo>)</mo><mo>=</mo><mn>0.4</mn></mrow></mtd></mtr>
+      <mtr><mtd><msub><mi>v</mi><mn>1</mn></msub></mtd><mtd><mo>=</mo></mtd><mtd><mrow><mn>0.999</mn><mo>(</mo><mn>0</mn><mo>)</mo><mo>+</mo><mn>0.001</mn><mo>(</mo><msup><mn>4</mn><mn>2</mn></msup><mo>)</mo><mo>=</mo><mn>0.016</mn></mrow></mtd></mtr>
+      <mtr><mtd><msub><mover><mi>m</mi><mo>^</mo></mover><mn>1</mn></msub></mtd><mtd><mo>=</mo></mtd><mtd><mrow><mfrac><mn>0.4</mn><mn>0.1</mn></mfrac><mo>=</mo><mn>4</mn></mrow></mtd></mtr>
+      <mtr><mtd><msub><mover><mi>v</mi><mo>^</mo></mover><mn>1</mn></msub></mtd><mtd><mo>=</mo></mtd><mtd><mrow><mfrac><mn>0.016</mn><mn>0.001</mn></mfrac><mo>=</mo><mn>16</mn></mrow></mtd></mtr>
+      <mtr><mtd><msub><mi>Δθ</mi><mn>1</mn></msub></mtd><mtd><mo>=</mo></mtd><mtd><mstyle mathcolor="#275d73"><mrow><mo>−</mo><mn>0.001</mn><mo>·</mo><mfrac><mn>4</mn><msqrt><mn>16</mn></msqrt></mfrac><mo>=</mo><mo>−</mo><mn>0.001</mn></mrow></mstyle></mtd></mtr>
+    </mtable></math></div></div>
+    <div class="arithmetic"><b>t = 2</b><div class="math-scroll"><math display="block" aria-label="Second Adam update after the gradient reverses to negative two"><mtable columnalign="right center left" rowspacing=".55em">
+      <mtr><mtd><msub><mi>m</mi><mn>2</mn></msub></mtd><mtd><mo>=</mo></mtd><mtd><mrow><mn>0.9</mn><mo>(</mo><mn>0.4</mn><mo>)</mo><mo>+</mo><mn>0.1</mn><mo>(</mo><mo>−</mo><mn>2</mn><mo>)</mo><mo>=</mo><mn>0.16</mn></mrow></mtd></mtr>
+      <mtr><mtd><msub><mi>v</mi><mn>2</mn></msub></mtd><mtd><mo>=</mo></mtd><mtd><mrow><mn>0.999</mn><mo>(</mo><mn>0.016</mn><mo>)</mo><mo>+</mo><mn>0.001</mn><msup><mrow><mo>(</mo><mo>−</mo><mn>2</mn><mo>)</mo></mrow><mn>2</mn></msup><mo>=</mo><mn>0.019984</mn></mrow></mtd></mtr>
+      <mtr><mtd><msub><mover><mi>m</mi><mo>^</mo></mover><mn>2</mn></msub></mtd><mtd><mo>=</mo></mtd><mtd><mrow><mfrac><mn>0.16</mn><mrow><mn>1</mn><mo>−</mo><msup><mn>0.9</mn><mn>2</mn></msup></mrow></mfrac><mo>=</mo><mn>0.842</mn></mrow></mtd></mtr>
+      <mtr><mtd><msub><mover><mi>v</mi><mo>^</mo></mover><mn>2</mn></msub></mtd><mtd><mo>=</mo></mtd><mtd><mrow><mfrac><mn>0.019984</mn><mrow><mn>1</mn><mo>−</mo><msup><mn>0.999</mn><mn>2</mn></msup></mrow></mfrac><mo>=</mo><mn>9.997</mn></mrow></mtd></mtr>
+      <mtr><mtd><msub><mi>Δθ</mi><mn>2</mn></msub></mtd><mtd><mo>≈</mo></mtd><mtd><mstyle mathcolor="#275d73"><mrow><mo>−</mo><mn>0.001</mn><mo>·</mo><mfrac><mn>0.842</mn><msqrt><mn>9.997</mn></msqrt></mfrac><mo>=</mo><mo>−</mo><mn>0.000266</mn></mrow></mstyle></mtd></mtr>
+    </mtable></math></div></div>
+    <p>The new gradient is negative, but the signed history remains positive. Adam therefore continues in the earlier descent direction with a much smaller update. Momentum is doing exactly what it was designed to do: resist one noisy reversal.</p>
+  </article>
+  <article class="trace"><div class="trace-title"><span class="label">Worked trace B</span><h3>Two coordinates carry different histories</h3></div>
+    <p>Now let <math class="inline-math" aria-label="g one equals row vector 10 comma 0.1"><mrow><msub><mi>g</mi><mn>1</mn></msub><mo>=</mo><mo>[</mo><mtable><mtr><mtd><mn>10</mn></mtd><mtd><mn>0.1</mn></mtd></mtr></mtable><mo>]</mo></mrow></math> and <math class="inline-math" aria-label="g two equals row vector negative 2 comma 0.1"><mrow><msub><mi>g</mi><mn>2</mn></msub><mo>=</mo><mo>[</mo><mtable><mtr><mtd><mo>−</mo><mn>2</mn></mtd><mtd><mn>0.1</mn></mtd></mtr></mtable><mo>]</mo></mrow></math>. The first coordinate starts one hundred times larger and then reverses; the second stays small and consistent.</p>
+    <div class="arithmetic"><b>t = 1</b><div class="math-scroll"><math display="block" aria-label="First two-coordinate Adam update"><mtable columnalign="right center left" rowspacing=".7em">
+      <mtr><mtd><msub><mi>m</mi><mn>1</mn></msub></mtd><mtd><mo>=</mo></mtd><mtd><mrow><mo>[</mo><mtable><mtr><mtd><mn>1</mn></mtd></mtr><mtr><mtd><mn>0.01</mn></mtd></mtr></mtable><mo>]</mo></mrow></mtd></mtr>
+      <mtr><mtd><msub><mi>v</mi><mn>1</mn></msub></mtd><mtd><mo>=</mo></mtd><mtd><mrow><mo>[</mo><mtable><mtr><mtd><mn>0.1</mn></mtd></mtr><mtr><mtd><mn>0.00001</mn></mtd></mtr></mtable><mo>]</mo></mrow></mtd></mtr>
+      <mtr><mtd><msub><mover><mi>m</mi><mo>^</mo></mover><mn>1</mn></msub></mtd><mtd><mo>=</mo></mtd><mtd><mrow><mo>[</mo><mtable><mtr><mtd><mn>10</mn></mtd></mtr><mtr><mtd><mn>0.1</mn></mtd></mtr></mtable><mo>]</mo></mrow></mtd></mtr>
+      <mtr><mtd><msub><mover><mi>v</mi><mo>^</mo></mover><mn>1</mn></msub></mtd><mtd><mo>=</mo></mtd><mtd><mrow><mo>[</mo><mtable><mtr><mtd><mn>100</mn></mtd></mtr><mtr><mtd><mn>0.01</mn></mtd></mtr></mtable><mo>]</mo></mrow></mtd></mtr>
+      <mtr><mtd><msub><mi>Δθ</mi><mn>1</mn></msub></mtd><mtd><mo>=</mo></mtd><mtd><mstyle mathcolor="#275d73"><mrow><mo>−</mo><mn>0.001</mn><mo>·</mo><mo>[</mo><mtable><mtr><mtd><mfrac><mn>10</mn><mn>10</mn></mfrac></mtd></mtr><mtr><mtd><mfrac><mn>0.1</mn><mn>0.1</mn></mfrac></mtd></mtr></mtable><mo>]</mo><mo>=</mo><mo>[</mo><mtable><mtr><mtd><mo>−</mo><mn>0.001</mn></mtd></mtr><mtr><mtd><mo>−</mo><mn>0.001</mn></mtd></mtr></mtable><mo>]</mo></mrow></mstyle></mtd></mtr>
+    </mtable></math></div></div>
+    <div class="arithmetic"><b>t = 2</b><div class="math-scroll"><math display="block" aria-label="Second two-coordinate Adam update after the x gradient reverses"><mtable columnalign="right center left" rowspacing=".7em">
+      <mtr><mtd><msub><mi>m</mi><mn>2</mn></msub></mtd><mtd><mo>=</mo></mtd><mtd><mrow><mo>[</mo><mtable><mtr><mtd><mn>0.7</mn></mtd></mtr><mtr><mtd><mn>0.019</mn></mtd></mtr></mtable><mo>]</mo></mrow></mtd></mtr>
+      <mtr><mtd><msub><mi>v</mi><mn>2</mn></msub></mtd><mtd><mo>=</mo></mtd><mtd><mrow><mo>[</mo><mtable><mtr><mtd><mn>0.1039</mn></mtd></mtr><mtr><mtd><mn>0.00001999</mn></mtd></mtr></mtable><mo>]</mo></mrow></mtd></mtr>
+      <mtr><mtd><msub><mover><mi>m</mi><mo>^</mo></mover><mn>2</mn></msub></mtd><mtd><mo>=</mo></mtd><mtd><mrow><mo>[</mo><mtable><mtr><mtd><mn>3.684</mn></mtd></mtr><mtr><mtd><mn>0.100</mn></mtd></mtr></mtable><mo>]</mo></mrow></mtd></mtr>
+      <mtr><mtd><msub><mover><mi>v</mi><mo>^</mo></mover><mn>2</mn></msub></mtd><mtd><mo>=</mo></mtd><mtd><mrow><mo>[</mo><mtable><mtr><mtd><mn>51.976</mn></mtd></mtr><mtr><mtd><mn>0.010</mn></mtd></mtr></mtable><mo>]</mo></mrow></mtd></mtr>
+      <mtr><mtd><mfrac><msub><mover><mi>m</mi><mo>^</mo></mover><mn>2</mn></msub><msqrt><msub><mover><mi>v</mi><mo>^</mo></mover><mn>2</mn></msub></msqrt></mfrac></mtd><mtd><mo>=</mo></mtd><mtd><mrow><mo>[</mo><mtable><mtr><mtd><mn>0.511</mn></mtd></mtr><mtr><mtd><mn>1.000</mn></mtd></mtr></mtable><mo>]</mo></mrow></mtd></mtr>
+      <mtr><mtd><msub><mi>Δθ</mi><mn>2</mn></msub></mtd><mtd><mo>≈</mo></mtd><mtd><mstyle mathcolor="#275d73"><mrow><mo>[</mo><mtable><mtr><mtd><mo>−</mo><mn>0.000511</mn></mtd></mtr><mtr><mtd><mo>−</mo><mn>0.001000</mn></mtd></mtr></mtable><mo>]</mo></mrow></mstyle></mtd></mtr>
+    </mtable></math></div></div>
+    <p>At the first step, scale cancels: both nonzero positive coordinates move by about <code>α</code>. At the second, the large coordinate's reversal weakens its signed memory while its scale memory remains high, so it receives about half a base step. The small consistent coordinate receives a full one.</p>
+  </article>
+</div></section>
+
+<section class="lesson-section" aria-labelledby="instrument-title"><div class="section-no">05 · Instrument</div><div class="section-body">
+  <h2 id="instrument-title">Change the second gradient before revealing the answer</h2>
+  <p>The first observation is fixed at <math class="inline-math" aria-label="g one equals row vector 10 comma 0.1"><mrow><msub><mi>g</mi><mn>1</mn></msub><mo>=</mo><mo>[</mo><mtable><mtr><mtd><mn>10</mn></mtd><mtd><mn>0.1</mn></mtd></mtr></mtable><mo>]</mo></mrow></math>. Predict what happens after <math class="inline-math" aria-label="g two equals row vector negative 2 comma 0.1"><mrow><msub><mi>g</mi><mn>2</mn></msub><mo>=</mo><mo>[</mo><mtable><mtr><mtd><mo>−</mo><mn>2</mn></mtd><mtd><mn>0.1</mn></mtd></mtr></mtable><mo>]</mo></mrow></math>: which coordinate receives the larger magnitude update—x, y, or neither?</p>
+  <figure class="instrument">
+    <div class="instrument-head"><div><span class="label">Coordinate-wise terrain instrument</span><h3>Feed a new gradient into both memories</h3><p>Move either slider. The gray arrow follows the newest raw gradient direction; the blue arrow follows Adam's history-aware ratio <math class="inline-math" aria-label="negative m hat two divided by square root of v hat two"><mrow><mo>−</mo><mfrac><msub><mover><mi>m</mi><mo>^</mo></mover><mn>2</mn></msub><msqrt><msub><mover><mi>v</mi><mo>^</mo></mover><mn>2</mn></msub></msqrt></mfrac></mrow></math>. Arrow lengths are normalized for a readable diagram; the table reports the actual ratio.</p></div>
+      <div class="controls"><div class="control"><label for="gx">Second x-gradient <output id="gx-out" for="gx">−2.0</output></label><input id="gx" type="range" min="-10" max="10" step="0.5" value="-2"></div><div class="control"><label for="gy">Second y-gradient <output id="gy-out" for="gy">0.10</output></label><input id="gy" type="range" min="-1" max="1" step="0.05" value="0.1"></div></div>
+    </div>
+    <div class="terrain-stage"><svg viewBox="0 0 760 330" role="img" aria-labelledby="instrument-svg-title instrument-svg-desc"><title id="instrument-svg-title">Raw-gradient and Adam updates on narrow contour lines</title><desc id="instrument-svg-desc">A narrow vertical valley contains a central starting point. A gray arrow shows the newest gradient descent direction, and a blue arrow shows Adam's direction after combining first- and second-moment histories.</desc><defs><marker id="raw-arrow" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M0 0L10 5L0 10z" fill="#7b817d"/></marker><marker id="adam-arrowhead" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M0 0L10 5L0 10z" fill="#275d73"/></marker></defs><rect width="760" height="330" fill="#fbfaf5"/><g fill="none" stroke="#a5ac99" stroke-width="1.5"><ellipse cx="380" cy="165" rx="65" ry="145"/><ellipse cx="380" cy="165" rx="105" ry="145"/><ellipse cx="380" cy="165" rx="155" ry="145"/><ellipse cx="380" cy="165" rx="215" ry="145"/></g><line x1="90" y1="165" x2="690" y2="165" stroke="#c6c8bf"/><line x1="380" y1="20" x2="380" y2="310" stroke="#c6c8bf"/><text x="695" y="160" fill="#657153" font-family="Avenir Next,Arial,sans-serif" font-size="14">steep x</text><text x="389" y="35" fill="#657153" font-family="Avenir Next,Arial,sans-serif" font-size="14">shallow y</text><circle cx="380" cy="165" r="6" fill="#172226"/><line id="raw-update" x1="380" y1="165" x2="500" y2="171" stroke="#7b817d" stroke-width="4" stroke-dasharray="8 6" marker-end="url(#raw-arrow)"/><line id="adam-update" x1="380" y1="165" x2="339" y2="245" stroke="#275d73" stroke-width="6" marker-end="url(#adam-arrowhead)"/></svg><div class="arrow-key" aria-hidden="true"><span class="raw">Newest-gradient direction</span><span class="adam">Adam history-aware direction</span></div></div>
+    <div class="instrument-readout"><div class="table-scroll"><table class="instrument-table"><thead><tr><th>Coordinate</th><th><math class="inline-math" aria-label="m hat two"><msub><mover><mi>m</mi><mo>^</mo></mover><mn>2</mn></msub></math></th><th><math class="inline-math" aria-label="square root of v hat two"><msqrt><msub><mover><mi>v</mi><mo>^</mo></mover><mn>2</mn></msub></msqrt></math></th><th><math class="inline-math" aria-label="m hat two divided by square root of v hat two"><mfrac><msub><mover><mi>m</mi><mo>^</mo></mover><mn>2</mn></msub><msqrt><msub><mover><mi>v</mi><mo>^</mo></mover><mn>2</mn></msub></msqrt></mfrac></math></th><th><math class="inline-math" aria-label="delta theta two"><msub><mi>Δθ</mi><mn>2</mn></msub></math></th></tr></thead><tbody><tr><td>x</td><td id="mx">3.684</td><td id="vx">7.209</td><td id="rx">0.511</td><td id="dx">−0.000511</td></tr><tr><td>y</td><td id="my">0.100</td><td id="vy">0.100</td><td id="ry">1.000</td><td id="dy">−0.001000</td></tr></tbody></table></div><p class="status" id="instrument-status" aria-live="polite">At the default setting, y receives the larger update magnitude because its direction stayed consistent while x reversed against a large scale history.</p><figcaption><span class="cap-label">Lesson diagram</span>Static reading at the default: after <math class="inline-math" aria-label="row vector 10 comma 0.1"><mrow><mo>[</mo><mtable><mtr><mtd><mn>10</mn></mtd><mtd><mn>0.1</mn></mtd></mtr></mtable><mo>]</mo></mrow></math> then <math class="inline-math" aria-label="row vector negative 2 comma 0.1"><mrow><mo>[</mo><mtable><mtr><mtd><mo>−</mo><mn>2</mn></mtd><mtd><mn>0.1</mn></mtd></mtr></mtable><mo>]</mo></mrow></math>, Adam takes about <math class="inline-math" aria-label="0.511 alpha"><mrow><mn>0.511</mn><mi>α</mi></mrow></math> in x and <math class="inline-math" aria-label="1.000 alpha"><mrow><mn>1.000</mn><mi>α</mi></mrow></math> in y.</figcaption></div>
+  </figure>
+  <details class="prediction"><summary>Reveal the prediction answer</summary><p><strong>y receives the larger update.</strong> The x-gradient reversed, so its signed first moment weakens, while its second-moment scale remains large. The y-gradient stayed small but consistent, so its corrected numerator and denominator still cancel to a ratio near 1.</p></details>
+</div></section>
+
+<section class="lesson-section" aria-labelledby="evidence-title"><div class="section-no">06 · Paper evidence</div><div class="section-body">
+  <h2 id="evidence-title">Read the result before naming a winner</h2>
+  <p class="lead">Figure 3 tests training cost on one CIFAR-10 convolutional network. Its two panels answer different questions: what happens in the first three passes through the data, and what happens over 45 passes?</p>
+  <figure class="source-figure"><div class="source-image-scroll" tabindex="0" role="region" aria-label="Scrollable original paper Figure 3"><img src="figure_3_cifar10_training_cost.png" width="1780" height="965" alt="Original Adam paper Figure 3. The left plot shows CIFAR-10 convolutional-network training cost for the first three epochs on a linear vertical scale. The right plot shows 45 epochs on a logarithmic vertical scale. Adam and Adam with dropout fall quickly; over 45 epochs Adam and SGD with Nesterov reach much lower training costs than AdaGrad in this experiment."></div><p class="scroll-hint">On a narrow screen, scroll the figure horizontally to read both panels.</p><figcaption><span class="cap-label">Original paper figure</span>Figure 3, PDF p. 7. CIFAR-10 with a c64-c64-c128-1000 architecture; the paper says the minibatch size is 128 and applies dropout to the input and fully connected layer for the “+dropout” runs.</figcaption></figure>
+  <div class="reading-steps" aria-label="How to read Figure 3"><div class="reading-step"><strong>Check the axes</strong><p>Horizontal position counts iterations over the entire dataset. Vertical position is training cost, not validation accuracy.</p></div><div class="reading-step"><strong>Separate the time scales</strong><p>The left panel is only 0-3 epochs with a linear y-axis. Adam and Adam+dropout make rapid early progress; that is a claim about the start.</p></div><div class="reading-step"><strong>Notice the log scale</strong><p>The right panel spans 45 epochs and powers of ten. Adam and SGD with Nesterov finish far below AdaGrad; equal vertical gaps represent multiplicative, not additive, differences.</p></div></div>
+  <p>The authors' own interpretation is careful: Adam and AdaGrad both lower cost rapidly at first, but Adam and SGD eventually converge considerably faster than AdaGrad on this CNN. Adam shows a <em>marginal</em> improvement over momentum SGD while adapting learning-rate scales across layers instead of hand-picking them.</p>
+  <div class="note"><strong>Sharp but scoped conclusion.</strong> The figure supports a training-optimization claim for this architecture, data, initialization protocol, hyperparameter search, and cost. It does not establish that Adam always generalizes better, reaches the best test accuracy, or beats every later optimizer.</div>
+</div></section>
+
+<section class="lesson-section" aria-labelledby="limits-title"><div class="section-no">07 · Boundaries</div><div class="section-body">
+  <h2 id="limits-title">What Adam buys—and what it cannot know</h2>
+  <div class="scope"><section><h3>What the mechanism buys</h3><p>First-order computation, two state vectors, coordinate-wise scaling, resistance to isolated sign changes, and a correction for zero-initialized moving averages.</p></section><section><h3>What remains outside it</h3><p>Full cross-coordinate curvature, the best global schedule, validation performance, and guarantees for arbitrary non-convex neural-network objectives.</p></section></div>
+  <p>The paper's convergence analysis is framed in online convex optimization under bounded-gradient, bounded-distance, learning-rate-decay, and first-moment-decay assumptions. The CNN experiment is non-convex empirical evidence; it is not covered by that convex guarantee.</p>
+  <p>The paper also reports a revealing weakness in this CNN experiment: after a few epochs, its second-moment estimate becomes very small and <code>ε</code> dominates, so <code>v̂</code> is a poor approximation to the cost geometry. The authors attribute more of the speed-up there to the first moment reducing minibatch variance.</p>
+  <h3>Misconception checks</h3>
+  <div class="misconceptions"><details><summary>“vₜ is the variance of the gradients.”</summary><p>No. It is an exponential average of <em>uncentered squared gradients</em>—a second raw moment. Adam does not subtract the mean before squaring.</p></details><details><summary>“Bias correction fixes biased minibatch gradients.”</summary><p>No. It corrects the predictable shrinkage of moment estimates caused by initializing their exponential averages at zero.</p></details><details><summary>“Adam learns the Hessian.”</summary><p>No. Its denominator is one historical scale per coordinate. It cannot represent rotations or interactions between coordinates as a full Hessian could.</p></details><details><summary>“Gradient-scale invariance is exact even when ε matters.”</summary><p>No. Rescaling <code>g</code> rescales <code>m̂</code> by the same factor and <code>v̂</code> by its square, so they cancel when <code>ε</code> is negligible. A fixed <code>ε</code> breaks exact cancellation near zero.</p></details><details><summary>“The defaults are laws.”</summary><p>No. Algorithm 1 calls them good defaults for the tested machine-learning problems. Data, architecture, regularization, schedule, and objective can change the useful settings.</p></details></div>
+</div></section>
+
+<section class="lesson-section" aria-labelledby="recall-title"><div class="section-no">08 · Active recall</div><div class="section-body">
+  <h2 id="recall-title">Close the loop without looking back</h2><p>Answer each aloud before opening it. Every answer should follow from the terrain, ledgers, traces, or evidence you just used.</p>
+  <div class="recall"><details><summary>Why can one learning rate be awkward in a narrow valley?</summary><p>A step large enough to move along a shallow coordinate may overshoot the steep coordinate; a step safe for the steep coordinate can make painfully slow progress along the shallow one.</p></details><details><summary>What information is kept by mₜ but destroyed by vₜ?</summary><p>The sign. <math class="inline-math" aria-label="m t"><msub><mi>m</mi><mi>t</mi></msub></math> averages signed gradients and therefore remembers direction; <math class="inline-math" aria-label="v t"><msub><mi>v</mi><mi>t</mi></msub></math> squares first and remembers scale without sign.</p></details><details><summary>Why divide by 1−βᵗ?</summary><p>A zero-initialized exponential average contains only a fraction <math class="inline-math" aria-label="one minus beta to the t"><mrow><mn>1</mn><mo>−</mo><msup><mi>β</mi><mi>t</mi></msup></mrow></math> of a stationary signal after <math class="inline-math" aria-label="t"><mi>t</mi></math> steps. The division removes that initialization shrinkage.</p></details><details><summary>At the first step, why did gradients 10 and 0.1 both produce an update near α?</summary><p>Bias correction gave <math class="inline-math" aria-label="m hat equals g"><mrow><mover><mi>m</mi><mo>^</mo></mover><mo>=</mo><mi>g</mi></mrow></math> and <math class="inline-math" aria-label="v hat equals g squared"><mrow><mover><mi>v</mi><mo>^</mo></mover><mo>=</mo><msup><mi>g</mi><mn>2</mn></msup></mrow></math>. With negligible <math class="inline-math" aria-label="epsilon"><mi>ε</mi></math>, <math class="inline-math" aria-label="g divided by square root of g squared equals g divided by absolute g"><mrow><mfrac><mi>g</mi><msqrt><msup><mi>g</mi><mn>2</mn></msup></msqrt></mfrac><mo>=</mo><mfrac><mi>g</mi><mrow><mo>|</mo><mi>g</mi><mo>|</mo></mrow></mfrac></mrow></math>, whose magnitude is 1 for each nonzero coordinate.</p></details><details><summary>Why did the x update shrink after its gradient reversed?</summary><p>The positive first-step direction still contributed to <math class="inline-math" aria-label="m hat two"><msub><mover><mi>m</mi><mo>^</mo></mover><mn>2</mn></msub></math>, while the squared large gradient still contributed strongly to <math class="inline-math" aria-label="v hat two"><msub><mover><mi>v</mi><mo>^</mo></mover><mn>2</mn></msub></math>. The numerator weakened but the denominator stayed large.</p></details><details><summary>What exactly does Figure 3 establish?</summary><p>For the displayed CIFAR-10 CNN experiment, Adam and AdaGrad both progressed rapidly at first, while Adam and momentum SGD eventually reached much lower training cost than AdaGrad. It does not establish universal test accuracy or optimizer dominance.</p></details></div>
+</div></section>
+
+<section class="lesson-section" aria-labelledby="map-title"><div class="section-no">09 · Mental map</div><div class="section-body">
+  <h2 id="map-title">Connect it to your mental map</h2><p>Adam belongs to the optimization branch: it changes <em>how parameters move</em>, not what the model computes or what the objective asks for.</p>
+  <dl class="map-grid"><dt>BatchNorm</dt><dd>BatchNorm controls activation statistics inside a network. Adam controls parameter-update scale across time. Normalized features are not normalized optimizer steps.</dd><dt>Dropout</dt><dd>Dropout injects stochastic masks to regularize a model. That makes the objective noisier; Adam consumes the resulting gradients but does not replace regularization.</dd><dt>Transformer</dt><dd>Attention defines information flow. Adam may train its weights, while the Transformer's learning-rate schedule remains a separate design choice.</dd><dt>VAE</dt><dd>The reparameterization trick makes stochastic latent-variable objectives differentiable. Those gradients still need an optimizer; Adam turns them into parameter updates.</dd><dt>DPO</dt><dd>DPO defines a preference loss. Backpropagation produces its gradients; Adam can then smooth and scale those gradients coordinate by coordinate.</dd></dl>
+  <div class="takeaway"><h2>Takeaway</h2><p><strong>Native intuition:</strong> Adam walks with two ledgers beside every parameter—signed direction above, squared scale below. Bias correction makes the empty ledgers honest at the start. Their ratio is a measured next step on uneven terrain, not a map of the whole mountain.</p></div>
+</div></section>
+</main>
+
+<footer class="sources"><h2>Source and further exploration</h2><ul><li><a href="adam_a_method_for_stochastic_optimization.pdf">Local PDF: Kingma and Ba, <cite>Adam: A Method for Stochastic Optimization</cite></a></li><li><a href="https://arxiv.org/abs/1412.6980">arXiv record and version history</a></li><li><a href="https://openreview.net/forum?id=8gmWwjFyLj">ICLR 2015 publication record</a></li></ul></footer>
+</div>
+
+<script>
+(() => {
+  const gx = document.getElementById('gx'); const gy = document.getElementById('gy');
+  const fields = {mx:document.getElementById('mx'),vx:document.getElementById('vx'),rx:document.getElementById('rx'),dx:document.getElementById('dx'),my:document.getElementById('my'),vy:document.getElementById('vy'),ry:document.getElementById('ry'),dy:document.getElementById('dy')};
+  const fmt = (n,digits=3) => (Math.abs(n)<0.0000005?0:n).toFixed(digits).replace('-','−'); const clamp=(n,lo,hi)=>Math.max(lo,Math.min(hi,n));
+  function coordinate(g,previousM,previousV){const m=.9*previousM+.1*g;const v=.999*previousV+.001*g*g;const mHat=m/(1-Math.pow(.9,2));const vHat=v/(1-Math.pow(.999,2));const rootV=Math.sqrt(vHat);const ratio=rootV===0?0:mHat/rootV;return{mHat,rootV,ratio,delta:-.001*ratio}}
+  function update(){const xg=Number(gx.value),yg=Number(gy.value),x=coordinate(xg,1,.1),y=coordinate(yg,.01,.00001);document.getElementById('gx-out').value=fmt(xg,1);document.getElementById('gy-out').value=fmt(yg,2);fields.mx.textContent=fmt(x.mHat);fields.vx.textContent=fmt(x.rootV);fields.rx.textContent=fmt(x.ratio);fields.dx.textContent=fmt(x.delta,6);fields.my.textContent=fmt(y.mHat);fields.vy.textContent=fmt(y.rootV);fields.ry.textContent=fmt(y.ratio);fields.dy.textContent=fmt(y.delta,6);
+    const rawNorm=Math.hypot(xg,yg)||1,rawScale=115,raw=document.getElementById('raw-update');raw.setAttribute('x2',(380-rawScale*xg/rawNorm).toFixed(1));raw.setAttribute('y2',(165+rawScale*yg/rawNorm).toFixed(1));const adamScale=80,adam=document.getElementById('adam-update');adam.setAttribute('x2',(380-adamScale*clamp(x.ratio,-1.45,1.45)).toFixed(1));adam.setAttribute('y2',(165+adamScale*clamp(y.ratio,-1.45,1.45)).toFixed(1));
+    const xMag=Math.abs(x.delta),yMag=Math.abs(y.delta);const relation=Math.abs(xMag-yMag)<.000005?'Both coordinates receive nearly the same update magnitude.':xMag>yMag?'x receives the larger update magnitude after combining direction and scale history.':'y receives the larger update magnitude after combining direction and scale history.';document.getElementById('instrument-status').textContent=`${relation} The reported normalized ratios are x ${fmt(x.ratio)} and y ${fmt(y.ratio)}.`}
+  gx.addEventListener('input',update);gy.addEventListener('input',update);update();
+})();
+</script>
+</body>
+</html>

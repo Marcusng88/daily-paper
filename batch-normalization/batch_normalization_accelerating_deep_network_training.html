@@ -1,0 +1,483 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="A one-hour university lesson on Batch Normalization, from moving activation distributions to training, inference, evidence, and limitations.">
+  <title>Batch Normalization - a one-hour lesson</title>
+  <style>
+    :root {
+      --ink: #20292f;
+      --muted: #606c72;
+      --paper: #f2f5f5;
+      --sheet: #fbfcfc;
+      --rule: #aeb9bc;
+      --blue: #294d73;
+      --rust: #8a4d3d;
+      --teal: #446d70;
+      --soft-blue: #e7eef2;
+      --soft-rust: #f1e9e5;
+      --focus: #b56828;
+      --display: Baskerville, "Iowan Old Style", "Palatino Linotype", Palatino, serif;
+      --body: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+      --utility: Arial, Helvetica, sans-serif;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      color: var(--ink);
+      background:
+        linear-gradient(90deg, transparent 0 46px, rgba(138,77,61,.14) 46px 47px, transparent 47px),
+        var(--paper);
+      font: 18px/1.66 var(--body);
+    }
+    a { color: var(--blue); text-underline-offset: 3px; text-decoration-thickness: 1px; }
+    a:hover { color: var(--rust); }
+    a:focus-visible, summary:focus-visible { outline: 3px solid var(--focus); outline-offset: 4px; }
+    .page { width: min(960px, calc(100% - 48px)); margin: 0 auto; padding: 28px 0 76px; }
+    .home {
+      display: inline-block;
+      margin-bottom: 58px;
+      font: 700 .72rem/1.2 var(--utility);
+      letter-spacing: .09em;
+      text-transform: uppercase;
+    }
+    .eyebrow, .label {
+      color: var(--rust);
+      font: 700 .68rem/1.3 var(--utility);
+      letter-spacing: .11em;
+      text-transform: uppercase;
+    }
+    h1, h2, h3 { font-family: var(--display); line-height: 1.12; }
+    h1 { max-width: 850px; margin: 10px 0 14px; font-size: clamp(3rem, 8vw, 5.35rem); letter-spacing: -.045em; font-weight: 600; }
+    h2 { margin: 72px 0 18px; padding-top: 13px; border-top: 1px solid var(--rule); font-size: clamp(1.8rem, 4vw, 2.45rem); letter-spacing: -.02em; }
+    h3 { margin: 34px 0 10px; font-size: 1.3rem; }
+    p { margin: 0 0 16px; }
+    .promise { max-width: 780px; margin: 0; color: #3f5059; font-size: 1.3rem; line-height: 1.48; }
+    .byline { margin: 24px 0 42px; color: var(--muted); font-size: .91rem; }
+    .route {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 0;
+      margin: 0 0 64px;
+      border-block: 1px solid var(--rule);
+    }
+    .route div { min-height: 118px; padding: 14px 12px 15px; border-right: 1px solid var(--rule); }
+    .route div:last-child { border-right: 0; }
+    .route b { display: block; margin-bottom: 8px; color: var(--blue); font: 700 .68rem/1.25 var(--utility); letter-spacing: .07em; text-transform: uppercase; }
+    .route span { display: block; font-size: .79rem; line-height: 1.4; }
+    .lead-in { font-size: 1.12rem; }
+    .callout { margin: 25px 0; padding: 16px 20px; border-left: 4px solid var(--rust); background: var(--soft-rust); }
+    .callout.blue { border-left-color: var(--blue); background: var(--soft-blue); }
+    .causal {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      margin: 28px 0;
+      border-block: 1px solid var(--rule);
+    }
+    .causal div { position: relative; padding: 18px 24px 18px 12px; font-size: .9rem; }
+    .causal div:not(:last-child)::after { content: "→"; position: absolute; right: 4px; top: 18px; color: var(--rust); font-family: var(--utility); }
+    .causal strong { display: block; color: var(--blue); font: 700 .7rem/1.3 var(--utility); letter-spacing: .06em; text-transform: uppercase; }
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; }
+    .note { padding: 17px 18px; border: 1px solid var(--rule); background: var(--sheet); }
+    .note > :last-child { margin-bottom: 0; }
+    .table-wrap, .formula, .figure-scroll { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; margin: 21px 0; font-size: .91rem; }
+    caption { margin-bottom: 10px; color: var(--muted); text-align: left; font-style: italic; }
+    th, td { padding: 10px 12px; border-bottom: 1px solid #cbd2d4; text-align: left; vertical-align: top; }
+    th { color: #49575e; font: 700 .68rem/1.25 var(--utility); letter-spacing: .07em; text-transform: uppercase; }
+    .formula {
+      margin: 23px 0;
+      padding: 18px 20px;
+      color: #f7f9f9;
+      background: #24333c;
+      font: 1rem/1.75 var(--mono);
+    }
+    .formula .step { color: #cddde4; }
+    .formula strong { color: #f1c7b9; }
+    math { font-family: "Cambria Math", "STIX Two Math", "Times New Roman", serif; }
+    math[display="block"] { display: block; width: max-content; min-width: min-content; margin: .2rem auto; }
+    math:not([display="block"]) { white-space: nowrap; vertical-align: -.08em; }
+    math mfrac { padding-inline: .12em; }
+    .formula math { color: inherit; font-size: 1.08rem; }
+    .formula mtext { color: #cddde4; font-family: var(--utility); font-size: .76em; font-weight: 700; letter-spacing: .05em; }
+    .trace-grid math { font-size: .93rem; }
+    .trace-grid > div, td { overflow-x: auto; }
+    .cell-math { font-size: .96rem; }
+    code { padding: .08em .24em; color: #263b47; background: #e4eaeb; font: .87em var(--mono); }
+    figure { margin: 32px 0; padding: 20px; border: 1px solid var(--rule); background: var(--sheet); }
+    figure img { display: block; width: 100%; height: auto; }
+    figure svg { display: block; width: 100%; height: auto; }
+    .figure-scroll svg { min-width: 670px; }
+    figcaption { margin-top: 14px; color: var(--muted); font-size: .87rem; line-height: 1.5; }
+    figcaption .label { display: block; margin-bottom: 5px; }
+    .trace { margin: 24px 0; padding: 20px; border: 1px solid var(--rule); background: var(--sheet); }
+    .trace h3 { margin-top: 0; }
+    .trace-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; background: var(--rule); border: 1px solid var(--rule); }
+    .trace-grid div { padding: 14px; background: var(--sheet); }
+    .trace-grid b { display: block; margin-bottom: 7px; color: var(--rust); font: 700 .68rem/1.2 var(--utility); letter-spacing: .06em; text-transform: uppercase; }
+    .answer, details { margin: 14px 0; border-top: 1px solid var(--rule); border-bottom: 1px solid var(--rule); background: rgba(255,255,255,.38); }
+    summary { padding: 14px 4px; cursor: pointer; color: #263f52; font-weight: 700; }
+    details p, details ul { margin: 0 18px 16px; }
+    .evidence-note { display: grid; grid-template-columns: 150px 1fr; gap: 22px; margin: 22px 0; padding: 18px 0; border-block: 1px solid var(--rule); }
+    .evidence-note strong { color: var(--rust); font: 700 .7rem/1.35 var(--utility); letter-spacing: .07em; text-transform: uppercase; }
+    .evidence-note p { margin: 0; }
+    .recall { counter-reset: recall; }
+    .recall details summary::before { counter-increment: recall; content: counter(recall) ". "; color: var(--rust); }
+    .takeaway { margin-top: 20px; padding: 25px 26px; border: 2px solid var(--blue); background: var(--soft-blue); font-size: 1.12rem; }
+    footer { margin-top: 72px; padding-top: 24px; border-top: 2px solid var(--ink); color: var(--muted); font-size: .9rem; }
+    footer h2 { margin: 0 0 13px; padding: 0; border: 0; color: var(--ink); font-size: 1.45rem; }
+    footer ul { margin: 0; padding-left: 1.2rem; }
+    footer li { margin: .42rem 0; }
+    small { color: var(--muted); }
+
+    @media (max-width: 790px) {
+      .route { grid-template-columns: repeat(3, 1fr); }
+      .route div:nth-child(3) { border-right: 0; }
+      .route div:nth-child(-n+3) { border-bottom: 1px solid var(--rule); }
+      .causal { grid-template-columns: 1fr 1fr; }
+      .causal div:nth-child(2)::after { display: none; }
+      .grid { grid-template-columns: 1fr; }
+      .trace-grid { grid-template-columns: 1fr 1fr; }
+    }
+    @media (max-width: 560px) {
+      body { font-size: 17px; background: var(--paper); }
+      .page { width: min(100% - 30px, 960px); padding-top: 22px; }
+      .home { margin-bottom: 44px; }
+      .route { grid-template-columns: 1fr 1fr; }
+      .route div:nth-child(3) { border-right: 1px solid var(--rule); }
+      .route div:nth-child(even) { border-right: 0; }
+      .route div:nth-child(-n+4) { border-bottom: 1px solid var(--rule); }
+      .causal { grid-template-columns: 1fr; }
+      .causal div { border-bottom: 1px solid #ccd3d5; }
+      .causal div:last-child { border-bottom: 0; }
+      .causal div::after { display: none; }
+      .trace-grid { grid-template-columns: 1fr; }
+      .evidence-note { grid-template-columns: 1fr; gap: 7px; }
+      figure { padding: 12px; }
+      th, td { min-width: 128px; }
+    }
+    @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <a class="home" href="../../index.html">← Daily AI Paper Lab</a>
+
+    <header>
+      <p class="eyebrow">Ioffe &amp; Szegedy · ICML 2015 · Guided study</p>
+      <h1>Batch Normalization</h1>
+      <p class="promise"><strong>Learning promise:</strong> in one hour, you will be able to explain why a deep layer sees a moving distribution, derive the BatchNorm transform, choose the correct axes, trace both training and inference numerically, and read the paper’s evidence without turning its results into a universal claim.</p>
+      <p class="byline">Batch Normalization: Accelerating Deep Network Training by Reducing Internal Covariate Shift · Sergey Ioffe and Christian Szegedy</p>
+    </header>
+
+    <nav class="route" aria-label="60-minute study route">
+      <div><b>0–8 min</b><span>Bridge from fixed input preprocessing to moving hidden activations.</span></div>
+      <div><b>8–18 min</b><span>Name the actors, axes, and shapes before using the equation.</span></div>
+      <div><b>18–30 min</b><span>Derive the measure → normalize → restore mechanism.</span></div>
+      <div><b>30–42 min</b><span>Work two traces: one training batch and one inference pass.</span></div>
+      <div><b>42–52 min</b><span>Interrogate the original figures and their experimental scope.</span></div>
+      <div><b>52–60 min</b><span>Correct misconceptions, recall the idea, and connect it forward.</span></div>
+    </nav>
+
+    <main>
+      <section aria-labelledby="bridge-heading">
+        <h2 id="bridge-heading">1. Bridge: the ruler moves while you measure</h2>
+        <p class="lead-in">Ordinary input standardization is like calibrating a ruler before an experiment. That works for raw data because the training set is fixed. A hidden layer is different: its inputs are produced by earlier layers, and those earlier layers change after every optimizer step.</p>
+
+        <figure>
+          <div class="figure-scroll">
+            <svg viewBox="0 0 820 300" role="img" aria-labelledby="moving-title moving-desc">
+              <title id="moving-title">A later layer receives a distribution that moves as earlier weights change</title>
+              <desc id="moving-desc">Three training steps show the same hidden coordinate shifting right and becoming wider. A lower row shows BatchNorm recentering and rescaling each observed mini-batch to a common coordinate frame.</desc>
+              <defs><marker id="arrow-rust" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10Z" fill="#8a4d3d"/></marker></defs>
+              <g font-family="Arial, sans-serif" fill="#20292f">
+                <text x="24" y="26" font-size="14" font-weight="700">ONE HIDDEN FEATURE ACROSS TRAINING</text>
+                <text x="58" y="64" font-size="13">step t</text><text x="324" y="64" font-size="13">step t + 1</text><text x="598" y="64" font-size="13">step t + 2</text>
+                <g stroke="#738188" stroke-width="2"><line x1="44" y1="132" x2="245" y2="132"/><line x1="309" y1="132" x2="510" y2="132"/><line x1="575" y1="132" x2="776" y2="132"/></g>
+                <g fill="#8a4d3d"><circle cx="84" cy="113" r="7"/><circle cx="113" cy="93" r="7"/><circle cx="142" cy="85" r="7"/><circle cx="171" cy="100" r="7"/><circle cx="201" cy="120" r="7"/><circle cx="349" cy="118" r="7"/><circle cx="389" cy="88" r="7"/><circle cx="429" cy="73" r="7"/><circle cx="469" cy="105" r="7"/><circle cx="601" cy="123" r="7"/><circle cx="648" cy="100" r="7"/><circle cx="700" cy="60" r="7"/><circle cx="753" cy="111" r="7"/></g>
+                <path d="M245 98H298" stroke="#8a4d3d" stroke-width="2" marker-end="url(#arrow-rust)"/><path d="M511 98H564" stroke="#8a4d3d" stroke-width="2" marker-end="url(#arrow-rust)"/>
+                <text x="24" y="184" font-size="14" font-weight="700">BATCHNORM'S LOCAL COORDINATE FRAME</text>
+                <line x1="104" y1="240" x2="716" y2="240" stroke="#294d73" stroke-width="2"/><line x1="410" y1="222" x2="410" y2="258" stroke="#294d73" stroke-width="2"/>
+                <g fill="#294d73"><circle cx="278" cy="223" r="7"/><circle cx="366" cy="207" r="7"/><circle cx="454" cy="207" r="7"/><circle cx="542" cy="223" r="7"/></g>
+                <text x="397" y="280" font-size="13">0</text><text x="258" y="280" font-size="13">−1-ish</text><text x="520" y="280" font-size="13">+1-ish</text><text x="580" y="205" font-size="13" fill="#294d73">recenter + rescale</text>
+              </g>
+            </svg>
+          </div>
+          <figcaption><span class="label">Lesson diagram</span>The raw hidden coordinate drifts because its producer is learning. BatchNorm does not freeze that producer; it repeatedly expresses the current mini-batch in a comparable local coordinate frame.</figcaption>
+        </figure>
+
+        <div class="callout"><strong>The analogy, with its limit.</strong> Think of a lab assistant who recalibrates the ruler for each tray of samples, then hands the researcher two learned knobs for the final unit and zero point. The analogy explains centering, scaling, <math aria-label="gamma"><mi>γ</mi></math>, and <math aria-label="beta"><mi>β</mi></math>. It does not mean every mini-batch represents the population perfectly; small or biased trays give noisy calibration.</div>
+      </section>
+
+      <section aria-labelledby="problem-heading">
+        <h2 id="problem-heading">2. The problem and the baseline that does not quite work</h2>
+        <p>The paper names the changing distributions of internal activations <em>internal covariate shift</em>. Its motivating concern is causal: a later sub-network keeps adapting not only to the task but also to changes in the representation emitted by earlier parameters.</p>
+        <div class="causal" aria-label="Causal chain motivating Batch Normalization">
+          <div><strong>Earlier weights update</strong>The function producing a hidden feature changes.</div><div><strong>Activation statistics move</strong>Means, variances, and nonlinear operating regions can shift.</div><div><strong>Later layers readjust</strong>Large rates or saturating nonlinearities become harder to manage.</div><div><strong>Training slows</strong>Optimization needs more careful rates and initialization.</div>
+        </div>
+        <div class="grid">
+          <div class="note"><p><strong>Baseline 1: standardize the raw dataset once.</strong></p><p>This stabilizes the network’s external input but not the hidden values created by parameters that continue to change.</p></div>
+          <div class="note"><p><strong>Baseline 2: repeatedly whiten every hidden vector.</strong></p><p>Full whitening requires covariance matrices and inverse square roots. The paper argues that doing this over the full training set after every update is expensive, and treating normalization as an external correction can make the optimizer ignore its dependence on the parameters.</p></div>
+        </div>
+        <p class="callout blue"><strong>Design requirement.</strong> The normalization must be cheap enough for stochastic mini-batches, differentiable as part of the network, and expressive enough not to erase a useful scale or offset. Those three requirements lead directly to the BN transform.</p>
+      </section>
+
+      <section aria-labelledby="actors-heading">
+        <h2 id="actors-heading">3. Name the actors, symbols, axes, and shapes</h2>
+        <p>Start with one scalar feature coordinate. A mini-batch contains <math aria-label="m"><mi>m</mi></math> observed values of that coordinate. BatchNorm repeats the same operation independently for every feature coordinate.</p>
+        <div class="table-wrap">
+          <table>
+            <caption>Symbols in Algorithm 1 of the paper</caption>
+            <thead><tr><th>Symbol</th><th>Role</th><th>Computed or learned?</th><th>Shape for D features</th></tr></thead>
+            <tbody>
+              <tr><td><math aria-label="x sub i"><msub><mi>x</mi><mi>i</mi></msub></math></td><td>Value of one feature for example <math aria-label="i"><mi>i</mi></math></td><td>Produced by the previous layer</td><td>One scalar; all features form <math aria-label="N by D"><mrow><mi>N</mi><mo>×</mo><mi>D</mi></mrow></math></td></tr>
+              <tr><td><math aria-label="mini-batch mean and variance"><mrow><msub><mi>μ</mi><mi>B</mi></msub><mo>,</mo><mspace width=".25em"/><msubsup><mi>σ</mi><mi>B</mi><mn>2</mn></msubsup></mrow></math></td><td>Current mini-batch mean and variance</td><td>Computed on each training forward pass</td><td>One pair per feature</td></tr>
+              <tr><td><math aria-label="x hat sub i"><msub><mover accent="true"><mi>x</mi><mo>^</mo></mover><mi>i</mi></msub></math></td><td>Centered and scaled coordinate</td><td>Computed</td><td>Same shape as <math aria-label="x sub i"><msub><mi>x</mi><mi>i</mi></msub></math></td></tr>
+              <tr><td><math aria-label="gamma and beta"><mrow><mi>γ</mi><mo>,</mo><mspace width=".25em"/><mi>β</mi></mrow></math></td><td>Output scale and shift</td><td>Learned by backpropagation</td><td>One pair per feature or channel</td></tr>
+              <tr><td><math aria-label="y sub i"><msub><mi>y</mi><mi>i</mi></msub></math></td><td>Value passed to the next operation</td><td>Computed</td><td>Same shape as <math aria-label="x sub i"><msub><mi>x</mi><mi>i</mi></msub></math></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="grid">
+          <div class="note"><p><strong>Dense tensor: <math aria-label="N by D"><mrow><mi>N</mi><mo>×</mo><mi>D</mi></mrow></math></strong></p><p>For each feature <math aria-label="d"><mi>d</mi></math>, pool over the <math aria-label="N"><mi>N</mi></math> examples. Keep different features separate.</p></div>
+          <div class="note"><p><strong>Convolution tensor: <math aria-label="N by C by H by W"><mrow><mi>N</mi><mo>×</mo><mi>C</mi><mo>×</mo><mi>H</mi><mo>×</mo><mi>W</mi></mrow></math></strong></p><p>For each channel <math aria-label="c"><mi>c</mi></math>, pool over <math aria-label="N"><mi>N</mi></math>, <math aria-label="H"><mi>H</mi></math>, and <math aria-label="W"><mi>W</mi></math>. Keep different channels separate. The paper describes one <math aria-label="gamma sub c and beta sub c"><mrow><msub><mi>γ</mi><mi>c</mi></msub><mo>,</mo><mspace width=".25em"/><msub><mi>β</mi><mi>c</mi></msub></mrow></math> pair per feature map.</p></div>
+        </div>
+        <p class="callout"><strong>Axis test.</strong> For <math aria-label="N equals four, C equals 64, H and W equal 28"><mrow><mi>N</mi><mo>=</mo><mn>4</mn><mo>,</mo><mspace width=".3em"/><mi>C</mi><mo>=</mo><mn>64</mn><mo>,</mo><mspace width=".3em"/><mi>H</mi><mo>=</mo><mi>W</mi><mo>=</mo><mn>28</mn></mrow></math>, one channel’s training statistics use <math aria-label="four times 28 times 28 equals 3,136"><mrow><mn>4</mn><mo>×</mo><mn>28</mn><mo>×</mo><mn>28</mn><mo>=</mo><mn>3,136</mn></mrow></math> values. They do not mix all 64 channels into one mean.</p>
+      </section>
+
+      <section aria-labelledby="mechanism-heading">
+        <h2 id="mechanism-heading">4. The mechanism: measure → normalize → restore</h2>
+        <p>The paper makes two simplifications to full whitening: normalize each scalar feature independently rather than decorrelating all features jointly, and estimate its moments from the current mini-batch.</p>
+        <div class="formula" aria-label="Batch Normalization equations">
+          <math display="block" aria-label="First measure the mini-batch mean and variance, then normalize each value, then scale by gamma and shift by beta">
+            <mtable columnalign="left left" columnspacing="1.2em" rowspacing=".8em">
+              <mtr>
+                <mtd><mtext>1 · MEASURE</mtext></mtd>
+                <mtd>
+                  <mrow>
+                    <msub><mi>μ</mi><mi>B</mi></msub><mo>=</mo>
+                    <mfrac><mn>1</mn><mi>m</mi></mfrac>
+                    <munderover><mo>∑</mo><mrow><mi>i</mi><mo>=</mo><mn>1</mn></mrow><mi>m</mi></munderover>
+                    <msub><mi>x</mi><mi>i</mi></msub>
+                    <mspace width="1.5em"/>
+                    <msubsup><mi>σ</mi><mi>B</mi><mn>2</mn></msubsup><mo>=</mo>
+                    <mfrac><mn>1</mn><mi>m</mi></mfrac>
+                    <munderover><mo>∑</mo><mrow><mi>i</mi><mo>=</mo><mn>1</mn></mrow><mi>m</mi></munderover>
+                    <msup><mrow><mo>(</mo><msub><mi>x</mi><mi>i</mi></msub><mo>−</mo><msub><mi>μ</mi><mi>B</mi></msub><mo>)</mo></mrow><mn>2</mn></msup>
+                  </mrow>
+                </mtd>
+              </mtr>
+              <mtr>
+                <mtd><mtext>2 · NORMALIZE</mtext></mtd>
+                <mtd>
+                  <mrow>
+                    <msub><mover accent="true"><mi>x</mi><mo>^</mo></mover><mi>i</mi></msub><mo>=</mo>
+                    <mfrac>
+                      <mrow><msub><mi>x</mi><mi>i</mi></msub><mo>−</mo><msub><mi>μ</mi><mi>B</mi></msub></mrow>
+                      <msqrt><mrow><msubsup><mi>σ</mi><mi>B</mi><mn>2</mn></msubsup><mo>+</mo><mi>ε</mi></mrow></msqrt>
+                    </mfrac>
+                  </mrow>
+                </mtd>
+              </mtr>
+              <mtr>
+                <mtd><mtext>3 · RESTORE</mtext></mtd>
+                <mtd>
+                  <mrow><msub><mi>y</mi><mi>i</mi></msub><mo>=</mo><mi>γ</mi><msub><mover accent="true"><mi>x</mi><mo>^</mo></mover><mi>i</mi></msub><mo>+</mo><mi>β</mi></mrow>
+                </mtd>
+              </mtr>
+            </mtable>
+          </math>
+        </div>
+
+        <figure>
+          <div class="figure-scroll">
+            <svg viewBox="0 0 820 320" role="img" aria-labelledby="mechanism-title mechanism-desc">
+              <title id="mechanism-title">The three stages of the Batch Normalizing Transform</title>
+              <desc id="mechanism-desc">Four raw feature values with mean five and variance five become four standardized values centered around zero, then learned gamma two and beta one stretch and shift them.</desc>
+              <defs><marker id="arrow-blue" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10Z" fill="#294d73"/></marker></defs>
+              <g font-family="Arial, sans-serif" fill="#20292f">
+                <text x="30" y="30" font-size="14" font-weight="700">RAW FEATURE x</text><text x="311" y="30" font-size="14" font-weight="700">STANDARDIZED x̂</text><text x="617" y="30" font-size="14" font-weight="700">LEARNED OUTPUT y</text>
+                <g stroke="#758289" stroke-width="2"><line x1="42" y1="178" x2="229" y2="178"/><line x1="312" y1="178" x2="499" y2="178"/><line x1="590" y1="178" x2="777" y2="178"/></g>
+                <g fill="#8a4d3d"><circle cx="66" cy="148" r="9"/><circle cx="112" cy="122" r="9"/><circle cx="159" cy="89" r="9"/><circle cx="205" cy="58" r="9"/></g>
+                <g fill="#294d73"><circle cx="329" cy="143" r="9"/><circle cx="381" cy="119" r="9"/><circle cx="430" cy="96" r="9"/><circle cx="482" cy="72" r="9"/></g>
+                <g fill="#446d70"><circle cx="608" cy="151" r="9"/><circle cx="656" cy="120" r="9"/><circle cx="706" cy="89" r="9"/><circle cx="758" cy="59" r="9"/></g>
+                <path d="M237 112H294" stroke="#294d73" stroke-width="2" marker-end="url(#arrow-blue)"/><path d="M507 112H570" stroke="#294d73" stroke-width="2" marker-end="url(#arrow-blue)"/>
+                <text x="240" y="91" font-size="12">− μᴮ</text><text x="240" y="108" font-size="12">÷ √(σ²ᴮ + ε)</text><text x="516" y="91" font-size="12">× γ</text><text x="516" y="108" font-size="12">+ β</text>
+                <text x="42" y="220" font-size="13">[2, 4, 6, 8]</text><text x="42" y="242" font-size="13" fill="#606c72">μᴮ = 5, σ²ᴮ = 5</text>
+                <text x="312" y="220" font-size="13">[−1.34, −0.45, 0.45, 1.34]</text><text x="312" y="242" font-size="13" fill="#606c72">approximately mean 0, variance 1</text>
+                <text x="590" y="220" font-size="13">[−1.68, 0.11, 1.89, 3.68]</text><text x="590" y="242" font-size="13" fill="#606c72">γ = 2, β = 1</text>
+                <line x1="30" y1="274" x2="790" y2="274" stroke="#aeb9bc"/><text x="30" y="300" font-size="13" fill="#606c72">ε prevents division by zero; it makes the variance only approximately one when it is not negligible.</text>
+              </g>
+            </svg>
+          </div>
+          <figcaption><span class="label">Lesson diagram</span>The normalized coordinate is an internal waypoint, not the layer’s final contract. The learned affine step can recover the identity transform when that is useful, preserving representation power.</figcaption>
+        </figure>
+        <p><strong>Why this is part of the model.</strong> The batch mean and variance depend on every example in the mini-batch, so backpropagation must pass through those dependencies. The paper gives the full chain-rule derivatives and learns <math aria-label="gamma"><mi>γ</mi></math> and <math aria-label="beta"><mi>β</mi></math> alongside the ordinary network parameters.</p>
+      </section>
+
+      <section aria-labelledby="trace-training-heading">
+        <h2 id="trace-training-heading">5. Worked trace A: one training mini-batch</h2>
+        <div class="trace">
+          <h3>Given <math aria-label="x equals the vector two, four, six, eight"><mrow><mi mathvariant="bold">x</mi><mo>=</mo><mo>[</mo><mn>2</mn><mo>,</mo><mn>4</mn><mo>,</mo><mn>6</mn><mo>,</mo><mn>8</mn><mo>]</mo></mrow></math>, <math aria-label="gamma equals two"><mrow><mi>γ</mi><mo>=</mo><mn>2</mn></mrow></math>, <math aria-label="beta equals one"><mrow><mi>β</mi><mo>=</mo><mn>1</mn></mrow></math></h3>
+          <p>Ignore tiny <math aria-label="epsilon"><mi>ε</mi></math> only to make the arithmetic readable.</p>
+          <div class="trace-grid">
+            <div>
+              <b>1 · Mean</b>
+              <math display="block" aria-label="Mini-batch mean equals the sum of two, four, six, and eight, divided by four, which equals five">
+                <mrow><msub><mi>μ</mi><mi>B</mi></msub><mo>=</mo><mfrac><mrow><mn>2</mn><mo>+</mo><mn>4</mn><mo>+</mo><mn>6</mn><mo>+</mo><mn>8</mn></mrow><mn>4</mn></mfrac><mo>=</mo><mn>5</mn></mrow>
+              </math>
+            </div>
+            <div>
+              <b>2 · Variance</b>
+              <math display="block" aria-label="Mini-batch variance equals nine plus one plus one plus nine, divided by four, which equals five">
+                <mrow><msubsup><mi>σ</mi><mi>B</mi><mn>2</mn></msubsup><mo>=</mo><mfrac><mrow><mn>9</mn><mo>+</mo><mn>1</mn><mo>+</mo><mn>1</mn><mo>+</mo><mn>9</mn></mrow><mn>4</mn></mfrac><mo>=</mo><mn>5</mn></mrow>
+              </math>
+            </div>
+            <div>
+              <b>3 · Normalize</b>
+              <math display="block" aria-label="The normalized vector is approximately negative 1.34, negative 0.45, 0.45, and 1.34">
+                <mrow>
+                  <mover accent="true"><mi mathvariant="bold">x</mi><mo>^</mo></mover><mo>≈</mo><mo>[</mo>
+                  <mtable columnspacing=".45em"><mtr><mtd><mo>−</mo><mn>1.34</mn></mtd><mtd><mo>−</mo><mn>0.45</mn></mtd><mtd><mn>0.45</mn></mtd><mtd><mn>1.34</mn></mtd></mtr></mtable>
+                  <mo>]</mo>
+                </mrow>
+              </math>
+            </div>
+            <div>
+              <b>4 · Restore</b>
+              <math display="block" aria-label="The output vector equals two times the normalized vector plus one, approximately negative 1.68, 0.11, 1.89, and 3.68">
+                <mrow>
+                  <mi mathvariant="bold">y</mi><mo>=</mo><mn>2</mn><mover accent="true"><mi mathvariant="bold">x</mi><mo>^</mo></mover><mo>+</mo><mn>1</mn><mo>≈</mo><mo>[</mo>
+                  <mtable columnspacing=".45em"><mtr><mtd><mo>−</mo><mn>1.68</mn></mtd><mtd><mn>0.11</mn></mtd><mtd><mn>1.89</mn></mtd><mtd><mn>3.68</mn></mtd></mtr></mtable>
+                  <mo>]</mo>
+                </mrow>
+              </math>
+            </div>
+          </div>
+        </div>
+        <details class="answer"><summary>Predict before revealing: if every raw value increases by 100, does the normalized vector change?</summary><p>Ignoring <math aria-label="epsilon"><mi>ε</mi></math>, no. The mean also increases by 100, so each centered value is unchanged; the variance is unchanged too. With the same <math aria-label="gamma"><mi>γ</mi></math> and <math aria-label="beta"><mi>β</mi></math>, <math aria-label="y"><mi>y</mi></math> is unchanged. This is shift invariance for that batch, not a claim that BatchNorm is invariant to every distributional change.</p></details>
+        <details class="answer"><summary>Why use the divisor <math aria-label="m"><mi>m</mi></math> here rather than <math aria-label="m minus one"><mrow><mi>m</mi><mo>−</mo><mn>1</mn></mrow></math>?</summary><p>Algorithm 1 defines the training mini-batch variance with <math aria-label="one over m"><mfrac><mn>1</mn><mi>m</mi></mfrac></math>. For inference, Algorithm 2 discusses estimating the population variance from many mini-batches and includes the correction <math aria-label="m over m minus one"><mfrac><mi>m</mi><mrow><mi>m</mi><mo>−</mo><mn>1</mn></mrow></mfrac></math>. Framework details vary, so do not silently substitute one convention for the other.</p></details>
+      </section>
+
+      <section aria-labelledby="trace-inference-heading">
+        <h2 id="trace-inference-heading">6. Worked trace B: the same activation at training and inference</h2>
+        <p>Training uses the present batch because the batch statistics must participate in gradient computation. Inference uses fixed population estimates because one prediction should not change when unrelated examples are placed beside it.</p>
+        <div class="trace">
+          <h3>Trace <math aria-label="x equals five"><mrow><mi>x</mi><mo>=</mo><mn>5</mn></mrow></math> with <math aria-label="gamma equals two"><mrow><mi>γ</mi><mo>=</mo><mn>2</mn></mrow></math>, <math aria-label="beta equals one"><mrow><mi>β</mi><mo>=</mo><mn>1</mn></mrow></math></h3>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Mode</th><th>Statistics used</th><th>Normalized value</th><th>Output</th></tr></thead>
+              <tbody>
+                <tr>
+                  <td><strong>Training</strong></td>
+                  <td>
+                    Current batch
+                    <math class="cell-math" aria-label="four, five, six, seven"><mrow><mo>[</mo><mn>4</mn><mo>,</mo><mn>5</mn><mo>,</mo><mn>6</mn><mo>,</mo><mn>7</mn><mo>]</mo></mrow></math>:
+                    <math class="cell-math" aria-label="mini-batch mean equals 5.5 and mini-batch variance equals 1.25"><mrow><msub><mi>μ</mi><mi>B</mi></msub><mo>=</mo><mn>5.5</mn><mo>,</mo><mspace width=".35em"/><msubsup><mi>σ</mi><mi>B</mi><mn>2</mn></msubsup><mo>=</mo><mn>1.25</mn></mrow></math>
+                  </td>
+                  <td>
+                    <math class="cell-math" display="block" aria-label="five minus 5.5 divided by the square root of 1.25 is approximately negative 0.447"><mrow><mfrac><mrow><mn>5</mn><mo>−</mo><mn>5.5</mn></mrow><msqrt><mn>1.25</mn></msqrt></mfrac><mo>≈</mo><mo>−</mo><mn>0.447</mn></mrow></math>
+                  </td>
+                  <td>
+                    <math class="cell-math" display="block" aria-label="two times negative 0.447 plus one is approximately 0.106"><mrow><mn>2</mn><mo>(</mo><mo>−</mo><mn>0.447</mn><mo>)</mo><mo>+</mo><mn>1</mn><mo>≈</mo><mn>0.106</mn></mrow></math>
+                  </td>
+                </tr>
+                <tr>
+                  <td><strong>Inference</strong></td>
+                  <td>
+                    Stored estimates:
+                    <math class="cell-math" aria-label="population mean equals four and population variance equals four"><mrow><mi>μ</mi><mo>=</mo><mn>4</mn><mo>,</mo><mspace width=".35em"/><msup><mi>σ</mi><mn>2</mn></msup><mo>=</mo><mn>4</mn></mrow></math>
+                  </td>
+                  <td>
+                    <math class="cell-math" display="block" aria-label="five minus four divided by the square root of four equals 0.5"><mrow><mfrac><mrow><mn>5</mn><mo>−</mo><mn>4</mn></mrow><msqrt><mn>4</mn></msqrt></mfrac><mo>=</mo><mn>0.5</mn></mrow></math>
+                  </td>
+                  <td>
+                    <math class="cell-math" display="block" aria-label="two times 0.5 plus one equals two"><mrow><mn>2</mn><mo>(</mo><mn>0.5</mn><mo>)</mo><mo>+</mo><mn>1</mn><mo>=</mo><mn>2</mn></mrow></math>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <p><small>Both rows ignore <math aria-label="epsilon"><mi>ε</mi></math> for readability. The chosen stored estimates are an illustrative state, not values reported by the paper.</small></p>
+        </div>
+        <details class="answer"><summary>Predict before revealing: can the same image and same weights produce different outputs in train and evaluation modes?</summary><p>Yes. The numerical trace does exactly that because the source of the statistics changes. In train mode, the image is coupled to its batch companions. In evaluation mode, fixed stored estimates make its output independent of those companions.</p></details>
+        <div class="callout blue"><strong>The paper’s inference rule.</strong> After training, estimate population means and variances from training mini-batches, freeze them, and fold normalization plus <math aria-label="gamma and beta"><mrow><mi>γ</mi><mo>,</mo><mspace width=".25em"/><mi>β</mi></mrow></math> into one linear transform if desired. “Running statistics” is common framework language; the paper’s Algorithm 2 states the statistical goal rather than one universal momentum convention.</div>
+      </section>
+
+      <section aria-labelledby="evidence-heading">
+        <h2 id="evidence-heading">7. Read the paper’s evidence in two layers</h2>
+        <p>First ask whether the motivating phenomenon appears in the studied network. Then ask whether the proposed intervention improves the larger training system. The paper supplies different figures for those two questions.</p>
+        <figure>
+          <img src="original_figure_1_mnist_distributions.png" width="745" height="575" alt="Original Figure 1 from the Batch Normalization paper. Panel a plots MNIST test accuracy versus training steps with and without BatchNorm. Panels b and c plot the 15th, 50th, and 85th percentiles of one sigmoid input over training; the curves move more without BatchNorm and remain more stable with it.">
+          <figcaption><span class="label">Original paper figure</span><strong>Figure 1, paper p. 6.</strong> In a three-hidden-layer sigmoid MNIST network, panel (a) shows faster, higher held-out accuracy with BN. Panels (b,c) follow one typical pre-sigmoid activation: its 15th, 50th, and 85th percentiles change more without BN and remain more stable with BN. This is direct evidence for the paper’s motivating observation in this particular network, not proof that the same explanation accounts for every BN benefit.</figcaption>
+        </figure>
+        <div class="evidence-note"><strong>How to read Figure 1</strong><p>The horizontal direction is training progress. In panels (b,c), vertical movement of the three percentile curves means the activation distribution is moving. “With BN” still changes somewhat; the claim is greater stability, not a perfectly frozen joint distribution.</p></div>
+        <figure>
+          <div class="grid">
+            <img src="original_figure_2_imagenet_training.png" width="750" height="475" alt="Original Figure 2 from the Batch Normalization paper, plotting single-crop ImageNet validation accuracy against training steps for Inception and several BatchNorm variants.">
+            <img src="original_figure_3_imagenet_table.png" width="710" height="370" alt="Original Figure 3 from the Batch Normalization paper. The table reports steps to 72.2 percent and maximum accuracy: Inception 31.0 million and 72.2 percent, BN-Baseline 13.3 million and 72.7 percent, BN-x5 2.1 million and 73.0 percent, BN-x30 2.7 million and 74.8 percent, and BN-x5-Sigmoid maximum 69.8 percent.">
+          </div>
+          <figcaption><span class="label">Original paper figures</span><strong>Figures 2 and 3, paper p. 7.</strong> The black Inception baseline takes 31.0 million steps to reach 72.2% single-crop validation accuracy. BN-Baseline reaches that accuracy in 13.3 million steps. BN-x5 reaches it in 2.1 million steps and peaks at 73.0%; BN-x30 reaches it in 2.7 million steps and peaks at 74.8%.</figcaption>
+        </figure>
+        <div class="grid">
+          <div class="note"><p><strong>What is isolated reasonably well?</strong></p><p>BN-Baseline is the same Inception variant with BatchNorm inserted before each nonlinearity. Its 13.3M versus 31.0M comparison supports a substantial speedup from adding BN in this setup.</p></div>
+          <div class="note"><p><strong>What is a package, not a pure ablation?</strong></p><p>The paper’s “14× fewer steps” headline refers to BN-x5, which combines BN with a five-times larger initial learning rate and the Section 4.2.1 training changes. It should not be read as a clean universal 14× effect from the layer alone.</p></div>
+        </div>
+        <details class="answer"><summary>Interpretation check: does 74.8% prove BN always improves final accuracy?</summary><p>No. It is the maximum single-crop validation accuracy of BN-x30 in the paper’s Inception/ImageNet experiment. Architecture, optimization changes, learning rate, data handling, and evaluation protocol all define the scope of the result.</p></details>
+      </section>
+
+      <section aria-labelledby="limits-heading">
+        <h2 id="limits-heading">8. Limitations and misconceptions</h2>
+        <div class="grid">
+          <div class="note"><p><strong>Small batches make the measuring tape noisy.</strong></p><p>When few independent values contribute, moment estimates fluctuate. In CNNs, <math aria-label="H times W"><mrow><mi>H</mi><mo>×</mo><mi>W</mi></mrow></math> adds samples per channel, but late small feature maps lose that help. Synchronized BN, frozen statistics, LayerNorm, or GroupNorm may be better fits in some regimes.</p></div>
+          <div class="note"><p><strong>Gradient accumulation is not one large BN batch.</strong></p><p>Unless statistics are synchronized specially, each forward pass normalizes its own micro-batch. Accumulating gradients later does not retroactively combine those moments.</p></div>
+          <div class="note"><p><strong><math aria-label="gamma"><mi>γ</mi></math> and <math aria-label="beta"><mi>β</mi></math> do not “undo” the optimization effect.</strong></p><p>They restore representational freedom after standardization. Their being learned does not make the training path identical to an unnormalized network.</p></div>
+          <div class="note"><p><strong>Internal covariate shift is the paper’s motivation, not the final word.</strong></p><p>Later work found that BN can help even when measured distribution drift is not reduced in the expected way, and emphasized smoother optimization. The empirical method remains useful even if the original causal story is incomplete.</p></div>
+        </div>
+        <h3>Choose the axes before choosing the normalizer</h3>
+        <div class="table-wrap">
+          <table><thead><tr><th>Method</th><th>Statistics pooled over</th><th>Training examples coupled?</th><th>Typical consequence</th></tr></thead><tbody><tr><td>BatchNorm</td><td>Batch, and spatial positions for CNNs; separately per channel</td><td>Yes</td><td>Train/eval statistics differ</td></tr><tr><td>LayerNorm</td><td>Features within one example or token</td><td>No</td><td>Natural fit when batch composition varies</td></tr><tr><td>GroupNorm</td><td>Channel groups and spatial positions within one example</td><td>No</td><td>Often considered when image batches are small</td></tr></tbody></table>
+        </div>
+      </section>
+
+      <section aria-labelledby="recall-heading">
+        <h2 id="recall-heading">9. Active recall</h2>
+        <p>Answer aloud before opening each row. Every answer is here so the page also works as a self-check without an instructor.</p>
+        <div class="recall">
+          <details><summary>Why does standardizing the input dataset once not solve the hidden-layer problem?</summary><p>Because hidden activations are generated by earlier parameters that keep changing. Their distributions can move even when the raw input distribution is fixed.</p></details>
+          <details><summary>What are the three operations in the BN transform?</summary><p>Compute mini-batch mean and variance; center and scale each value using those statistics plus <math aria-label="epsilon"><mi>ε</mi></math>; then apply learned scale <math aria-label="gamma"><mi>γ</mi></math> and shift <math aria-label="beta"><mi>β</mi></math>.</p></details>
+          <details><summary>For <math aria-label="N by C by H by W"><mrow><mi>N</mi><mo>×</mo><mi>C</mi><mo>×</mo><mi>H</mi><mo>×</mo><mi>W</mi></mrow></math>, which axes supply one channel’s statistics?</summary><p>The <math aria-label="N"><mi>N</mi></math>, <math aria-label="H"><mi>H</mi></math>, and <math aria-label="W"><mi>W</mi></math> axes. The channel axis stays separate, giving each channel its own moments and learned affine pair.</p></details>
+          <details><summary>Why do training and inference use different statistics?</summary><p>Training needs current-batch statistics inside the differentiable computation. Inference needs an output that does not depend on arbitrary batch companions, so it uses fixed population estimates gathered during or after training.</p></details>
+          <details><summary>What qualification belongs beside the paper’s 14× speedup?</summary><p>It is the BN-x5 system on the studied Inception/ImageNet setup. BN-x5 combines BatchNorm with a five-times larger initial learning rate and other Section 4.2.1 training changes; it is not a universal isolated 14× layer effect.</p></details>
+          <details><summary>Teach it back in one sentence.</summary><p>BatchNorm measures each feature or channel over the current training batch, expresses values in that local coordinate frame, restores useful scale and offset with learned parameters, and switches to fixed population estimates for deterministic inference.</p></details>
+        </div>
+      </section>
+
+      <section aria-labelledby="map-heading">
+        <h2 id="map-heading">Connect it to your mental map</h2>
+        <p><strong>ResNet:</strong> the original residual networks put BN inside residual branches; shortcuts preserve a direct information route while BN manages the branch’s feature coordinates. <strong>Transformers:</strong> they commonly use LayerNorm because a token can be normalized without dependence on batch companions. <strong>Dropout:</strong> the BN paper observes a regularizing effect from mini-batch noise in its experiments, but BN and Dropout are not interchangeable definitions of regularization. <strong>Adam:</strong> Adam rescales parameter updates using gradient moments; BN rescales activations using data moments. They act on different objects and can be used together.</p>
+        <p class="callout"><strong>Mental question to keep:</strong> whenever you meet a normalization layer, ask which axes share statistics, when those statistics are measured, which parameters restore expressivity, and whether inference follows the same rule as training.</p>
+      </section>
+
+      <section aria-labelledby="takeaway-heading">
+        <h2 id="takeaway-heading">Takeaway</h2>
+        <div class="takeaway"><strong>Native intuition:</strong> BatchNorm gives each hidden feature a temporary coordinate system built from the current mini-batch, then lets the network learn the final unit and zero point. That makes the training geometry easier to manage without trapping the representation at mean zero and variance one. Deployment closes the loop by replacing the temporary batch ruler with fixed population estimates.</div>
+      </section>
+    </main>
+
+    <footer>
+      <h2>Source and further exploration</h2>
+      <ul>
+        <li><a href="batch_normalization_accelerating_deep_network_training.pdf">Original paper PDF (local copy)</a></li>
+        <li><a href="https://arxiv.org/abs/1502.03167">arXiv record: Batch Normalization</a></li>
+        <li><a href="https://proceedings.mlr.press/v37/ioffe15.html">ICML 2015 publication record (PMLR)</a></li>
+        <li><a href="https://arxiv.org/abs/1805.11604">Later analysis: How Does Batch Normalization Help Optimization?</a></li>
+      </ul>
+    </footer>
+  </div>
+</body>
+</html>
