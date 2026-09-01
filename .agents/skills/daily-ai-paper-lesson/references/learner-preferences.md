@@ -25,7 +25,7 @@ Mix domains over time: language models, computer vision, reinforcement learning,
 ## Source and visual quality
 
 - Confirm the paper has an accessible primary PDF before teaching it.
-- Include at least one source-grounded evidence visual in every detailed lesson. Prefer a sharp, tightly cropped original figure or result table with exact figure/table and paper-page provenance. If no original visual remains readable, build a faithful HTML/SVG reconstruction of a named source figure or table, preserve its values, scales, conditions, and uncertainty, and label it clearly as a reconstruction. A custom mechanism diagram alone does not satisfy this evidence requirement.
+- Include at least one source-grounded evidence visual in every detailed lesson. Prefer a sharp, tightly cropped original figure or result table with exact figure/table and paper-page provenance when it makes the evidence easier to read. A faithful HTML/SVG reconstruction of a named source figure or table is equally acceptable when it is clearer or the original does not remain readable; preserve its values, scales, conditions, and uncertainty, and label it clearly as a reconstruction. A custom mechanism diagram alone does not satisfy this evidence requirement.
 - Include an original paper figure only if it can remain sharp. Prefer vector PDF/SVG. Do not embed blurry snapshots.
 - Do not embed the complete source-paper PDF merely to display one figure. Extract or create a dedicated, sharp local figure asset; keep the full original paper as a footer link.
 - A paper's raster figure may be shown at native size with a clear caption; do not upscale it merely to fill layout.

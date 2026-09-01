@@ -12,7 +12,7 @@ Make a visual only when it makes a paper's mechanism, evidence, comparison, or m
 - Use a concise table when a comparison is primarily textual or numerical.
 - Use a labelled SVG for architecture, tensor shapes, information flow, algorithm steps, or a small derivation.
 - Use a compact interactive lab only when changing an input helps the learner form intuition. It must have a useful static reading path too.
-- Use a source figure from the original paper only if it remains sharp at its displayed size and supports a specific teaching point. Prefer vector extraction or high-resolution rendering. Never enlarge a blurry screenshot.
+- Prefer a source figure from the original paper when it remains sharp at its displayed size and supports a specific teaching point. Prefer vector extraction or high-resolution rendering, but do not force it when a faithful reconstruction teaches the evidence more clearly. Never enlarge a blurry screenshot.
 - Label non-paper visuals **Lesson diagram** in the nearby caption. Attribute original-paper visuals precisely.
 
 ## Lesson-first composition

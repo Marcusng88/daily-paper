@@ -7,7 +7,11 @@ window.DAILY_PAPER_CATALOG = [
     "topicLabel": "Meta-learning",
     "title": "Model-Agnostic Meta-Learning for Fast Adaptation of Deep Networks",
     "description": "Learn why a model can be trained not just to perform now, but to become useful after a few examples and an ordinary gradient step.",
-    "authors": "Finn, Abbeel & Levine",
+    "authors": [
+      "Chelsea Finn",
+      "Pieter Abbeel",
+      "Sergey Levine"
+    ],
     "venue": "ICML 2017",
     "paperFile": "model-agnostic-meta-learning-for-fast-adaptation-of-deep-networks/model_agnostic_meta_learning_for_fast_adaptation_of_deep_networks.pdf",
     "lessonFile": "model-agnostic-meta-learning-for-fast-adaptation-of-deep-networks/model_agnostic_meta_learning_for_fast_adaptation_of_deep_networks.html",
@@ -31,7 +35,7 @@ window.DAILY_PAPER_CATALOG = [
       "first-order MAML"
     ],
     "mentalMapConnection": "Adds a learn-to-adapt branch: unlike Adam, which changes how one update is scaled, MAML trains an initialization for the model it becomes after task-specific updates.",
-    "search": "model-agnostic meta-learning for fast adaptation of deep networks model-agnostic-meta-learning-for-fast-adaptation-of-deep-networks finn, abbeel & levine icml 2017 meta-learning meta-learning learn why a model can be trained not just to perform now, but to become useful after a few examples and an ordinary gradient step. meta-learning and few-shot adaptation adds a learn-to-adapt branch: unlike adam, which changes how one update is scaled, maml trains an initialization for the model it becomes after task-specific updates. https://proceedings.mlr.press/v70/finn17a.html meta-learning few-shot learning optimization reinforcement learning meta-learning task distribution support set query set fast adaptation inner update outer update meta-gradient first-order maml"
+    "search": "model-agnostic meta-learning for fast adaptation of deep networks model-agnostic-meta-learning-for-fast-adaptation-of-deep-networks chelsea finn,pieter abbeel,sergey levine icml 2017 meta-learning meta-learning learn why a model can be trained not just to perform now, but to become useful after a few examples and an ordinary gradient step. meta-learning and few-shot adaptation adds a learn-to-adapt branch: unlike adam, which changes how one update is scaled, maml trains an initialization for the model it becomes after task-specific updates. https://proceedings.mlr.press/v70/finn17a.html meta-learning few-shot learning optimization reinforcement learning meta-learning task distribution support set query set fast adaptation inner update outer update meta-gradient first-order maml"
   },
   {
     "date": "2026-08-31",
@@ -40,7 +44,11 @@ window.DAILY_PAPER_CATALOG = [
     "topicLabel": "Generative modeling",
     "title": "Denoising Diffusion Probabilistic Models",
     "description": "Learn how generation can be decomposed into reversing a known sequence of small noise steps.",
-    "authors": "Ho, Jain & Abbeel",
+    "authors": [
+      "Jonathan Ho",
+      "Ajay Jain",
+      "Pieter Abbeel"
+    ],
     "venue": "NeurIPS 2020",
     "paperFile": "denoising-diffusion-probabilistic-models/denoising_diffusion_probabilistic_models.pdf",
     "lessonFile": "denoising-diffusion-probabilistic-models/denoising_diffusion_probabilistic_models.html",
@@ -62,7 +70,7 @@ window.DAILY_PAPER_CATALOG = [
       "iterative sampling"
     ],
     "mentalMapConnection": "Adds a likelihood-trained generative path beside GANs and VAEs: corrupt data with a fixed process, then learn many local denoising corrections.",
-    "search": "denoising diffusion probabilistic models denoising-diffusion-probabilistic-models ho, jain & abbeel neurips 2020 generative generative modeling learn how generation can be decomposed into reversing a known sequence of small noise steps. diffusion-based generative modeling adds a likelihood-trained generative path beside gans and vaes: corrupt data with a fixed process, then learn many local denoising corrections. https://arxiv.org/abs/2006.11239 generative modeling diffusion models denoising score matching diffusion models forward noising process reverse denoising process noise schedule noise prediction variational bound iterative sampling"
+    "search": "denoising diffusion probabilistic models denoising-diffusion-probabilistic-models jonathan ho,ajay jain,pieter abbeel neurips 2020 generative generative modeling learn how generation can be decomposed into reversing a known sequence of small noise steps. diffusion-based generative modeling adds a likelihood-trained generative path beside gans and vaes: corrupt data with a fixed process, then learn many local denoising corrections. https://arxiv.org/abs/2006.11239 generative modeling diffusion models denoising score matching diffusion models forward noising process reverse denoising process noise schedule noise prediction variational bound iterative sampling"
   },
   {
     "date": "2026-08-30",
@@ -71,7 +79,11 @@ window.DAILY_PAPER_CATALOG = [
     "topicLabel": "Model compression",
     "title": "Distilling the Knowledge in a Neural Network",
     "description": "Learn how a small model learns from a teacher’s entire softened probability distribution, carrying more information than one hard label.",
-    "authors": "Hinton, Vinyals & Dean",
+    "authors": [
+      "Geoffrey Hinton",
+      "Oriol Vinyals",
+      "Jeff Dean"
+    ],
     "venue": "NeurIPS Workshop 2015",
     "paperFile": "distilling-the-knowledge-in-a-neural-network/distilling_the_knowledge_in_a_neural_network.pdf",
     "lessonFile": "distilling-the-knowledge-in-a-neural-network/distilling_the_knowledge_in_a_neural_network.html",
@@ -93,7 +105,7 @@ window.DAILY_PAPER_CATALOG = [
       "model compression"
     ],
     "mentalMapConnection": "Adds a model-compression branch: a smaller student learns the teacher’s relationships among classes rather than copying only hard labels.",
-    "search": "distilling the knowledge in a neural network distilling-the-knowledge-in-a-neural-network hinton, vinyals & dean neurips workshop 2015 compression model compression learn how a small model learns from a teacher’s entire softened probability distribution, carrying more information than one hard label. model compression and teacher-student learning adds a model-compression branch: a smaller student learns the teacher’s relationships among classes rather than copying only hard labels. https://arxiv.org/abs/1503.02531 model compression knowledge distillation deployment transfer learning knowledge distillation soft targets teacher-student learning softmax temperature dark knowledge temperature-squared gradient scaling model compression"
+    "search": "distilling the knowledge in a neural network distilling-the-knowledge-in-a-neural-network geoffrey hinton,oriol vinyals,jeff dean neurips workshop 2015 compression model compression learn how a small model learns from a teacher’s entire softened probability distribution, carrying more information than one hard label. model compression and teacher-student learning adds a model-compression branch: a smaller student learns the teacher’s relationships among classes rather than copying only hard labels. https://arxiv.org/abs/1503.02531 model compression knowledge distillation deployment transfer learning knowledge distillation soft targets teacher-student learning softmax temperature dark knowledge temperature-squared gradient scaling model compression"
   },
   {
     "date": "2026-08-26",
@@ -102,7 +114,12 @@ window.DAILY_PAPER_CATALOG = [
     "topicLabel": "Self-supervised learning",
     "title": "A Simple Framework for Contrastive Learning of Visual Representations",
     "description": "Learn how carefully chosen augmented views become a self-supervised training signal, teaching an encoder what should stay the same without labels.",
-    "authors": "Chen et al.",
+    "authors": [
+      "Ting Chen",
+      "Simon Kornblith",
+      "Mohammad Norouzi",
+      "Geoffrey Hinton"
+    ],
     "venue": "ICML 2020",
     "paperFile": "simclr-contrastive-learning/a_simple_framework_for_contrastive_learning_of_visual_representations.pdf",
     "lessonFile": "simclr-contrastive-learning/a_simple_framework_for_contrastive_learning_of_visual_representations.html",
@@ -125,7 +142,7 @@ window.DAILY_PAPER_CATALOG = [
       "linear evaluation"
     ],
     "mentalMapConnection": "Adds self-supervision: augmentation defines invariances, while a contrastive objective shapes representations without class labels.",
-    "search": "a simple framework for contrastive learning of visual representations simclr-contrastive-learning chen et al. icml 2020 self-supervised self-supervised learning learn how carefully chosen augmented views become a self-supervised training signal, teaching an encoder what should stay the same without labels. self-supervised visual representation learning adds self-supervision: augmentation defines invariances, while a contrastive objective shapes representations without class labels. https://proceedings.mlr.press/v119/chen20j.html self-supervised learning representation learning contrastive learning computer vision self-supervised learning contrastive learning positive pairs negative pairs nt-xent loss temperature projection head linear evaluation"
+    "search": "a simple framework for contrastive learning of visual representations simclr-contrastive-learning ting chen,simon kornblith,mohammad norouzi,geoffrey hinton icml 2020 self-supervised self-supervised learning learn how carefully chosen augmented views become a self-supervised training signal, teaching an encoder what should stay the same without labels. self-supervised visual representation learning adds self-supervision: augmentation defines invariances, while a contrastive objective shapes representations without class labels. https://proceedings.mlr.press/v119/chen20j.html self-supervised learning representation learning contrastive learning computer vision self-supervised learning contrastive learning positive pairs negative pairs nt-xent loss temperature projection head linear evaluation"
   },
   {
     "date": "2026-08-24",
@@ -134,7 +151,10 @@ window.DAILY_PAPER_CATALOG = [
     "topicLabel": "Graph machine learning",
     "title": "Semi-Supervised Classification with Graph Convolutional Networks",
     "description": "Learn how a node mixes carefully normalized information from its neighbours and itself, then turns relational context into a class prediction.",
-    "authors": "Kipf & Welling",
+    "authors": [
+      "Thomas N. Kipf",
+      "Max Welling"
+    ],
     "venue": "ICLR 2017",
     "paperFile": "semi-supervised-classification-with-graph-convolutional-networks/semi_supervised_classification_with_graph_convolutional_networks.pdf",
     "lessonFile": "semi-supervised-classification-with-graph-convolutional-networks/semi_supervised_classification_with_graph_convolutional_networks.html",
@@ -155,7 +175,7 @@ window.DAILY_PAPER_CATALOG = [
       "over-smoothing"
     ],
     "mentalMapConnection": "Adds a graph-structured-data branch: it generalizes the shared local rule of CNNs beyond grids and contrasts fixed graph neighbourhood mixing with the Transformer’s learned attention.",
-    "search": "semi-supervised classification with graph convolutional networks semi-supervised-classification-with-graph-convolutional-networks kipf & welling iclr 2017 graphs graph machine learning learn how a node mixes carefully normalized information from its neighbours and itself, then turns relational context into a class prediction. graph representation learning and semi-supervised node classification adds a graph-structured-data branch: it generalizes the shared local rule of cnns beyond grids and contrasts fixed graph neighbourhood mixing with the transformer’s learned attention. https://openreview.net/forum?id=sju4ayygl graph neural networks representation learning semi-supervised learning graphs adjacency matrix message passing self-loops degree normalization node classification over-smoothing"
+    "search": "semi-supervised classification with graph convolutional networks semi-supervised-classification-with-graph-convolutional-networks thomas n. kipf,max welling iclr 2017 graphs graph machine learning learn how a node mixes carefully normalized information from its neighbours and itself, then turns relational context into a class prediction. graph representation learning and semi-supervised node classification adds a graph-structured-data branch: it generalizes the shared local rule of cnns beyond grids and contrasts fixed graph neighbourhood mixing with the transformer’s learned attention. https://openreview.net/forum?id=sju4ayygl graph neural networks representation learning semi-supervised learning graphs adjacency matrix message passing self-loops degree normalization node classification over-smoothing"
   },
   {
     "date": "2026-08-24",
@@ -164,7 +184,10 @@ window.DAILY_PAPER_CATALOG = [
     "topicLabel": "Efficient ML",
     "title": "The Lottery Ticket Hypothesis: Finding Sparse, Trainable Neural Networks",
     "description": "Learn why a useful sparse network may be defined by both its mask and its original initialization, and how pruning discovers one route through a dense model.",
-    "authors": "Frankle & Carbin",
+    "authors": [
+      "Jonathan Frankle",
+      "Michael Carbin"
+    ],
     "venue": "ICLR 2019",
     "paperFile": "the-lottery-ticket-hypothesis/the_lottery_ticket_hypothesis.pdf",
     "lessonFile": "the-lottery-ticket-hypothesis/the_lottery_ticket_hypothesis.html",
@@ -186,7 +209,7 @@ window.DAILY_PAPER_CATALOG = [
       "sparse trainability"
     ],
     "mentalMapConnection": "Adds a sparsity branch: optimization may depend not only on architecture, but on which parameters survive and the values from which they started.",
-    "search": "the lottery ticket hypothesis: finding sparse, trainable neural networks the-lottery-ticket-hypothesis frankle & carbin iclr 2019 efficient efficient ml learn why a useful sparse network may be defined by both its mask and its original initialization, and how pruning discovers one route through a dense model. neural-network sparsity, pruning, and initialization adds a sparsity branch: optimization may depend not only on architecture, but on which parameters survive and the values from which they started. https://arxiv.org/abs/1803.03635 efficient ml sparsity pruning initialization optimization unstructured pruning binary masks winning tickets iterative magnitude pruning original initialization sparse trainability"
+    "search": "the lottery ticket hypothesis: finding sparse, trainable neural networks the-lottery-ticket-hypothesis jonathan frankle,michael carbin iclr 2019 efficient efficient ml learn why a useful sparse network may be defined by both its mask and its original initialization, and how pruning discovers one route through a dense model. neural-network sparsity, pruning, and initialization adds a sparsity branch: optimization may depend not only on architecture, but on which parameters survive and the values from which they started. https://arxiv.org/abs/1803.03635 efficient ml sparsity pruning initialization optimization unstructured pruning binary masks winning tickets iterative magnitude pruning original initialization sparse trainability"
   },
   {
     "date": "2026-08-23",
@@ -195,7 +218,10 @@ window.DAILY_PAPER_CATALOG = [
     "topicLabel": "Generative modeling",
     "title": "Auto-Encoding Variational Bayes",
     "description": "Learn how a VAE balances reconstruction with a sampleable latent space, and why reparameterization lets gradients flow through random samples.",
-    "authors": "Kingma & Welling",
+    "authors": [
+      "Diederik P. Kingma",
+      "Max Welling"
+    ],
     "venue": "ICLR 2014",
     "paperFile": "auto-encoding-variational-bayes/auto_encoding_variational_bayes.pdf",
     "lessonFile": "auto-encoding-variational-bayes/auto_encoding_variational_bayes.html",
@@ -216,7 +242,7 @@ window.DAILY_PAPER_CATALOG = [
       "prior distribution"
     ],
     "mentalMapConnection": "Adds a likelihood-based latent-variable branch beside GANs, and connects probabilistic inference to the stochastic-gradient training ideas introduced by Adam.",
-    "search": "auto-encoding variational bayes auto-encoding-variational-bayes kingma & welling iclr 2014 generative generative modeling learn how a vae balances reconstruction with a sampleable latent space, and why reparameterization lets gradients flow through random samples. probabilistic generative modeling and variational inference adds a likelihood-based latent-variable branch beside gans, and connects probabilistic inference to the stochastic-gradient training ideas introduced by adam. https://arxiv.org/abs/1312.6114 generative modeling variational inference latent-variable models latent variables generative model approximate posterior elbo reparameterization trick variational inference prior distribution"
+    "search": "auto-encoding variational bayes auto-encoding-variational-bayes diederik p. kingma,max welling iclr 2014 generative generative modeling learn how a vae balances reconstruction with a sampleable latent space, and why reparameterization lets gradients flow through random samples. probabilistic generative modeling and variational inference adds a likelihood-based latent-variable branch beside gans, and connects probabilistic inference to the stochastic-gradient training ideas introduced by adam. https://arxiv.org/abs/1312.6114 generative modeling variational inference latent-variable models latent variables generative model approximate posterior elbo reparameterization trick variational inference prior distribution"
   },
   {
     "date": "2026-08-23",
@@ -225,7 +251,13 @@ window.DAILY_PAPER_CATALOG = [
     "topicLabel": "Regularization",
     "title": "Dropout: A Simple Way to Prevent Neural Networks from Overfitting",
     "description": "Learn why training with missing internal routes discourages fragile feature partnerships, and how one scaled test network approximates an ensemble.",
-    "authors": "Srivastava et al.",
+    "authors": [
+      "Nitish Srivastava",
+      "Geoffrey Hinton",
+      "Alex Krizhevsky",
+      "Ilya Sutskever",
+      "Ruslan Salakhutdinov"
+    ],
     "venue": "JMLR 2014",
     "paperFile": "dropout-a-simple-way-to-prevent-neural-networks-from-overfitting/dropout_a_simple_way_to_prevent_neural_networks_from_overfitting.pdf",
     "lessonFile": "dropout-a-simple-way-to-prevent-neural-networks-from-overfitting/dropout_a_simple_way_to_prevent_neural_networks_from_overfitting.html",
@@ -247,7 +279,7 @@ window.DAILY_PAPER_CATALOG = [
       "shared-weight ensemble"
     ],
     "mentalMapConnection": "Adds a regularization branch: it changes which internal routes train on each pass, unlike Adam's parameter updates, BatchNorm's activation statistics, or ResNet's permanent shortcut paths.",
-    "search": "dropout: a simple way to prevent neural networks from overfitting dropout-a-simple-way-to-prevent-neural-networks-from-overfitting srivastava et al. jmlr 2014 regularization regularization learn why training with missing internal routes discourages fragile feature partnerships, and how one scaled test network approximates an ensemble. regularization and generalization adds a regularization branch: it changes which internal routes train on each pass, unlike adam's parameter updates, batchnorm's activation statistics, or resnet's permanent shortcut paths. https://www.jmlr.org/papers/v15/srivastava14a.html regularization generalization deep learning model averaging dropout regularization generalization co-adaptation bernoulli masks test-time scaling shared-weight ensemble"
+    "search": "dropout: a simple way to prevent neural networks from overfitting dropout-a-simple-way-to-prevent-neural-networks-from-overfitting nitish srivastava,geoffrey hinton,alex krizhevsky,ilya sutskever,ruslan salakhutdinov jmlr 2014 regularization regularization learn why training with missing internal routes discourages fragile feature partnerships, and how one scaled test network approximates an ensemble. regularization and generalization adds a regularization branch: it changes which internal routes train on each pass, unlike adam's parameter updates, batchnorm's activation statistics, or resnet's permanent shortcut paths. https://www.jmlr.org/papers/v15/srivastava14a.html regularization generalization deep learning model averaging dropout regularization generalization co-adaptation bernoulli masks test-time scaling shared-weight ensemble"
   },
   {
     "date": "2026-08-22",
@@ -256,7 +288,10 @@ window.DAILY_PAPER_CATALOG = [
     "topicLabel": "Optimization",
     "title": "Adam: A Method for Stochastic Optimization",
     "description": "Learn how Adam keeps separate memories for gradient direction and gradient scale, then turns them into a calibrated parameter update.",
-    "authors": "Kingma & Ba",
+    "authors": [
+      "Diederik P. Kingma",
+      "Jimmy Ba"
+    ],
     "venue": "ICLR 2015",
     "paperFile": "adam-a-method-for-stochastic-optimization/adam_a_method_for_stochastic_optimization.pdf",
     "lessonFile": "adam-a-method-for-stochastic-optimization/adam_a_method_for_stochastic_optimization.html",
@@ -270,7 +305,7 @@ window.DAILY_PAPER_CATALOG = [
     ],
     "concepts": [],
     "mentalMapConnection": null,
-    "search": "adam: a method for stochastic optimization adam-a-method-for-stochastic-optimization kingma & ba iclr 2015 optimization optimization learn how adam keeps separate memories for gradient direction and gradient scale, then turns them into a calibrated parameter update. https://arxiv.org/abs/1412.6980 optimization deep-learning adaptive-methods training-dynamics"
+    "search": "adam: a method for stochastic optimization adam-a-method-for-stochastic-optimization diederik p. kingma,jimmy ba iclr 2015 optimization optimization learn how adam keeps separate memories for gradient direction and gradient scale, then turns them into a calibrated parameter update. https://arxiv.org/abs/1412.6980 optimization deep-learning adaptive-methods training-dynamics"
   },
   {
     "date": "2026-08-22",
@@ -279,7 +314,14 @@ window.DAILY_PAPER_CATALOG = [
     "topicLabel": "Post-training",
     "title": "Direct Preference Optimization: Your Language Model is Secretly a Reward Model",
     "description": "Learn how preference pairs can directly reshape a language model through a logistic objective, without training a separate reward model or running reinforcement learning.",
-    "authors": "Rafailov et al.",
+    "authors": [
+      "Rafael Rafailov",
+      "Archit Sharma",
+      "Eric Mitchell",
+      "Stefano Ermon",
+      "Christopher D. Manning",
+      "Chelsea Finn"
+    ],
     "venue": "NeurIPS 2023",
     "paperFile": "direct-preference-optimization/direct_preference_optimization.pdf",
     "lessonFile": "direct-preference-optimization/direct_preference_optimization.html",
@@ -300,7 +342,7 @@ window.DAILY_PAPER_CATALOG = [
       "beta"
     ],
     "mentalMapConnection": "First collection lesson: establishes the preference-learning and post-training branch.",
-    "search": "direct preference optimization: your language model is secretly a reward model direct-preference-optimization rafailov et al. neurips 2023 post-training post-training learn how preference pairs can directly reshape a language model through a logistic objective, without training a separate reward model or running reinforcement learning. language-model post-training and alignment first collection lesson: establishes the preference-learning and post-training branch. https://proceedings.neurips.cc/paper_files/paper/2023/file/a85b405ed65c6477a4fe8302b5e06ce7-paper-conference.pdf language-model post-training alignment preference learning preference pairs bradley-terry model kl-regularized reward maximization reference policy implicit reward dpo loss beta"
+    "search": "direct preference optimization: your language model is secretly a reward model direct-preference-optimization rafael rafailov,archit sharma,eric mitchell,stefano ermon,christopher d. manning,chelsea finn neurips 2023 post-training post-training learn how preference pairs can directly reshape a language model through a logistic objective, without training a separate reward model or running reinforcement learning. language-model post-training and alignment first collection lesson: establishes the preference-learning and post-training branch. https://proceedings.neurips.cc/paper_files/paper/2023/file/a85b405ed65c6477a4fe8302b5e06ce7-paper-conference.pdf language-model post-training alignment preference learning preference pairs bradley-terry model kl-regularized reward maximization reference policy implicit reward dpo loss beta"
   },
   {
     "date": "2026-08-21",
@@ -309,7 +351,10 @@ window.DAILY_PAPER_CATALOG = [
     "topicLabel": "Normalization",
     "title": "Batch Normalization: Accelerating Deep Network Training by Reducing Internal Covariate Shift",
     "description": "Understand how a learned measuring tape uses mini-batch statistics during training, then running statistics at inference, to make deep feature scales easier to manage.",
-    "authors": "Ioffe & Szegedy",
+    "authors": [
+      "Sergey Ioffe",
+      "Christian Szegedy"
+    ],
     "venue": "ICML 2015",
     "paperFile": "batch-normalization/batch_normalization_accelerating_deep_network_training.pdf",
     "lessonFile": "batch-normalization/batch_normalization_accelerating_deep_network_training.html",
@@ -323,7 +368,7 @@ window.DAILY_PAPER_CATALOG = [
     ],
     "concepts": [],
     "mentalMapConnection": null,
-    "search": "batch normalization: accelerating deep network training by reducing internal covariate shift batch-normalization ioffe & szegedy icml 2015 normalization normalization understand how a learned measuring tape uses mini-batch statistics during training, then running statistics at inference, to make deep feature scales easier to manage. https://arxiv.org/abs/1502.03167 deep-learning optimization normalization computer-vision"
+    "search": "batch normalization: accelerating deep network training by reducing internal covariate shift batch-normalization sergey ioffe,christian szegedy icml 2015 normalization normalization understand how a learned measuring tape uses mini-batch statistics during training, then running statistics at inference, to make deep feature scales easier to manage. https://arxiv.org/abs/1502.03167 deep-learning optimization normalization computer-vision"
   },
   {
     "date": "2026-08-20",
@@ -332,7 +377,16 @@ window.DAILY_PAPER_CATALOG = [
     "topicLabel": "Generative modeling",
     "title": "Generative Adversarial Nets",
     "description": "Learn how a generator and a learned critic play a game that moves generated samples toward the real data distribution.",
-    "authors": "Goodfellow et al.",
+    "authors": [
+      "Ian Goodfellow",
+      "Jean Pouget-Abadie",
+      "Mehdi Mirza",
+      "Bing Xu",
+      "David Warde-Farley",
+      "Sherjil Ozair",
+      "Aaron Courville",
+      "Yoshua Bengio"
+    ],
     "venue": "NeurIPS 2014",
     "paperFile": "generative-adversarial-nets/generative_adversarial_nets.pdf",
     "lessonFile": "generative-adversarial-nets/generative_adversarial_nets.html",
@@ -346,7 +400,7 @@ window.DAILY_PAPER_CATALOG = [
     ],
     "concepts": [],
     "mentalMapConnection": null,
-    "search": "generative adversarial nets generative-adversarial-nets goodfellow et al. neurips 2014 generative generative modeling learn how a generator and a learned critic play a game that moves generated samples toward the real data distribution. https://arxiv.org/abs/1406.2661 generative-modeling deep-learning adversarial-learning probabilistic-modeling"
+    "search": "generative adversarial nets generative-adversarial-nets ian goodfellow,jean pouget-abadie,mehdi mirza,bing xu,david warde-farley,sherjil ozair,aaron courville,yoshua bengio neurips 2014 generative generative modeling learn how a generator and a learned critic play a game that moves generated samples toward the real data distribution. https://arxiv.org/abs/1406.2661 generative-modeling deep-learning adversarial-learning probabilistic-modeling"
   },
   {
     "date": "2026-08-19",
@@ -355,7 +409,16 @@ window.DAILY_PAPER_CATALOG = [
     "topicLabel": "Language modeling",
     "title": "Attention Is All You Need",
     "description": "Learn how tokens exchange information through queries, keys, values, and causal masking to build context for translation.",
-    "authors": "Vaswani et al.",
+    "authors": [
+      "Ashish Vaswani",
+      "Noam Shazeer",
+      "Niki Parmar",
+      "Jakob Uszkoreit",
+      "Llion Jones",
+      "Aidan N. Gomez",
+      "Łukasz Kaiser",
+      "Illia Polosukhin"
+    ],
     "venue": "NeurIPS 2017",
     "paperFile": "attention-is-all-you-need/attention_is_all_you_need.pdf",
     "lessonFile": "attention-is-all-you-need/attention_is_all_you_need.html",
@@ -369,7 +432,7 @@ window.DAILY_PAPER_CATALOG = [
     ],
     "concepts": [],
     "mentalMapConnection": null,
-    "search": "attention is all you need attention-is-all-you-need vaswani et al. neurips 2017 language language modeling learn how tokens exchange information through queries, keys, values, and causal masking to build context for translation. https://arxiv.org/abs/1706.03762 deep-learning natural-language-processing transformers attention"
+    "search": "attention is all you need attention-is-all-you-need ashish vaswani,noam shazeer,niki parmar,jakob uszkoreit,llion jones,aidan n. gomez,łukasz kaiser,illia polosukhin neurips 2017 language language modeling learn how tokens exchange information through queries, keys, values, and causal masking to build context for translation. https://arxiv.org/abs/1706.03762 deep-learning natural-language-processing transformers attention"
   },
   {
     "date": "2026-08-19",
@@ -378,7 +441,12 @@ window.DAILY_PAPER_CATALOG = [
     "topicLabel": "Computer vision",
     "title": "Deep Residual Learning for Image Recognition",
     "description": "See why deep networks learn more easily when each block preserves a useful feature map and learns only the correction.",
-    "authors": "He et al.",
+    "authors": [
+      "Kaiming He",
+      "Xiangyu Zhang",
+      "Shaoqing Ren",
+      "Jian Sun"
+    ],
     "venue": "CVPR 2016",
     "paperFile": "deep-residual-learning-for-image-recognition/deep_residual_learning_for_image_recognition.pdf",
     "lessonFile": "deep-residual-learning-for-image-recognition/deep_residual_learning_for_image_recognition.html",
@@ -392,7 +460,7 @@ window.DAILY_PAPER_CATALOG = [
     ],
     "concepts": [],
     "mentalMapConnection": null,
-    "search": "deep residual learning for image recognition deep-residual-learning-for-image-recognition he et al. cvpr 2016 vision computer vision see why deep networks learn more easily when each block preserves a useful feature map and learns only the correction. https://arxiv.org/abs/1512.03385 deep-learning computer-vision convolutional-neural-networks optimization"
+    "search": "deep residual learning for image recognition deep-residual-learning-for-image-recognition kaiming he,xiangyu zhang,shaoqing ren,jian sun cvpr 2016 vision computer vision see why deep networks learn more easily when each block preserves a useful feature map and learns only the correction. https://arxiv.org/abs/1512.03385 deep-learning computer-vision convolutional-neural-networks optimization"
   },
   {
     "date": "2026-08-19",
@@ -401,7 +469,27 @@ window.DAILY_PAPER_CATALOG = [
     "topicLabel": "Reinforcement learning",
     "title": "Human-level Control through Deep Reinforcement Learning",
     "description": "Build intuition for value forecasts, Bellman targets, experience replay, and the delayed target network that stabilizes learning from pixels.",
-    "authors": "Mnih et al.",
+    "authors": [
+      "Volodymyr Mnih",
+      "Koray Kavukcuoglu",
+      "David Silver",
+      "Andrei A. Rusu",
+      "Joel Veness",
+      "Marc G. Bellemare",
+      "Alex Graves",
+      "Martin Riedmiller",
+      "Andreas K. Fidjeland",
+      "Georg Ostrovski",
+      "Stig Petersen",
+      "Charles Beattie",
+      "Amir Sadik",
+      "Ioannis Antonoglou",
+      "Helen King",
+      "Dharshan Kumaran",
+      "Daan Wierstra",
+      "Shane Legg",
+      "Demis Hassabis"
+    ],
     "venue": "Nature 2015",
     "paperFile": "human-level-control-through-deep-reinforcement-learning/human_level_control_through_deep_reinforcement_learning.pdf",
     "lessonFile": "human-level-control-through-deep-reinforcement-learning/human_level_control_through_deep_reinforcement_learning.html",
@@ -415,6 +503,6 @@ window.DAILY_PAPER_CATALOG = [
     ],
     "concepts": [],
     "mentalMapConnection": null,
-    "search": "human-level control through deep reinforcement learning human-level-control-through-deep-reinforcement-learning mnih et al. nature 2015 reinforcement reinforcement learning build intuition for value forecasts, bellman targets, experience replay, and the delayed target network that stabilizes learning from pixels. https://www.nature.com/articles/nature14236 deep-reinforcement-learning decision-making computer-vision deep-learning"
+    "search": "human-level control through deep reinforcement learning human-level-control-through-deep-reinforcement-learning volodymyr mnih,koray kavukcuoglu,david silver,andrei a. rusu,joel veness,marc g. bellemare,alex graves,martin riedmiller,andreas k. fidjeland,georg ostrovski,stig petersen,charles beattie,amir sadik,ioannis antonoglou,helen king,dharshan kumaran,daan wierstra,shane legg,demis hassabis nature 2015 reinforcement reinforcement learning build intuition for value forecasts, bellman targets, experience replay, and the delayed target network that stabilizes learning from pixels. https://www.nature.com/articles/nature14236 deep-reinforcement-learning decision-making computer-vision deep-learning"
   }
 ];

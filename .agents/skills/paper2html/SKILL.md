@@ -67,7 +67,7 @@ Before delivery, clear these hard failures:
 - empty image alt text or unlabeled custom figures;
 - horizontal overflow, clipped content, distorted figures, or unreadable mobile layout.
 
-Also reject a lesson that only summarizes the paper. After following it, a student should be able to explain the core mechanism, work through a concrete trace or derivation, distinguish a common misconception, interpret the central evidence, and state an important limitation. Recheck semantic heading order, visible focus, keyboard operation, reduced-motion behaviour, and sufficient contrast for interactive elements.
+Also reject a lesson that only summarizes the paper. After following it, a student should be able to explain the core mechanism, work through a concrete trace or derivation, distinguish a common misconception, interpret the central evidence, and state an important limitation. Prefer a sharp original-paper extract for evidence when it clearly helps; a faithful reconstruction remains valid when it teaches the evidence more clearly. Recheck semantic heading order, visible focus, keyboard operation, reduced-motion behaviour, and sufficient contrast for interactive elements.
 
 Inspect the page at desktop and mobile widths when rendering is available. Static checks alone cannot catch visual defects. Revise and recheck until hard failures are cleared; report any inspection capability that is unavailable.
 

@@ -6,7 +6,7 @@
   <meta name="description" content="A collection of detailed AI, machine learning, and deep learning paper lessons.">
   <title>Daily AI Paper Lab</title>
   <style>
-    :root{--ink:#20201e;--muted:#65635e;--paper:#fbfaf6;--rule:#d9d5ca;--accent:#7a302c;--field:#f5f0e9}*{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--ink);font:18px/1.6 Georgia,serif}.wrap{max-width:920px;margin:auto;padding:72px 28px}h1,h2{line-height:1.12}h1{max-width:14ch;font-size:clamp(3rem,7vw,5.7rem);margin:0 0 .7rem;letter-spacing:-.045em;font-weight:normal}h2{font-size:1.55rem;margin:0}.lede,.meta,.summary{color:var(--muted)}.lede{max-width:44rem}.summary{max-width:44rem;margin:.7rem 0}.meta{margin:.55rem 0}.catalog-tools{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:.65rem;margin:2.3rem 0 0;padding:1rem 0;border-top:2px solid var(--ink);border-bottom:1px solid var(--rule)}.catalog-tools label{display:block;font:600 .72rem/1 Arial,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}.catalog-tools input,.catalog-tools select{width:100%;margin-top:.35rem;padding:.65rem .7rem;border:1px solid #a9a39a;border-radius:0;background:var(--field);color:var(--ink);font:16px Georgia,serif}.catalog-tools input:focus-visible,.catalog-tools select:focus-visible{outline:3px solid #b1734d;outline-offset:2px}.results{margin:1rem 0 -1rem;color:var(--muted);font-size:.9rem}.lesson{display:grid;grid-template-columns:126px 1fr;gap:26px;margin-top:2.5rem;padding:1.55rem 0;border-top:1px solid var(--rule)}.lesson[hidden]{display:none}.date{padding-top:5px;color:var(--accent);font:600 .78rem/1.3 Arial,sans-serif;letter-spacing:.08em;text-transform:uppercase}.paper-title{color:inherit;text-decoration:none}.paper-title:hover h2{text-decoration:underline;text-decoration-color:var(--accent)}.tag{font:600 .75rem/1.2 Arial,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:var(--accent)}.button{display:inline-block;margin-top:.5rem;padding:.55rem .8rem;border:1px solid var(--accent);color:var(--accent);font:600 .78rem/1 Arial,sans-serif;letter-spacing:.05em;text-decoration:none;text-transform:uppercase}.button:hover{background:var(--accent);color:#fff}a:focus-visible{outline:3px solid #b1734d;outline-offset:3px}@media(max-width:650px){.wrap{padding:42px 20px}h1{font-size:2.7rem}.catalog-tools{grid-template-columns:1fr}.lesson{grid-template-columns:1fr;gap:8px}.date{padding-top:0}}
+    :root{--ink:#20201e;--muted:#65635e;--paper:#fbfaf6;--rule:#d9d5ca;--accent:#7a302c;--field:#f5f0e9}*{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--ink);font:18px/1.6 Georgia,serif}.wrap{max-width:920px;margin:auto;padding:72px 28px}h1,h2{line-height:1.12}h1{max-width:14ch;font-size:clamp(3rem,7vw,5.7rem);margin:0 0 .7rem;letter-spacing:-.045em;font-weight:normal}h2{font-size:1.55rem;margin:0}.lede,.meta,.summary{color:var(--muted)}.lede{max-width:44rem}.summary{max-width:44rem;margin:.7rem 0}.meta{margin:.55rem 0}.catalog-tools{display:grid;grid-template-columns:minmax(0,1fr) auto auto auto;gap:.65rem;margin:2.3rem 0 0;padding:1rem 0;border-top:2px solid var(--ink);border-bottom:1px solid var(--rule)}.catalog-tools label,.view-control>span{display:block;font:600 .72rem/1 Arial,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}.catalog-tools input,.catalog-tools select{width:100%;margin-top:.35rem;padding:.65rem .7rem;border:1px solid #a9a39a;border-radius:0;background:var(--field);color:var(--ink);font:16px Georgia,serif}.catalog-tools input:focus-visible,.catalog-tools select:focus-visible,.view-button:focus-visible,.page-button:focus-visible{outline:3px solid #b1734d;outline-offset:2px}.view-options{display:flex;margin-top:.35rem;border:1px solid #a9a39a}.view-button{margin:0;padding:.67rem .58rem;border:0;border-right:1px solid #a9a39a;background:var(--field);color:var(--ink);font:600 .69rem/1 Arial,sans-serif;letter-spacing:.04em;text-transform:uppercase;cursor:pointer}.view-button:last-child{border-right:0}.view-button[aria-pressed="true"]{background:var(--ink);color:var(--paper)}.results{margin:1rem 0 -1rem;color:var(--muted);font-size:.9rem}.lesson{display:grid;grid-template-columns:126px 1fr;gap:26px;margin-top:2.5rem;padding:1.55rem 0;border-top:1px solid var(--rule)}.lesson[hidden]{display:none}.date{padding-top:5px;color:var(--accent);font:600 .78rem/1.3 Arial,sans-serif;letter-spacing:.08em;text-transform:uppercase}.paper-title{color:inherit;text-decoration:none}.paper-title:hover h2{text-decoration:underline;text-decoration-color:var(--accent)}.tag{font:600 .75rem/1.2 Arial,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:var(--accent)}.button{display:inline-block;margin-top:.5rem;padding:.55rem .8rem;border:1px solid var(--accent);color:var(--accent);font:600 .78rem/1 Arial,sans-serif;letter-spacing:.05em;text-decoration:none;text-transform:uppercase}.button:hover{background:var(--accent);color:#fff}a:focus-visible{outline:3px solid #b1734d;outline-offset:3px}.pagination{display:flex;align-items:center;justify-content:flex-end;gap:.35rem;min-height:4.6rem;margin-top:1rem;border-top:1px solid var(--rule);font:600 .74rem/1 Arial,sans-serif;letter-spacing:.04em;text-transform:uppercase}.pagination[hidden]{display:none}.page-status{margin-right:auto;color:var(--muted)}.page-button{min-width:2.4rem;margin:0;padding:.58rem .48rem;border:1px solid #a9a39a;border-radius:0;background:transparent;color:var(--ink);font:inherit;letter-spacing:inherit;cursor:pointer}.page-button:hover:not(:disabled){border-color:var(--accent);color:var(--accent)}.page-button[aria-current="page"]{border-color:var(--ink);background:var(--ink);color:var(--paper)}.page-button:disabled{opacity:.45;cursor:not-allowed}.page-gap{padding:0 .15rem;color:var(--muted)}#lesson-list[data-view="compact"] .lesson{grid-template-columns:96px 1fr;gap:18px;margin-top:1.25rem;padding:.95rem 0}#lesson-list[data-view="compact"] .summary{display:none}#lesson-list[data-view="compact"] .tag{margin:.05rem 0 .3rem}#lesson-list[data-view="compact"] h2{font-size:1.2rem}#lesson-list[data-view="compact"] .meta{margin:.3rem 0}#lesson-list[data-view="compact"] .button{margin-top:.25rem;padding:.4rem .55rem;font-size:.66rem}#lesson-list[data-view="list"] .lesson{grid-template-columns:96px minmax(0,1fr);gap:18px;margin-top:.8rem;padding:.8rem 0}#lesson-list[data-view="list"] .lesson-content{display:grid;grid-template-columns:minmax(11rem,1fr) minmax(15rem,1.8fr) auto;grid-template-areas:"title summary action" "meta meta action";gap:.15rem 1.25rem;align-items:start}#lesson-list[data-view="list"] .tag{display:none}#lesson-list[data-view="list"] .paper-title{grid-area:title}#lesson-list[data-view="list"] h2{font-size:1.08rem}#lesson-list[data-view="list"] .summary{grid-area:summary;margin:0;font-size:.86rem;line-height:1.45}#lesson-list[data-view="list"] .meta{grid-area:meta;margin:0;font-size:.8rem;line-height:1.4}#lesson-list[data-view="list"] .button{grid-area:action;align-self:center;margin:0;padding:.45rem .55rem;font-size:.63rem;white-space:nowrap}@media(max-width:760px){.catalog-tools{grid-template-columns:1fr 1fr}.view-control{grid-column:1/-1}.view-options{width:max-content}#lesson-list[data-view="list"] .lesson-content{grid-template-columns:1fr auto;grid-template-areas:"title action" "summary summary" "meta meta"}}@media(max-width:650px){.wrap{padding:42px 20px}h1{font-size:2.7rem}.catalog-tools{grid-template-columns:1fr}.view-control{grid-column:auto}.lesson,#lesson-list[data-view="compact"] .lesson,#lesson-list[data-view="list"] .lesson{grid-template-columns:1fr;gap:8px}.date{padding-top:0}.pagination{justify-content:flex-start;flex-wrap:wrap;padding:.8rem 0}.page-status{width:100%;margin-right:0}#lesson-list[data-view="list"] .lesson-content{grid-template-columns:1fr auto;grid-template-areas:"title action" "summary summary" "meta meta";gap:.35rem .75rem}}
   </style>
 </head>
 <body>
@@ -16,9 +16,11 @@
       <label>Search papers<input id="paper-search" type="search" placeholder="Title, author, topic…" autocomplete="off"></label>
       <label>Filter by topic<select id="topic-filter"><option value="all">All topics</option><option value="meta-learning">Meta-learning</option><option value="graphs">Graph machine learning</option><option value="generative">Generative modeling</option><option value="compression">Model compression</option><option value="self-supervised">Self-supervised learning</option><option value="efficient">Efficient ML</option><option value="regularization">Regularization</option><option value="post-training">Post-training</option><option value="optimization">Optimization</option><option value="normalization">Normalization</option><option value="language">Language modeling</option><option value="vision">Computer vision</option><option value="reinforcement">Reinforcement learning</option></select></label>
       <label>Sort<select id="sort-order"><option value="newest">Newest first</option><option value="oldest">Oldest first</option><option value="title">Title A–Z</option></select></label>
+      <div class="view-control" role="group" aria-label="Lesson view"><span>View</span><div class="view-options"><button class="view-button" type="button" data-view="reader" aria-pressed="false">Reader</button><button class="view-button" type="button" data-view="compact" aria-pressed="false">Compact</button><button class="view-button" type="button" data-view="list" aria-pressed="true">List</button></div></div>
     </form>
     <p id="results" class="results" aria-live="polite"></p>
     <section id="lesson-list" aria-label="Paper lessons"></section>
+    <nav id="pagination" class="pagination" aria-label="Lesson pages" hidden></nav>
   </main>
   <script src="catalog.js"></script>
   <script>
@@ -27,30 +29,64 @@
       const search = document.querySelector('#paper-search');
       const filter = document.querySelector('#topic-filter');
       const sort = document.querySelector('#sort-order');
+      const viewButtons = [...document.querySelectorAll('.view-button')];
       const list = document.querySelector('#lesson-list');
       const results = document.querySelector('#results');
+      const pagination = document.querySelector('#pagination');
+      const pageSize = 10;
+      let currentPage = 1;
       if (!Array.isArray(catalog)) { results.textContent = 'The lesson catalog could not be loaded.'; return; }
       const dateLabel = date => new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }).format(new Date(`${date}T00:00:00`));
       const card = record => {
         const article = document.createElement('article'); article.className = 'lesson'; article.dataset.date = record.date; article.dataset.topic = record.topic; article.dataset.search = record.search;
         const time = document.createElement('time'); time.className = 'date'; time.dateTime = record.date; time.textContent = dateLabel(record.date);
-        const content = document.createElement('div');
+        const content = document.createElement('div'); content.className = 'lesson-content';
         const tag = document.createElement('p'); tag.className = 'tag'; tag.textContent = `${record.topicLabel} · 60 minutes`;
         const paper = document.createElement('a'); paper.className = 'paper-title'; paper.href = record.paperFile;
         const title = document.createElement('h2'); title.textContent = record.title; paper.append(title);
         const summary = document.createElement('p'); summary.className = 'summary'; summary.textContent = record.description;
-        const meta = document.createElement('p'); meta.className = 'meta'; meta.textContent = `${record.authors} · ${record.venue}`;
+        const meta = document.createElement('p'); meta.className = 'meta'; meta.textContent = `${record.authors.join(', ')} · ${record.venue}`;
         const lesson = document.createElement('a'); lesson.className = 'button'; lesson.href = record.lessonFile; lesson.textContent = 'Read the lesson →';
         content.append(tag, paper, summary, meta, lesson); article.append(time, content); return article;
       };
       const cards = catalog.map(card);
-      const update = () => {
+      const setView = view => {
+        const selected = ['reader', 'compact', 'list'].includes(view) ? view : 'reader';
+        list.dataset.view = selected;
+        viewButtons.forEach(button => { button.setAttribute('aria-pressed', String(button.dataset.view === selected)); });
+      };
+      const renderPagination = (pageCount, matchCount) => {
+        pagination.replaceChildren();
+        if (pageCount <= 1) { pagination.hidden = true; return; }
+        pagination.hidden = false;
+        const status = document.createElement('span'); status.className = 'page-status'; status.textContent = `Page ${currentPage} of ${pageCount} · ${matchCount} lessons`;
+        const addButton = (label, targetPage, disabled = false, current = false) => {
+          const button = document.createElement('button'); button.type = 'button'; button.className = 'page-button'; button.textContent = label; button.disabled = disabled; button.setAttribute('aria-label', /^\d+$/.test(label) ? `Page ${label}` : label);
+          if (current) button.setAttribute('aria-current', 'page');
+          button.addEventListener('click', () => { currentPage = targetPage; update(); }); pagination.append(button);
+        };
+        const addGap = () => { const gap = document.createElement('span'); gap.className = 'page-gap'; gap.setAttribute('aria-hidden', 'true'); gap.textContent = '…'; pagination.append(gap); };
+        pagination.append(status);
+        addButton('Previous', currentPage - 1, currentPage === 1);
+        const pages = [...new Set([1, currentPage - 1, currentPage, currentPage + 1, pageCount].filter(page => page >= 1 && page <= pageCount))].sort((a, b) => a - b);
+        pages.forEach((page, index) => { if (index && page - pages[index - 1] > 1) addGap(); addButton(String(page), page, false, page === currentPage); });
+        addButton('Next', currentPage + 1, currentPage === pageCount);
+      };
+      const update = (resetPage = false) => {
+        if (resetPage) currentPage = 1;
         const query = search.value.trim().toLowerCase(); const topic = filter.value; const order = sort.value;
         const sorted = [...cards].sort((a, b) => order === 'title' ? a.querySelector('h2').textContent.localeCompare(b.querySelector('h2').textContent) : order === 'oldest' ? a.dataset.date.localeCompare(b.dataset.date) : b.dataset.date.localeCompare(a.dataset.date));
-        sorted.forEach(item => { item.hidden = !((topic === 'all' || item.dataset.topic === topic) && (!query || item.dataset.search.includes(query))); list.append(item); });
-        const count = cards.filter(item => !item.hidden).length; results.textContent = `${count} ${count === 1 ? 'lesson' : 'lessons'} found`;
+        const matches = sorted.filter(item => (topic === 'all' || item.dataset.topic === topic) && (!query || item.dataset.search.includes(query)));
+        const pageCount = Math.max(1, Math.ceil(matches.length / pageSize)); currentPage = Math.min(currentPage, pageCount);
+        const first = (currentPage - 1) * pageSize; const visible = new Set(matches.slice(first, first + pageSize));
+        sorted.forEach(item => { item.hidden = !visible.has(item); list.append(item); });
+        const start = matches.length ? first + 1 : 0; const end = Math.min(first + pageSize, matches.length);
+        results.textContent = matches.length ? `${matches.length} ${matches.length === 1 ? 'lesson' : 'lessons'} found · Showing ${start}–${end}` : 'No lessons found';
+        renderPagination(pageCount, matches.length);
       };
-      search.addEventListener('input', update); filter.addEventListener('change', update); sort.addEventListener('change', update); update();
+      search.addEventListener('input', () => update(true)); filter.addEventListener('change', () => update(true)); sort.addEventListener('change', () => update(true));
+      viewButtons.forEach(button => button.addEventListener('click', () => setView(button.dataset.view)));
+      setView('list'); update();
     })();
   </script>
 </body>

@@ -7,27 +7,29 @@ const root = path.resolve(scriptDir, "..");
 const curriculum = JSON.parse(fs.readFileSync(path.join(root, "curriculum.json"), "utf8"));
 
 const presentation = {
-  "model-agnostic-meta-learning-for-fast-adaptation-of-deep-networks": ["meta-learning", "Meta-learning", "Finn, Abbeel & Levine", "ICML 2017"],
-  "denoising-diffusion-probabilistic-models": ["generative", "Generative modeling", "Ho, Jain & Abbeel", "NeurIPS 2020"],
-  "distilling-the-knowledge-in-a-neural-network": ["compression", "Model compression", "Hinton, Vinyals & Dean", "NeurIPS Workshop 2015"],
-  "simclr-contrastive-learning": ["self-supervised", "Self-supervised learning", "Chen et al.", "ICML 2020"],
-  "semi-supervised-classification-with-graph-convolutional-networks": ["graphs", "Graph machine learning", "Kipf & Welling", "ICLR 2017"],
-  "the-lottery-ticket-hypothesis": ["efficient", "Efficient ML", "Frankle & Carbin", "ICLR 2019"],
-  "auto-encoding-variational-bayes": ["generative", "Generative modeling", "Kingma & Welling", "ICLR 2014"],
-  "dropout-a-simple-way-to-prevent-neural-networks-from-overfitting": ["regularization", "Regularization", "Srivastava et al.", "JMLR 2014"],
-  "direct-preference-optimization": ["post-training", "Post-training", "Rafailov et al.", "NeurIPS 2023"],
-  "adam-a-method-for-stochastic-optimization": ["optimization", "Optimization", "Kingma & Ba", "ICLR 2015"],
-  "batch-normalization": ["normalization", "Normalization", "Ioffe & Szegedy", "ICML 2015"],
-  "generative-adversarial-nets": ["generative", "Generative modeling", "Goodfellow et al.", "NeurIPS 2014"],
-  "attention-is-all-you-need": ["language", "Language modeling", "Vaswani et al.", "NeurIPS 2017"],
-  "deep-residual-learning-for-image-recognition": ["vision", "Computer vision", "He et al.", "CVPR 2016"],
-  "human-level-control-through-deep-reinforcement-learning": ["reinforcement", "Reinforcement learning", "Mnih et al.", "Nature 2015"]
+  "model-agnostic-meta-learning-for-fast-adaptation-of-deep-networks": ["meta-learning", "Meta-learning", "ICML 2017"],
+  "denoising-diffusion-probabilistic-models": ["generative", "Generative modeling", "NeurIPS 2020"],
+  "distilling-the-knowledge-in-a-neural-network": ["compression", "Model compression", "NeurIPS Workshop 2015"],
+  "simclr-contrastive-learning": ["self-supervised", "Self-supervised learning", "ICML 2020"],
+  "semi-supervised-classification-with-graph-convolutional-networks": ["graphs", "Graph machine learning", "ICLR 2017"],
+  "the-lottery-ticket-hypothesis": ["efficient", "Efficient ML", "ICLR 2019"],
+  "auto-encoding-variational-bayes": ["generative", "Generative modeling", "ICLR 2014"],
+  "dropout-a-simple-way-to-prevent-neural-networks-from-overfitting": ["regularization", "Regularization", "JMLR 2014"],
+  "direct-preference-optimization": ["post-training", "Post-training", "NeurIPS 2023"],
+  "adam-a-method-for-stochastic-optimization": ["optimization", "Optimization", "ICLR 2015"],
+  "batch-normalization": ["normalization", "Normalization", "ICML 2015"],
+  "generative-adversarial-nets": ["generative", "Generative modeling", "NeurIPS 2014"],
+  "attention-is-all-you-need": ["language", "Language modeling", "NeurIPS 2017"],
+  "deep-residual-learning-for-image-recognition": ["vision", "Computer vision", "CVPR 2016"],
+  "human-level-control-through-deep-reinforcement-learning": ["reinforcement", "Reinforcement learning", "Nature 2015"]
 };
 
 const catalog = curriculum.completed_lessons.map(lesson => {
   const display = presentation[lesson.slug];
   if (!display) throw new Error(`No catalog presentation mapping for ${lesson.slug}`);
-  const [topic, topicLabel, authors, venue] = display;
+  const [topic, topicLabel, venue] = display;
+  const authors = (lesson.authors || []).filter(Boolean);
+  if (!authors.length) throw new Error(`No authors listed for ${lesson.slug}`);
   const areas = (lesson.areas || []).filter(Boolean);
   const concepts = (lesson.concepts_introduced || []).filter(Boolean);
   const tokens = [lesson.title, lesson.slug, authors, venue, topic, topicLabel, lesson.description,

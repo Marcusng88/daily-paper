@@ -442,7 +442,14 @@
       "slug": "generative-adversarial-nets",
       "title": "Generative Adversarial Nets",
       "authors": [
-        "Ian Goodfellow et al."
+        "Ian Goodfellow",
+        "Jean Pouget-Abadie",
+        "Mehdi Mirza",
+        "Bing Xu",
+        "David Warde-Farley",
+        "Sherjil Ozair",
+        "Aaron Courville",
+        "Yoshua Bengio"
       ],
       "year": 2014,
       "areas": [
@@ -461,7 +468,14 @@
       "slug": "attention-is-all-you-need",
       "title": "Attention Is All You Need",
       "authors": [
-        "Ashish Vaswani et al."
+        "Ashish Vaswani",
+        "Noam Shazeer",
+        "Niki Parmar",
+        "Jakob Uszkoreit",
+        "Llion Jones",
+        "Aidan N. Gomez",
+        "Łukasz Kaiser",
+        "Illia Polosukhin"
       ],
       "year": 2017,
       "areas": [
@@ -480,7 +494,10 @@
       "slug": "deep-residual-learning-for-image-recognition",
       "title": "Deep Residual Learning for Image Recognition",
       "authors": [
-        "Kaiming He et al."
+        "Kaiming He",
+        "Xiangyu Zhang",
+        "Shaoqing Ren",
+        "Jian Sun"
       ],
       "year": 2015,
       "areas": [
@@ -499,7 +516,25 @@
       "slug": "human-level-control-through-deep-reinforcement-learning",
       "title": "Human-level Control through Deep Reinforcement Learning",
       "authors": [
-        "Volodymyr Mnih et al."
+        "Volodymyr Mnih",
+        "Koray Kavukcuoglu",
+        "David Silver",
+        "Andrei A. Rusu",
+        "Joel Veness",
+        "Marc G. Bellemare",
+        "Alex Graves",
+        "Martin Riedmiller",
+        "Andreas K. Fidjeland",
+        "Georg Ostrovski",
+        "Stig Petersen",
+        "Charles Beattie",
+        "Amir Sadik",
+        "Ioannis Antonoglou",
+        "Helen King",
+        "Dharshan Kumaran",
+        "Daan Wierstra",
+        "Shane Legg",
+        "Demis Hassabis"
       ],
       "year": 2015,
       "areas": [
