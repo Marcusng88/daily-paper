@@ -1,0 +1,4 @@
+interface:
+  display_name: "Daily AI Paper Lesson"
+  short_description: "Build a deep, visual AI-paper lesson"
+  default_prompt: "Use $daily-ai-paper-lesson to create a detailed AI paper lesson."
