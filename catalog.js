@@ -1,6 +1,39 @@
 /* Generated from curriculum.json by scripts/build_catalog.mjs. */
 window.DAILY_PAPER_CATALOG = [
   {
+    "date": "2026-09-01",
+    "slug": "model-agnostic-meta-learning-for-fast-adaptation-of-deep-networks",
+    "topic": "meta-learning",
+    "topicLabel": "Meta-learning",
+    "title": "Model-Agnostic Meta-Learning for Fast Adaptation of Deep Networks",
+    "description": "Learn why a model can be trained not just to perform now, but to become useful after a few examples and an ordinary gradient step.",
+    "authors": "Finn, Abbeel & Levine",
+    "venue": "ICML 2017",
+    "paperFile": "model-agnostic-meta-learning-for-fast-adaptation-of-deep-networks/model_agnostic_meta_learning_for_fast_adaptation_of_deep_networks.pdf",
+    "lessonFile": "model-agnostic-meta-learning-for-fast-adaptation-of-deep-networks/model_agnostic_meta_learning_for_fast_adaptation_of_deep_networks.html",
+    "canonicalUrl": "https://proceedings.mlr.press/v70/finn17a.html",
+    "domain": "meta-learning and few-shot adaptation",
+    "areas": [
+      "meta-learning",
+      "few-shot learning",
+      "optimization",
+      "reinforcement learning"
+    ],
+    "concepts": [
+      "meta-learning",
+      "task distribution",
+      "support set",
+      "query set",
+      "fast adaptation",
+      "inner update",
+      "outer update",
+      "meta-gradient",
+      "first-order MAML"
+    ],
+    "mentalMapConnection": "Adds a learn-to-adapt branch: unlike Adam, which changes how one update is scaled, MAML trains an initialization for the model it becomes after task-specific updates.",
+    "search": "model-agnostic meta-learning for fast adaptation of deep networks model-agnostic-meta-learning-for-fast-adaptation-of-deep-networks finn, abbeel & levine icml 2017 meta-learning meta-learning learn why a model can be trained not just to perform now, but to become useful after a few examples and an ordinary gradient step. meta-learning and few-shot adaptation adds a learn-to-adapt branch: unlike adam, which changes how one update is scaled, maml trains an initialization for the model it becomes after task-specific updates. https://proceedings.mlr.press/v70/finn17a.html meta-learning few-shot learning optimization reinforcement learning meta-learning task distribution support set query set fast adaptation inner update outer update meta-gradient first-order maml"
+  },
+  {
     "date": "2026-08-31",
     "slug": "denoising-diffusion-probabilistic-models",
     "topic": "generative",

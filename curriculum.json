@@ -94,9 +94,52 @@
     "winning tickets",
     "iterative magnitude pruning",
     "original initialization",
-    "sparse trainability"
+    "sparse trainability",
+    "meta-learning",
+    "task distribution",
+    "support set",
+    "query set",
+    "fast adaptation",
+    "inner update",
+    "outer update",
+    "meta-gradient",
+    "first-order MAML"
   ],
   "completed_lessons": [
+    {
+      "date": "2026-09-01",
+      "slug": "model-agnostic-meta-learning-for-fast-adaptation-of-deep-networks",
+      "title": "Model-Agnostic Meta-Learning for Fast Adaptation of Deep Networks",
+      "lesson_file": "model-agnostic-meta-learning-for-fast-adaptation-of-deep-networks/model_agnostic_meta_learning_for_fast_adaptation_of_deep_networks.html",
+      "paper_file": "model-agnostic-meta-learning-for-fast-adaptation-of-deep-networks/model_agnostic_meta_learning_for_fast_adaptation_of_deep_networks.pdf",
+      "authors": [
+        "Chelsea Finn",
+        "Pieter Abbeel",
+        "Sergey Levine"
+      ],
+      "venue": "ICML 2017",
+      "canonical_url": "https://proceedings.mlr.press/v70/finn17a.html",
+      "domain": "meta-learning and few-shot adaptation",
+      "areas": [
+        "meta-learning",
+        "few-shot learning",
+        "optimization",
+        "reinforcement learning"
+      ],
+      "concepts_introduced": [
+        "meta-learning",
+        "task distribution",
+        "support set",
+        "query set",
+        "fast adaptation",
+        "inner update",
+        "outer update",
+        "meta-gradient",
+        "first-order MAML"
+      ],
+      "mental_map_connection": "Adds a learn-to-adapt branch: unlike Adam, which changes how one update is scaled, MAML trains an initialization for the model it becomes after task-specific updates.",
+      "description": "Learn why a model can be trained not just to perform now, but to become useful after a few examples and an ordinary gradient step."
+    },
     {
       "date": "2026-08-31",
       "slug": "denoising-diffusion-probabilistic-models",

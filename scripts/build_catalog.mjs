@@ -7,6 +7,7 @@ const root = path.resolve(scriptDir, "..");
 const curriculum = JSON.parse(fs.readFileSync(path.join(root, "curriculum.json"), "utf8"));
 
 const presentation = {
+  "model-agnostic-meta-learning-for-fast-adaptation-of-deep-networks": ["meta-learning", "Meta-learning", "Finn, Abbeel & Levine", "ICML 2017"],
   "denoising-diffusion-probabilistic-models": ["generative", "Generative modeling", "Ho, Jain & Abbeel", "NeurIPS 2020"],
   "distilling-the-knowledge-in-a-neural-network": ["compression", "Model compression", "Hinton, Vinyals & Dean", "NeurIPS Workshop 2015"],
   "simclr-contrastive-learning": ["self-supervised", "Self-supervised learning", "Chen et al.", "ICML 2020"],

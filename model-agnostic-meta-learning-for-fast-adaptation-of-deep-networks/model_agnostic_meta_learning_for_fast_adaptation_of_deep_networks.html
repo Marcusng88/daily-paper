@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="A one-hour lesson on Model-Agnostic Meta-Learning for Fast Adaptation of Deep Networks.">
+  <title>Model-Agnostic Meta-Learning — one-hour lesson</title>
+  <style>
+    :root{--ink:#1c2531;--muted:#5d6875;--paper:#f7f8f6;--wash:#e9eef0;--rule:#c6d0d4;--navy:#16435c;--teal:#217b7e;--coral:#a6503a;--gold:#b48631;--sans:Arial,Helvetica,sans-serif;--serif:Georgia,"Times New Roman",serif}*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--paper);color:var(--ink);font:18px/1.68 var(--serif)}a{color:var(--navy);text-decoration-thickness:1px;text-underline-offset:3px}a:focus-visible,button:focus-visible{outline:3px solid var(--gold);outline-offset:3px}.skip{position:absolute;left:-9999px}.skip:focus{left:1rem;top:1rem;z-index:4;background:#fff;padding:.5rem}.reading{max-width:76rem;margin-inline:auto;padding:1.5rem 1.4rem 5rem}.topline{font:700 .76rem/1.2 var(--sans);letter-spacing:.13em;text-transform:uppercase;color:var(--teal);margin:0 0 1rem}.home{font:700 .75rem/1.2 var(--sans);letter-spacing:.08em;text-transform:uppercase}.hero{margin:2.3rem 0 3rem;padding:1rem 0 2.7rem;border-bottom:1px solid var(--rule)}h1,h2,h3{line-height:1.12;margin:0;font-weight:normal}h1{max-width:15ch;font-size:clamp(3.2rem,8vw,6.9rem);letter-spacing:-.06em;color:var(--navy)}h2{font-size:clamp(2rem,4vw,3.35rem);letter-spacing:-.04em}h3{font-size:1.25rem}.dek{max-width:47rem;font-size:1.25rem;margin:1.3rem 0;color:#334454}.paperline{max-width:49rem;margin:1.25rem 0 0;font:600 .82rem/1.55 var(--sans);color:var(--muted)}.route{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:0;margin-top:2.4rem;border-top:2px solid var(--ink);border-bottom:1px solid var(--rule)}.route div{padding:.75rem .6rem .85rem;border-left:1px solid var(--rule);font:600 .72rem/1.35 var(--sans)}.route div:first-child{border-left:0}.route b{display:block;color:var(--coral);letter-spacing:.08em}section{padding:3.2rem 0;border-bottom:1px solid var(--rule)}.eyebrow{font:700 .72rem/1.2 var(--sans);letter-spacing:.14em;text-transform:uppercase;color:var(--coral);margin:0 0 .7rem}.lead{max-width:48rem;font-size:1.12rem}.analogy,.boundary{max-width:60rem;margin:1.4rem 0;padding:1rem 1.15rem;border-left:4px solid var(--teal);background:var(--wash)}.boundary{border-left-color:var(--gold);background:#f6f0df}.grid-2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1.15rem;margin:1.5rem 0}.card{padding:1rem 1.1rem;border:1px solid var(--rule);background:#fbfcfa}.card h3{color:var(--navy);margin-bottom:.35rem}.callout-label{font:700 .7rem/1.2 var(--sans);letter-spacing:.1em;color:var(--teal)}table{width:100%;border-collapse:collapse;margin:1.4rem 0;font-size:.92rem}caption{text-align:left;font:700 .76rem/1.35 var(--sans);letter-spacing:.09em;text-transform:uppercase;color:var(--muted);margin-bottom:.5rem}th,td{padding:.62rem .58rem;text-align:left;vertical-align:top;border-bottom:1px solid var(--rule)}th{font:700 .72rem/1.25 var(--sans);letter-spacing:.07em;text-transform:uppercase;color:var(--navy)}.mathbox{overflow-x:auto;margin:1.3rem 0;padding:1rem 1.15rem;background:#fff;border:1px solid var(--rule);font-size:1.15rem}.mathbox math{margin-inline:auto}.smallmath{font-size:1rem}.figure{max-width:65rem;margin:1.7rem auto;padding:1rem;background:#fff;border:1px solid var(--rule)}svg{display:block;width:100%;height:auto}figcaption{padding:.8rem .2rem .1rem;color:var(--muted);font-size:.9rem}.caption-label{font:700 .7rem/1.2 var(--sans);letter-spacing:.1em;text-transform:uppercase;color:var(--coral)}.steps{counter-reset:step;list-style:none;padding:0;margin:1.4rem 0}.steps li{position:relative;padding:.1rem 0 .9rem 3rem;max-width:58rem}.steps li::before{counter-increment:step;content:counter(step);position:absolute;left:0;top:0;width:1.8rem;height:1.8rem;display:grid;place-items:center;border:1px solid var(--teal);border-radius:50%;font:700 .78rem var(--sans);color:var(--teal)}.lab{margin:1.7rem 0;padding:1.2rem;border:2px solid var(--navy);background:#eef4f5}.lab-head{display:flex;gap:1rem;align-items:baseline;flex-wrap:wrap}.lab h3{color:var(--navy)}.choices{display:flex;gap:.7rem;flex-wrap:wrap;margin:1rem 0}.choice{border:1px solid var(--navy);border-radius:0;background:#fff;color:var(--navy);padding:.55rem .75rem;font:700 .78rem/1.2 var(--sans);cursor:pointer}.choice[aria-pressed="true"],.choice:hover{background:var(--navy);color:#fff}.result{min-height:3.5rem;margin:0;padding:.85rem;background:#fff;border-left:4px solid var(--coral)}details{max-width:60rem;margin:1rem 0;border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);padding:.75rem 0}summary{cursor:pointer;font-weight:bold}details p{margin:.8rem 0 .1rem}.evidence{padding:1.1rem;background:#f0f4f2;border-top:3px solid var(--teal)}.evidence strong{font-family:var(--sans)}.footer{padding:2.8rem 0 0}.footer h2{font-size:1.7rem}.footer ul{padding-left:1.2rem}@media(max-width:700px){.reading{padding:1.1rem 1rem 4rem}.route{grid-template-columns:repeat(2,minmax(0,1fr))}.route div:nth-child(3),.route div:nth-child(5){border-left:0}.grid-2{grid-template-columns:1fr}h1{font-size:3.25rem}table{font-size:.8rem}th,td{padding:.45rem .3rem}.figure{margin-inline:-.15rem}.mathbox{padding:.85rem;font-size:1rem}}@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+  </style>
+</head>
+<body>
+  <a class="skip" href="#lesson">Skip to lesson</a>
+  <main class="reading" id="lesson">
+    <a class="home" href="../index.html">← Daily AI Paper Lab</a>
+    <header class="hero">
+      <p class="topline">Meta-learning · Few-shot adaptation · ICML 2017</p>
+      <h1>Learn the starting point, not just the task.</h1>
+      <p class="dek">MAML asks a different training question: which parameters become useful for a new task after only a small amount of ordinary gradient descent? Follow one gradient through the adaptation step, then see why that changes what an initialization means.</p>
+      <p class="paperline"><em>Model-Agnostic Meta-Learning for Fast Adaptation of Deep Networks</em> · Chelsea Finn, Pieter Abbeel, Sergey Levine · ICML 2017</p>
+      <div class="route" aria-label="One-hour study route">
+        <div><b>0–8 min</b>Why one trained model is not enough</div><div><b>8–18 min</b>Tasks, support data, query data</div><div><b>18–31 min</b>Inner and outer updates</div><div><b>31–42 min</b>Trace a gradient through a gradient</div><div><b>42–52 min</b>Read the benchmark evidence</div><div><b>52–60 min</b>Recall, limits, and connections</div>
+      </div>
+    </header>
+
+    <section>
+      <p class="eyebrow">1 · Prerequisite bridge</p>
+      <h2>A good map is not the same as a good compass.</h2>
+      <p class="lead">Ordinary training finds parameters that perform well on the training distribution now. Meta-learning finds parameters from which a small task-specific update can perform well on a new task. The difference is easy to miss because both use gradient descent.</p>
+      <aside class="analogy"><span class="callout-label">Analogy</span><br>Imagine preparing a field kit for many nearby hiking routes. A kit packed perfectly for yesterday’s route can be awkward tomorrow. MAML is not trying to pre-pack every answer; it is trying to choose an arrangement that becomes right quickly after receiving a few clues about today’s route. The arrangement is <em>θ</em>; the few clues produce the task gradient.</aside>
+      <div class="grid-2">
+        <article class="card"><h3>Pretraining</h3><p>Optimize one parameter vector for average performance across observed tasks. Fine-tuning happens afterward, but the training objective did not explicitly reward fast fine-tuning.</p></article>
+        <article class="card"><h3>MAML</h3><p>Optimize <em>through</em> a simulated fine-tuning step. A parameter vector earns credit when its adapted version works on fresh data from the same sampled task.</p></article>
+      </div>
+      <aside class="boundary"><span class="callout-label">Boundary</span><br>“Model-agnostic” does not mean data-free or optimizer-free. The paper assumes a model parameterized by θ and a loss smooth enough for gradient methods. It means the meta-rule does not require a special recurrent learner or a metric-learning architecture.</aside>
+    </section>
+
+    <section>
+      <p class="eyebrow">2 · The unit of learning changes</p>
+      <h2>A task supplies two roles for data.</h2>
+      <p>During meta-training, MAML samples tasks <em>T<sub>i</sub></em> from a distribution <em>p(T)</em>. For each task, a small support set produces an adaptation update. Separate query examples test whether that adapted model actually generalized. The query loss — not the support loss alone — teaches the shared initialization.</p>
+      <table>
+        <caption>Actors and shapes in a supervised N-way, K-shot task</caption>
+        <thead><tr><th>Object</th><th>Typical shape</th><th>Job</th></tr></thead>
+        <tbody>
+          <tr><td>Task T<sub>i</sub></td><td>One sampled classification or regression problem</td><td>Acts like one meta-training example.</td></tr>
+          <tr><td>Support set D<sub>i</sub></td><td>N × K labeled examples in N-way classification</td><td>Produces the inner, task-specific gradient.</td></tr>
+          <tr><td>Query set D′<sub>i</sub></td><td>Fresh labeled examples from the same task</td><td>Measures post-adaptation performance for the outer update.</td></tr>
+          <tr><td>θ, θ′<sub>i</sub></td><td>Same parameter shape</td><td>Shared initialization and its adapted copy for task i.</td></tr>
+          <tr><td>α, β</td><td>Scalars or learned step sizes</td><td>Inner adaptation and outer meta-update step sizes.</td></tr>
+        </tbody>
+      </table>
+      <p>For a 5-way 1-shot image task, the support set contains five labeled images: one example for each of five classes. The query examples are different images from those same five classes. A useful initialization must turn that tiny support signal into good query predictions.</p>
+    </section>
+
+    <section>
+      <p class="eyebrow">3 · The learned routing is through time</p>
+      <h2>Adapt inside each task; learn from the result.</h2>
+      <p>The paper’s Algorithm 1 (PDF p. 3) has two nested updates. First, make a private copy of θ for every sampled task. Then judge each copy after it has moved.</p>
+      <figure class="figure">
+        <svg viewBox="0 0 1060 430" role="img" aria-labelledby="cycle-title cycle-desc">
+          <title id="cycle-title">MAML's inner and outer learning loop</title><desc id="cycle-desc">A shared initialization branches into three task-specific gradient updates. Each adapted parameter is evaluated on fresh data, and their results feed one outer update back to the shared initialization.</desc>
+          <defs><marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#16435c"/></marker></defs>
+          <rect x="12" y="16" width="1036" height="398" fill="#fbfcfa" stroke="#c6d0d4"/><text x="50" y="60" font-family="Arial" font-size="18" font-weight="700" fill="#16435c">shared meta-parameters θ</text><circle cx="155" cy="135" r="38" fill="#16435c"/><text x="140" y="142" font-family="Georgia" font-size="27" fill="white">θ</text>
+          <path d="M195 135 C300 135,295 90,385 90" fill="none" stroke="#16435c" stroke-width="3" marker-end="url(#arrow)"/><path d="M195 135 C300 135,295 210,385 210" fill="none" stroke="#16435c" stroke-width="3" marker-end="url(#arrow)"/><path d="M195 135 C300 135,295 330,385 330" fill="none" stroke="#16435c" stroke-width="3" marker-end="url(#arrow)"/>
+          <g font-family="Arial" font-size="16" fill="#1c2531"><text x="265" y="75">support data from T₁</text><text x="265" y="195">support data from T₂</text><text x="265" y="315">support data from T₃</text></g>
+          <g><rect x="390" y="52" width="206" height="76" fill="#dceff0" stroke="#217b7e"/><rect x="390" y="172" width="206" height="76" fill="#dceff0" stroke="#217b7e"/><rect x="390" y="292" width="206" height="76" fill="#dceff0" stroke="#217b7e"/><g font-family="Arial" text-anchor="middle" fill="#16435c"><text x="493" y="82" font-size="15" font-weight="700">inner update</text><text x="493" y="108" font-size="20">θ′ᵢ = θ − α∇Lᵢ</text><text x="493" y="202" font-size="15" font-weight="700">inner update</text><text x="493" y="228" font-size="20">θ′ᵢ = θ − α∇Lᵢ</text><text x="493" y="322" font-size="15" font-weight="700">inner update</text><text x="493" y="348" font-size="20">θ′ᵢ = θ − α∇Lᵢ</text></g></g>
+          <g stroke="#16435c" stroke-width="3" fill="none" marker-end="url(#arrow)"><path d="M596 90H705"/><path d="M596 210H705"/><path d="M596 330H705"/></g>
+          <g><rect x="710" y="52" width="172" height="76" fill="#f8e5de" stroke="#a6503a"/><rect x="710" y="172" width="172" height="76" fill="#f8e5de" stroke="#a6503a"/><rect x="710" y="292" width="172" height="76" fill="#f8e5de" stroke="#a6503a"/><g font-family="Arial" text-anchor="middle" fill="#773321"><text x="796" y="83" font-size="14" font-weight="700">query loss</text><text x="796" y="110" font-size="19">Lᵢ(θ′ᵢ)</text><text x="796" y="203" font-size="14" font-weight="700">query loss</text><text x="796" y="230" font-size="19">Lᵢ(θ′ᵢ)</text><text x="796" y="323" font-size="14" font-weight="700">query loss</text><text x="796" y="350" font-size="19">Lᵢ(θ′ᵢ)</text></g></g>
+          <path d="M882 90 C955 90,960 205,930 205" fill="none" stroke="#a6503a" stroke-width="3" marker-end="url(#arrow)"/><path d="M882 210H930" fill="none" stroke="#a6503a" stroke-width="3" marker-end="url(#arrow)"/><path d="M882 330 C955 330,960 215,930 215" fill="none" stroke="#a6503a" stroke-width="3" marker-end="url(#arrow)"/><rect x="934" y="163" width="90" height="94" fill="#f4edd8" stroke="#b48631"/><text x="979" y="194" text-anchor="middle" font-family="Arial" font-size="14" font-weight="700" fill="#725419">outer</text><text x="979" y="218" text-anchor="middle" font-family="Arial" font-size="14" font-weight="700" fill="#725419">update</text><text x="979" y="242" text-anchor="middle" font-family="Georgia" font-size="20" fill="#725419">θ ← θ − β∇ΣL</text><path d="M934 255 C885 402,292 410,173 179" fill="none" stroke="#b48631" stroke-width="3" stroke-dasharray="8 7" marker-end="url(#arrow)"/><text x="493" y="402" text-anchor="middle" font-family="Arial" font-size="15" fill="#725419">differentiate through the adaptation step</text>
+        </svg>
+        <figcaption><span class="caption-label">Lesson diagram</span> Each task gets its own inner move. The outer update adjusts the shared starting point according to how well those moved copies perform on fresh examples.</figcaption>
+      </figure>
+      <div class="mathbox" aria-label="MAML inner and outer update equations">
+        <math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><mrow><munder><mi>θ</mi><mo>′</mo></munder><mi>i</mi><mo>=</mo><mi>θ</mi><mo>−</mo><mi>α</mi><msub><mo>∇</mo><mi>θ</mi></msub><msub><mi>L</mi><msub><mi>T</mi><mi>i</mi></msub></msub><mo>(</mo><msub><mi>f</mi><mi>θ</mi></msub><mo>)</mo></mrow></math>
+        <hr>
+        <math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><mrow><mi>θ</mi><mo>←</mo><mi>θ</mi><mo>−</mo><mi>β</mi><msub><mo>∇</mo><mi>θ</mi></msub><mrow><mo>∑</mo><msub><mi>T</mi><mi>i</mi></msub><mo>∼</mo><mi>p</mi><mo>(</mo><mi>T</mi><mo>)</mo></mrow><msub><mi>L</mi><msub><mi>T</mi><mi>i</mi></msub></msub><mo>(</mo><msub><mi>f</mi><msub><mi>θ</mi><mi>i</mi></msub></msub><mo>′</mo><mo>)</mo></mrow></math>
+      </div>
+      <p>Keep the dependency arrow visible: θ′<sub>i</sub> depends on θ. Therefore the outer derivative contains the effect of changing θ on the inner gradient step itself. Full MAML computes this “gradient through a gradient”; the paper notes that this brings Hessian-vector products.</p>
+    </section>
+
+    <section>
+      <p class="eyebrow">4 · Worked trace I</p>
+      <h2>One tiny task, one meta-gradient.</h2>
+      <p>Use a toy scalar task solely to make the nesting calculable. Let the support loss be <em>L<sub>S</sub>(θ) = (θ − 3)²</em>, start at θ = 1, and set α = 0.25. Let the query loss have the same target: <em>L<sub>Q</sub>(θ′) = (θ′ − 3)²</em>.</p>
+      <ol class="steps">
+        <li><strong>Adapt on support data.</strong> The support gradient is 2(1 − 3) = −4. Thus θ′ = 1 − 0.25(−4) = 2.</li>
+        <li><strong>Score fresh query data.</strong> L<sub>Q</sub>(2) = (2 − 3)² = 1. This is the quantity meta-training wants to lower after adaptation.</li>
+        <li><strong>Differentiate through the move.</strong> Since θ′ = θ − 0.25 · 2(θ − 3), the sensitivity is dθ′/dθ = 1 − 0.5 = 0.5. The outer gradient is 2(2 − 3) · 0.5 = −1.</li>
+        <li><strong>Update the starting point.</strong> With β = 0.2, θ becomes 1 − 0.2(−1) = 1.2. The initialization moves toward a place from which the support update can reach this task’s target.</li>
+      </ol>
+      <aside class="boundary"><span class="callout-label">What this trace proves — and does not</span><br>It shows the chain rule in MAML’s objective. It does not reproduce the paper’s neural-network experiments, and it uses the same support/query target only to keep the arithmetic short. In actual training, the query examples must be distinct to reward generalization rather than memorization.</aside>
+      <div class="lab" aria-labelledby="lab-title">
+        <div class="lab-head"><p class="eyebrow">Predict before reveal</p><h3 id="lab-title">Change only the support gradient.</h3></div>
+        <p>Starting at θ = 1 with α = 0.25, predict which task moves the adapted copy closest to its target. Then select a support gradient.</p>
+        <div class="choices" aria-label="Choose a toy task gradient"><button class="choice" type="button" data-gradient="-4" data-target="3" aria-pressed="true">gradient −4, target 3</button><button class="choice" type="button" data-gradient="2" data-target="0" aria-pressed="false">gradient +2, target 0</button><button class="choice" type="button" data-gradient="-8" data-target="5" aria-pressed="false">gradient −8, target 5</button></div>
+        <p class="result" id="lab-result" aria-live="polite">With gradient −4, θ′ = 1 − 0.25(−4) = 2. It moves toward target 3. The same initialization can adapt in opposite directions because the task-specific gradient changes.</p>
+        <p class="smallmath">Static reading: MAML does not make all tasks share one final θ. It learns a θ from which different task gradients can quickly branch.</p>
+      </div>
+    </section>
+
+    <section>
+      <p class="eyebrow">5 · Worked trace II</p>
+      <h2>Read “5-way, 1-shot” as a data budget.</h2>
+      <div class="grid-2">
+        <article class="card"><h3>Support</h3><p>Choose five held-out classes. Give one labeled example for each: 5-way × 1-shot = <strong>5 support images</strong>. Run one or more inner gradient updates using them.</p></article>
+        <article class="card"><h3>Query</h3><p>Evaluate the adapted classifier on different images from those five classes. Their loss supplies the outer signal. At meta-test time, the query accuracy is the outcome.</p></article>
+      </div>
+      <p>The paper’s MiniImageNet row makes the scale concrete. For the reported 5-way evaluation, full MAML obtains 48.70% ± 1.84% at one shot; the fine-tuning baseline obtains 28.86% ± 0.54%. The point-estimate difference is:</p>
+      <div class="mathbox smallmath"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><mrow><mn>48.70</mn><mo>−</mo><mn>28.86</mn><mo>=</mo><mn>19.84</mn><mtext> percentage points</mtext></mrow></math></div>
+      <p>For 5-shot, the corresponding point-estimate difference is 63.11 − 49.79 = 13.32 percentage points. Those are comparisons within this paper’s MiniImageNet setup; they are not a timeless ranking of every later few-shot method.</p>
+    </section>
+
+    <section>
+      <p class="eyebrow">6 · Evidence, not mythology</p>
+      <h2>What did the paper actually measure?</h2>
+      <div class="evidence">
+        <p class="eyebrow">Original paper table</p>
+        <table>
+          <caption>Reconstruction of the MiniImageNet portion of Table 1 (PDF p. 7)</caption>
+          <thead><tr><th>5-way method</th><th>1-shot accuracy</th><th>5-shot accuracy</th></tr></thead>
+          <tbody>
+            <tr><td>Fine-tuning baseline</td><td>28.86 ± 0.54%</td><td>49.79 ± 0.79%</td></tr>
+            <tr><td>Nearest neighbor baseline</td><td>41.08 ± 0.70%</td><td>51.04 ± 0.65%</td></tr>
+            <tr><td>Matching nets</td><td>43.56 ± 0.84%</td><td>55.31 ± 0.73%</td></tr>
+            <tr><td>Meta-learner LSTM</td><td>43.44 ± 0.77%</td><td>60.60 ± 0.71%</td></tr>
+            <tr><td>MAML, first-order approximation</td><td>48.07 ± 1.75%</td><td>63.15 ± 0.91%</td></tr>
+            <tr><td><strong>MAML</strong></td><td><strong>48.70 ± 1.84%</strong></td><td><strong>63.11 ± 0.92%</strong></td></tr>
+          </tbody>
+        </table>
+        <p><span class="caption-label">Paper evidence</span> The ± values are 95% confidence intervals over tasks, as stated in the table caption. The paper also reports that omitting second derivatives gave roughly a 33% speed-up in network computation with near-full-MAML MiniImageNet results (PDF p. 7).</p>
+      </div>
+      <p><strong>Strong reading:</strong> under this held-out MiniImageNet protocol, MAML’s reported point estimates exceed the listed baselines. <strong>Careful reading:</strong> the table does not establish that MAML is always best, that the same margin transfers to another dataset, or that a confidence interval around each method alone proves a pairwise significance test.</p>
+    </section>
+
+    <section>
+      <p class="eyebrow">7 · Failure modes and distinctions</p>
+      <h2>Fast adaptation has a bill to pay.</h2>
+      <div class="grid-2">
+        <article class="card"><h3>Second-order cost</h3><p>Full MAML differentiates through gradient updates. That needs extra computation and memory; the paper’s first-order approximation is a practical response, not the identical algorithm.</p></article>
+        <article class="card"><h3>Task-distribution dependence</h3><p>Meta-training only teaches useful adaptation for tasks resembling its task distribution. A new task can be out of range even when it provides K examples.</p></article>
+        <article class="card"><h3>Support/query leakage</h3><p>Using the same examples for both roles undermines the central generalization signal. The split is a causal part of the objective, not paperwork.</p></article>
+        <article class="card"><h3>Not instant learning</h3><p>MAML still requires labels, rollouts, gradient evaluation, and a well-chosen adaptation budget. In the paper’s reinforcement-learning setting, each extra adaptation step needs new on-policy samples.</p></article>
+      </div>
+      <details><summary>Misconception: “MAML learns one model per task.”</summary><p>No. It learns one shared initialization θ. During each sampled task, it temporarily creates θ′<sub>i</sub>; the outer update combines what those temporary copies reveal.</p></details>
+      <details><summary>Misconception: “The inner step is the whole algorithm.”</summary><p>No. Ordinary fine-tuning has an inner step too. MAML’s distinctive operation is optimizing θ for the post-inner-step query loss.</p></details>
+      <details><summary>Misconception: “Model-agnostic means there are no assumptions.”</summary><p>The method assumes a gradient-based learner and a sufficiently smooth loss. It is flexible across regression, classification, and policy-gradient reinforcement learning, but not unconstrained.</p></details>
+    </section>
+
+    <section>
+      <p class="eyebrow">8 · Active recall</p>
+      <h2>Can you reconstruct the causal loop?</h2>
+      <details><summary>1. What is optimized by the inner update, and what is optimized by the outer update?</summary><p>The inner update adapts θ to θ′<sub>i</sub> using support data for one task. The outer update changes the shared θ so the adapted copies have lower query loss across sampled tasks.</p></details>
+      <details><summary>2. Why are support and query examples separated?</summary><p>Support examples tell the learner how to adapt; fresh query examples test whether that adaptation generalized. The outer objective needs the latter signal.</p></details>
+      <details><summary>3. Where do second derivatives enter full MAML?</summary><p>When differentiating the query loss with respect to θ through θ′<sub>i</sub> = θ − α∇θL<sub>i</sub>(θ). Differentiating the inner gradient contributes curvature information.</p></details>
+      <details><summary>4. What does 5-way, 1-shot mean?</summary><p>One task contains five classes and one labeled support example from each class: five support examples total, followed by query examples from those same classes.</p></details>
+      <details><summary>5. State one scoped empirical result.</summary><p>On the paper’s MiniImageNet 5-way benchmark, Table 1 reports MAML at 48.70% ± 1.84% for 1-shot and 63.11% ± 0.92% for 5-shot accuracy.</p></details>
+    </section>
+
+    <section>
+      <p class="eyebrow">9 · Connect it to your mental map</p>
+      <h2>Same gradient machinery; a different training target.</h2>
+      <div class="grid-2">
+        <article class="card"><h3>Adam</h3><p>Adam changes how a parameter update is scaled using moment estimates. MAML changes <em>what initialization is being optimized for</em>: performance after a later update. Adam can be MAML’s meta-optimizer; the paper uses it in the sinusoid regression experiment.</p></article>
+        <article class="card"><h3>DQN</h3><p>DQN learns action values through Bellman targets and replay. MAML can be applied to reinforcement learning, but the paper adapts policies with on-policy gradients. Do not substitute an experience-replay story for the support/query task loop.</p></article>
+        <article class="card"><h3>SimCLR</h3><p>SimCLR learns representations useful across augmentations. MAML learns parameters positioned for quick task-specific movement. Both transfer prior experience, but one emphasizes invariant embeddings and the other the geometry of fine-tuning.</p></article>
+        <article class="card"><h3>ResNet</h3><p>ResNet exposes an identity baseline inside a network block. MAML exposes a useful adaptation baseline across tasks. Both are parameterization ideas that make a desired change easier to learn, at different levels of the system.</p></article>
+      </div>
+    </section>
+
+    <section>
+      <p class="eyebrow">10 · Takeaway</p>
+      <h2>Learn to arrive ready to change.</h2>
+      <p class="lead">MAML is not a new prediction layer. It is a training objective that evaluates an initialization by the learner it becomes after a small, ordinary update. Support data says how to move; query data says whether that move was useful; the outer gradient makes future moves more effective.</p>
+    </section>
+
+    <footer class="footer">
+      <h2>Source and further exploration</h2>
+      <ul>
+        <li><a href="model_agnostic_meta_learning_for_fast_adaptation_of_deep_networks.pdf">Original paper PDF (local copy)</a></li>
+        <li><a href="https://proceedings.mlr.press/v70/finn17a.html">PMLR canonical record</a></li>
+        <li><a href="https://github.com/cbfinn/maml">Authors’ MAML implementation</a></li>
+      </ul>
+    </footer>
+  </main>
+  <script>
+    (() => {
+      const buttons = [...document.querySelectorAll('.choice')];
+      const result = document.querySelector('#lab-result');
+      buttons.forEach(button => button.addEventListener('click', () => {
+        const gradient = Number(button.dataset.gradient);
+        const target = Number(button.dataset.target);
+        const adapted = 1 - 0.25 * gradient;
+        const direction = adapted < target ? 'toward' : adapted > target ? 'past' : 'exactly to';
+        buttons.forEach(item => item.setAttribute('aria-pressed', String(item === button)));
+        result.textContent = `With gradient ${gradient > 0 ? '+' : ''}${gradient}, θ′ = 1 − 0.25(${gradient}) = ${adapted}. It moves ${direction} target ${target}. The same initialization can adapt in different directions because the task-specific gradient changes.`;
+      }));
+    })();
+  </script>
+</body>
+</html>
