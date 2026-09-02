@@ -1,6 +1,58 @@
 /* Generated from curriculum.json by scripts/build_catalog.mjs. */
 window.DAILY_PAPER_CATALOG = [
   {
+    "date": "2026-09-02",
+    "slug": "mastering-the-game-of-go-with-deep-neural-networks-and-tree-search",
+    "topic": "planning",
+    "topicLabel": "Planning and search",
+    "title": "Mastering the game of Go with deep neural networks and tree search",
+    "description": "Learn how AlphaGo combined learned policy and value networks with tree search so it could deliberate over a huge board without examining every possible game.",
+    "authors": [
+      "David Silver",
+      "Aja Huang",
+      "Chris J. Maddison",
+      "Arthur Guez",
+      "Laurent Sifre",
+      "George van den Driessche",
+      "Julian Schrittwieser",
+      "Ioannis Antonoglou",
+      "Veda Panneershelvam",
+      "Marc Lanctot",
+      "Sander Dieleman",
+      "Dominik Grewe",
+      "John Nham",
+      "Nal Kalchbrenner",
+      "Ilya Sutskever",
+      "Timothy Lillicrap",
+      "Madeleine Leach",
+      "Koray Kavukcuoglu",
+      "Thore Graepel",
+      "Demis Hassabis"
+    ],
+    "venue": "Nature 2016",
+    "paperFile": "mastering-the-game-of-go-with-deep-neural-networks-and-tree-search/mastering_the_game_of_go_with_deep_neural_networks_and_tree_search.pdf",
+    "lessonFile": "mastering-the-game-of-go-with-deep-neural-networks-and-tree-search/mastering_the_game_of_go_with_deep_neural_networks_and_tree_search.html",
+    "canonicalUrl": "https://doi.org/10.1038/nature16961",
+    "domain": "planning with learned policy and value networks",
+    "areas": [
+      "reinforcement learning",
+      "planning",
+      "tree search",
+      "game playing"
+    ],
+    "concepts": [
+      "Monte Carlo tree search",
+      "policy prior",
+      "value network",
+      "tree expansion",
+      "exploration bonus",
+      "rollout",
+      "backup"
+    ],
+    "mentalMapConnection": "Adds planning to the reinforcement-learning branch: unlike DQN's direct action scoring, AlphaGo uses learned policy and value predictions to decide where a temporary search tree should spend its computation.",
+    "search": "mastering the game of go with deep neural networks and tree search mastering-the-game-of-go-with-deep-neural-networks-and-tree-search david silver,aja huang,chris j. maddison,arthur guez,laurent sifre,george van den driessche,julian schrittwieser,ioannis antonoglou,veda panneershelvam,marc lanctot,sander dieleman,dominik grewe,john nham,nal kalchbrenner,ilya sutskever,timothy lillicrap,madeleine leach,koray kavukcuoglu,thore graepel,demis hassabis nature 2016 planning planning and search learn how alphago combined learned policy and value networks with tree search so it could deliberate over a huge board without examining every possible game. planning with learned policy and value networks adds planning to the reinforcement-learning branch: unlike dqn's direct action scoring, alphago uses learned policy and value predictions to decide where a temporary search tree should spend its computation. https://doi.org/10.1038/nature16961 reinforcement learning planning tree search game playing monte carlo tree search policy prior value network tree expansion exploration bonus rollout backup"
+  },
+  {
     "date": "2026-09-01",
     "slug": "model-agnostic-meta-learning-for-fast-adaptation-of-deep-networks",
     "topic": "meta-learning",

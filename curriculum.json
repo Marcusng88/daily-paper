@@ -103,9 +103,33 @@
     "inner update",
     "outer update",
     "meta-gradient",
-    "first-order MAML"
+    "first-order MAML",
+    "Monte Carlo tree search",
+    "policy prior",
+    "value network",
+    "tree expansion",
+    "exploration bonus",
+    "rollout",
+    "backup"
   ],
   "completed_lessons": [
+    {
+      "date": "2026-09-02",
+      "slug": "mastering-the-game-of-go-with-deep-neural-networks-and-tree-search",
+      "title": "Mastering the game of Go with deep neural networks and tree search",
+      "lesson_file": "mastering-the-game-of-go-with-deep-neural-networks-and-tree-search/mastering_the_game_of_go_with_deep_neural_networks_and_tree_search.html",
+      "paper_file": "mastering-the-game-of-go-with-deep-neural-networks-and-tree-search/mastering_the_game_of_go_with_deep_neural_networks_and_tree_search.pdf",
+      "authors": [
+        "David Silver", "Aja Huang", "Chris J. Maddison", "Arthur Guez", "Laurent Sifre", "George van den Driessche", "Julian Schrittwieser", "Ioannis Antonoglou", "Veda Panneershelvam", "Marc Lanctot", "Sander Dieleman", "Dominik Grewe", "John Nham", "Nal Kalchbrenner", "Ilya Sutskever", "Timothy Lillicrap", "Madeleine Leach", "Koray Kavukcuoglu", "Thore Graepel", "Demis Hassabis"
+      ],
+      "venue": "Nature 2016",
+      "canonical_url": "https://doi.org/10.1038/nature16961",
+      "domain": "planning with learned policy and value networks",
+      "areas": ["reinforcement learning", "planning", "tree search", "game playing"],
+      "concepts_introduced": ["Monte Carlo tree search", "policy prior", "value network", "tree expansion", "exploration bonus", "rollout", "backup"],
+      "mental_map_connection": "Adds planning to the reinforcement-learning branch: unlike DQN's direct action scoring, AlphaGo uses learned policy and value predictions to decide where a temporary search tree should spend its computation.",
+      "description": "Learn how AlphaGo combined learned policy and value networks with tree search so it could deliberate over a huge board without examining every possible game."
+    },
     {
       "date": "2026-09-01",
       "slug": "model-agnostic-meta-learning-for-fast-adaptation-of-deep-networks",
