@@ -19,6 +19,8 @@ Make a visual only when it makes a paper's mechanism, evidence, comparison, or m
 
 The reader is studying, not operating a dashboard. Give each visual one question to answer and one dominant visual field. Keep labels, values, and a short caption close to the figure; avoid KPI cards, decorative panels, status badges, pill controls, and duplicate legends.
 
+Place every retained source-paper visual in the causal lesson flow where its question becomes necessary: a mechanism figure beside the mechanism it clarifies, and a result figure beside the evidence it qualifies. Do not append a detached source-figure gallery unless comparing the figures themselves is the learning activity.
+
 For diagrams, use direct labels and arrows instead of a legend when possible. For plots, include meaningful axes and units, label important values directly, and use a legend only when direct labels are insufficient. Preserve the paper's units, splits, metrics, and experimental conditions.
 
 ## Interactive labs

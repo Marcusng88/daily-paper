@@ -1,34 +1,484 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="A one-hour lesson on Federated Averaging and communication-efficient decentralized learning.">
-  <title>Communication-Efficient Learning of Deep Networks — one-hour lesson</title>
-  <style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="A one-hour lesson on Federated Averaging and communication-efficient decentralized learning.">
+<title>Communication-Efficient Learning of Deep Networks — one-hour lesson</title>
+<style>
     :root{--ground:#e8eceb;--paper:#f8faf9;--ink:#17272b;--muted:#556569;--line:#a9bab9;--navy:#17465b;--teal:#197b78;--orange:#a24d2e;--yellow:#d5a52a}*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--ground);color:var(--ink);font:18px/1.65 Georgia,'Times New Roman',serif}a{color:inherit;text-decoration-color:var(--orange);text-underline-offset:.16em}a:focus-visible,button:focus-visible,input:focus-visible{outline:3px solid var(--orange);outline-offset:3px}.page{max-width:1080px;margin:auto;padding:30px 32px 82px}.home{font:700 .72rem/1 Arial,sans-serif;letter-spacing:.12em;text-transform:uppercase;text-decoration:none;color:var(--muted)}.masthead{margin-top:28px;padding:50px 0 42px;border-top:7px solid var(--navy);border-bottom:1px solid var(--line);display:grid;grid-template-columns:1.3fr .7fr;gap:48px}.eyebrow,.section-id,.figure-label{font:700 .72rem/1.2 Arial,sans-serif;letter-spacing:.13em;text-transform:uppercase}.eyebrow{color:var(--orange);margin:0 0 1rem}.masthead h1{max-width:13ch;margin:0;font-size:clamp(3.1rem,7vw,6rem);font-weight:normal;line-height:.91;letter-spacing:-.064em}.lede{max-width:38rem;margin:1.5rem 0 0;font-size:1.18rem;line-height:1.52}.citation{margin-top:1.3rem;color:var(--muted);font-size:.9rem}.promise{align-self:end;background:var(--paper);padding:1.25rem;border-left:5px solid var(--teal)}.promise h2{font-size:1.35rem;line-height:1.15;margin:.4rem 0 .65rem}.promise p{margin:0;font-size:.94rem}.route{margin:2rem 0 4.7rem;padding:1rem 0;border-bottom:1px solid var(--line);font-size:.9rem}.route strong{color:var(--navy);font:700 .72rem/1 Arial,sans-serif;letter-spacing:.12em;text-transform:uppercase}.route p{margin:.6rem 0 0}.lesson{max-width:860px;margin:auto}.lesson>section{margin-bottom:5.2rem;scroll-margin-top:2rem}.section-id{color:var(--orange);margin:0 0 .7rem}.lesson h2{margin:0 0 1.1rem;font-size:clamp(2rem,4vw,3rem);line-height:1.03;font-weight:normal;letter-spacing:-.035em}.lesson h3{margin:1.7rem 0 .55rem;font-size:1.27rem;line-height:1.18}.lesson p{max-width:45rem}.margin-note{max-width:45rem;margin:1.5rem 0;padding:1rem 1.2rem;background:var(--paper);border-left:4px solid var(--orange)}.margin-note p{margin:.2rem 0}.analogy{max-width:45rem;padding:1.25rem 1.4rem;border:1px solid var(--line);background:var(--paper)}.analogy strong{display:block;margin-bottom:.55rem;color:var(--navy);font:700 .72rem/1 Arial,sans-serif;letter-spacing:.1em;text-transform:uppercase}.analogy p{margin:0}.diagram{margin:2rem 0;max-width:100%;padding:1rem;background:var(--paper);border:1px solid var(--line)}.diagram svg,.original{display:block;width:100%;height:auto}.figure-label{display:block;color:var(--orange);margin:.8rem 0 .35rem}.diagram figcaption,.caption{font-size:.87rem;color:var(--muted);line-height:1.48}.actors{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;max-width:48rem;background:var(--line);border:1px solid var(--line)}.actor{padding:1rem;background:var(--paper)}.actor b{font-size:1.1rem}.actor p{margin:.5rem 0 0;font-size:.87rem;line-height:1.45}.eq{max-width:100%;overflow-x:auto;margin:1.35rem 0;padding:1rem 1.2rem;text-align:center;background:var(--paper);border-top:1px solid var(--line);border-bottom:1px solid var(--line)}.eq math{font-size:1.18rem}.trace{max-width:45rem;margin:1.4rem 0;padding:1.1rem 1.25rem;background:var(--paper);border-top:4px solid var(--teal)}.trace h3{margin:0 0 .6rem}.trace p{margin:.6rem 0}.grid-table,.evidence{width:100%;max-width:48rem;border-collapse:collapse;margin:1.2rem 0;font-size:.9rem}.grid-table th,.grid-table td,.evidence th,.evidence td{padding:.68rem;border:1px solid var(--line);text-align:left;vertical-align:top}.grid-table th,.evidence th{background:#dbe5e3;color:var(--navy);font:700 .7rem/1.2 Arial,sans-serif;letter-spacing:.07em;text-transform:uppercase}.mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace}.instrument{max-width:45rem;padding:1.25rem 1.4rem;background:var(--paper);border:1px solid var(--line)}.instrument h3{margin:0 0 .5rem}.instrument label{display:block;margin:1rem 0 .25rem;font-weight:bold;font-size:.9rem}.instrument input{width:100%;accent-color:var(--orange)}.output{margin-top:1rem;padding:1rem;background:#e5eeec;border-left:4px solid var(--teal)}.output p{margin:.2rem 0}.small{font-size:.86rem;color:var(--muted)}.evidence{max-width:100%;font-size:.85rem}.reconstruction{border-top:4px solid var(--yellow)}.boundary{max-width:45rem;padding:1.1rem 1.25rem;border:1px solid var(--line)}.boundary h3{margin:0 0 .45rem}.boundary p{margin:.2rem 0}.reveal{max-width:45rem;margin:1rem 0;background:var(--paper);border:1px solid var(--line)}.reveal summary{cursor:pointer;padding:1rem 1.15rem;font-weight:bold}.reveal div{padding:0 1.15rem 1rem}.recall{max-width:45rem;padding:0;list-style:none;counter-reset:q}.recall li{counter-increment:q;padding:.8rem 0;border-bottom:1px solid var(--line)}.recall summary{cursor:pointer;font-weight:bold}.recall summary::before{content:counter(q) '. ';color:var(--orange)}.recall p{margin:.55rem 0 0;padding-left:1.35rem}.connections{display:grid;grid-template-columns:1fr 1fr;gap:1px;max-width:49rem;background:var(--line);border:1px solid var(--line)}.connection{padding:1rem;background:var(--paper)}.connection h3{margin:0 0 .45rem;font-size:1.08rem}.connection p{margin:0;font-size:.88rem}.takeaway{max-width:48rem;background:var(--navy);padding:1.6rem 1.8rem;color:#f4f7f6}.takeaway h2{margin:0 0 .65rem}.takeaway p{margin:0;font-size:1.08rem}.sources{max-width:860px;margin:5rem auto 0;padding-top:1.5rem;border-top:2px solid var(--navy)}.sources h2{font-size:1.7rem}.sources li{margin:.4rem 0}@media(max-width:720px){body{font-size:17px}.page{padding:22px 19px 55px}.masthead{grid-template-columns:1fr;gap:26px;padding:38px 0}.masthead h1{font-size:3.25rem}.lesson>section{margin-bottom:3.7rem}.actors,.connections{grid-template-columns:1fr}.eq{text-align:left;padding:.8rem}.eq math{font-size:1.05rem}.evidence{font-size:.77rem}.grid-table{font-size:.8rem}}@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
   </style>
 </head>
 <body>
-  <main class="page">
-    <a class="home" href="../index.html">← Daily AI Paper Lab</a>
-    <header class="masthead"><div><p class="eyebrow">Distributed optimization · AISTATS 2017</p><h1>Train together. Keep data apart.</h1><p class="lede">Federated Averaging moves computation to many devices: each client improves a shared model locally, then a server combines the resulting models. The central trade-off is not just accuracy—it is useful progress per communication round.</p><p class="citation"><em>Communication-Efficient Learning of Deep Networks from Decentralized Data</em> · H. Brendan McMahan, Eider Moore, Daniel Ramage, Seth Hampson &amp; Blaise Agüera y Arcas</p></div><aside class="promise"><p class="eyebrow">Learning promise</p><h2>Trace one federated round and name its real compromise.</h2><p>By the end, you will be able to compute a weighted model average, explain why client data can be non-IID, distinguish local work from server aggregation, and read the paper’s speed-up evidence without turning it into a privacy guarantee.</p></aside></header>
-    <nav class="route" aria-label="Timed study route"><strong>One-hour study route</strong><p><a href="#bridge">0–7 Bridge</a> · <a href="#setting">7–16 Why centralized training does not fit</a> · <a href="#actors">16–26 Name the moving parts</a> · <a href="#mechanism">26–39 Trace FedAvg</a> · <a href="#evidence">39–49 Read the evidence</a> · <a href="#recall">49–60 Diagnose, retrieve, connect</a></p></nav>
-    <article class="lesson">
-      <section id="bridge"><p class="section-id">1 · Prerequisite bridge</p><h2>A shared recipe, many private kitchens.</h2><p>Ordinary training imagines data gathered in one place, where batches update one model. Federated learning changes where the calculation happens: the data stays with many clients, while a shared model visits them in rounds.</p><div class="analogy"><strong>Concrete analogy</strong><p>Imagine a cooking class where every kitchen keeps its own ingredient notebook. The instructor sends the same recipe draft to a selection of kitchens. Each kitchen tries several revisions using only its own notes, then reports the revised recipe—not the notebook—to the instructor. The instructor makes a size-weighted blend and starts the next round.</p></div><p>The boundary matters: a model update is not the raw dataset, but it can still reveal information. The paper describes privacy advantages from reducing data centralization; it does <em>not</em> claim that model averaging by itself guarantees privacy.</p></section>
-      <section id="setting"><p class="section-id">2 · The setting</p><h2>Communication, not arithmetic, is the scarce resource.</h2><p>The paper describes client data that is <b>non-IID</b> (one client’s examples need not resemble the population) and <b>unbalanced</b> (clients may have very different amounts of data). Mobile devices may also be offline or bandwidth-limited. Sending a model back and forth repeatedly can dominate the cost.</p><div class="margin-note"><p><b>Failed baseline:</b> Federated SGD can take one local gradient step, communicate, then repeat. It is straightforward, but it can require many communication rounds. FedAvg asks whether clients can safely do more local training before the next aggregation.</p></div><p>This leaves a tension: more local work can reduce messages, but clients can drift toward their unlike-local objectives before their models are averaged.</p></section>
-      <section id="actors"><p class="section-id">3 · The actors and notation</p><h2>Separate the global objective from each client’s view.</h2><p>There are <i>K</i> clients. Client <i>k</i> owns an index set <i>P</i><sub>k</sub> with <i>n</i><sub>k</sub> examples; <i>n</i> is the total number of examples. Each client has a local objective <i>F</i><sub>k</sub>(<i>w</i>), while the server aims to minimize the data-size-weighted global objective:</p><div class="eq"><math aria-label="f of w equals the sum over k of n sub k divided by n times F sub k of w"><mrow><mi>f</mi><mo>(</mo><mi>w</mi><mo>)</mo><mo>=</mo><munderover><mo>∑</mo><mrow><mi>k</mi><mo>=</mo><mn>1</mn></mrow><mi>K</mi></munderover><mfrac><msub><mi>n</mi><mi>k</mi></msub><mi>n</mi></mfrac><msub><mi>F</mi><mi>k</mi></msub><mo>(</mo><mi>w</mi><mo>)</mo></mrow></math></div><div class="actors"><div class="actor"><b>C</b><p><b>Client fraction.</b> The proportion selected for a round. The paper selects <i>m = max(CK, 1)</i> clients.</p></div><div class="actor"><b>E</b><p><b>Local epochs.</b> How many passes a selected client makes through its data before returning a model.</p></div><div class="actor"><b>B</b><p><b>Local batch size.</b> The minibatch used in each local update. Smaller batches usually mean more local update steps.</p></div></div><p>These are levers for spending more computation at the edge in exchange for fewer server rounds. They do not remove the difficulty of heterogeneous data.</p></section>
-      <section id="mechanism"><p class="section-id">4 · The mechanism</p><h2>Federated averaging is local SGD plus a carefully weighted merge.</h2><figure class="diagram"><svg viewBox="0 0 820 360" role="img" aria-labelledby="flow-title flow-desc"><title id="flow-title">Federated Averaging round with three selected clients</title><desc id="flow-desc">A server sends a global model to three clients. Each client does local SGD on its private data and returns its updated model. The server combines models weighted by their example counts.</desc><defs><marker id="arrow" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto"><path d="M0 0L9 4.5 0 9Z" fill="#17465b"/></marker></defs><g fill="none" stroke="#17465b" stroke-width="3" marker-end="url(#arrow)"><path d="M400 95L150 165"/><path d="M400 95L400 165"/><path d="M400 95L650 165"/><path d="M150 262L400 322"/><path d="M400 262L400 322"/><path d="M650 262L400 322"/></g><rect x="300" y="25" width="200" height="70" fill="#17465b"/><text x="400" y="55" fill="#fff" font-family="Arial" font-size="17" text-anchor="middle">server model</text><text x="400" y="78" fill="#fff" font-family="Arial" font-size="15" text-anchor="middle">wᵗ</text><g fill="#f8faf9" stroke="#197b78" stroke-width="3"><rect x="70" y="165" width="160" height="97"/><rect x="320" y="165" width="160" height="97"/><rect x="570" y="165" width="160" height="97"/></g><g font-family="Arial" font-size="15" fill="#17272b" text-anchor="middle"><text x="150" y="194">client 1</text><text x="150" y="218">private data · E epochs</text><text x="150" y="241">w₁ᵗ⁺¹, n₁</text><text x="400" y="194">client 2</text><text x="400" y="218">private data · E epochs</text><text x="400" y="241">w₂ᵗ⁺¹, n₂</text><text x="650" y="194">client 3</text><text x="650" y="218">private data · E epochs</text><text x="650" y="241">w₃ᵗ⁺¹, n₃</text></g><rect x="280" y="320" width="240" height="35" fill="#a24d2e"/><text x="400" y="343" fill="#fff" font-family="Arial" font-size="15" text-anchor="middle">weighted average → wᵗ⁺¹</text></svg><span class="figure-label">Lesson diagram</span><figcaption>One synchronous FedAvg round. The server sees the returned updates and their aggregation weights; in the paper’s setting, clients retain their local training datasets.</figcaption></figure><ol><li><b>Select:</b> choose <i>m</i> clients and send each the same current model <i>w</i><sub>t</sub>.</li><li><b>Update locally:</b> each selected client splits its own data into batches and performs <i>E</i> local epochs of SGD, producing <i>w</i><sub>t+1</sub><sup>k</sup>.</li><li><b>Aggregate:</b> the server weights each returned model by that client’s example count, rather than giving a one-example client the same influence as a large client.</li></ol><div class="eq"><math aria-label="w sub t plus one equals sum over k of n sub k over n times w sub t plus one superscript k"><mrow><msub><mi>w</mi><mrow><mi>t</mi><mo>+</mo><mn>1</mn></mrow></msub><mo>=</mo><munderover><mo>∑</mo><mrow><mi>k</mi><mo>=</mo><mn>1</mn></mrow><mi>K</mi></munderover><mfrac><msub><mi>n</mi><mi>k</mi></msub><mi>n</mi></mfrac><msubsup><mi>w</mi><mrow><mi>t</mi><mo>+</mo><mn>1</mn></mrow><mi>k</mi></msubsup></mrow></math></div></section>
-      <section id="traces"><p class="section-id">5 · Worked traces</p><h2>Calculate the merge before you trust the slogan.</h2><div class="trace"><h3>Trace A · Example-count weighting</h3><p>Two selected clients start from the same scalar model. After their local training, client A has <span class="mono">nA = 2</span> examples and returns <span class="mono">wA = 4</span>; client B has <span class="mono">nB = 8</span> examples and returns <span class="mono">wB = 10</span>.</p><div class="eq"><math aria-label="w next equals two over ten times four plus eight over ten times ten equals eight point eight"><mrow><msup><mi>w</mi><mi>next</mi></msup><mo>=</mo><mfrac><mn>2</mn><mn>10</mn></mfrac><mo>×</mo><mn>4</mn><mo>+</mo><mfrac><mn>8</mn><mn>10</mn></mfrac><mo>×</mo><mn>10</mn><mo>=</mo><mn>8.8</mn></mrow></math></div><p><b>Interpretation:</b> the server does not average to 7. Each model is weighted by the amount of client data it represents. This is the model-averaging form of combining example-weighted gradients in FedSGD.</p></div><div class="trace"><h3>Trace B · More local work, fewer possible messages</h3><p>A client has <span class="mono">nₖ = 120</span> examples. With <span class="mono">E = 3</span> local epochs and minibatches of <span class="mono">B = 20</span>, the paper’s local-update count is:</p><div class="eq"><math aria-label="u sub k equals E times n sub k divided by B equals three times one hundred twenty divided by twenty equals eighteen local updates"><mrow><msub><mi>u</mi><mi>k</mi></msub><mo>=</mo><mfrac><mrow><mi>E</mi><msub><mi>n</mi><mi>k</mi></msub></mrow><mi>B</mi></mfrac><mo>=</mo><mfrac><mrow><mn>3</mn><mo>×</mo><mn>120</mn></mrow><mn>20</mn></mfrac><mo>=</mo><mn>18</mn><mtext> local updates</mtext></mrow></math></div><p>FedSGD’s matching endpoint is <span class="mono">E = 1, B = ∞</span>: one full-batch local gradient calculation before communicating. FedAvg deliberately lets each selected client make many updates, which can save rounds but can magnify client drift.</p></div><div class="instrument"><h3>Predict before reveal · Which returned model pulls the server farther?</h3><p>Client A always has <span class="mono">nA = 2, wA = 4</span>; client B returns <span class="mono">wB = 10</span>. Move B’s example-count slider and predict the new global model.</p><label for="client-b-size">Client B has <output id="count-output">8</output> examples</label><input id="client-b-size" type="range" min="1" max="18" value="8"><div class="output" aria-live="polite"><p id="average-readout"></p><p id="interpretation"></p></div><p class="small">Static reading: with B holding 8 examples, the aggregate is 8.8. With B holding 2 examples, the aggregate is 7.0. Data-size weighting changes the server’s result even though neither client’s local model has changed.</p></div></section>
-      <section id="evidence"><p class="section-id">6 · Evidence reading</p><h2>More local computation helped communication efficiency—under the paper’s experiments.</h2><p>The paper compares communication rounds needed to reach target CIFAR-10 test accuracies. The table below faithfully reconstructs its Table 3 so the exact measurement stays visible.</p><figure class="diagram reconstruction"><table class="evidence"><thead><tr><th>Method</th><th>80% accuracy</th><th>82% accuracy</th><th>85% accuracy</th></tr></thead><tbody><tr><td>SGD</td><td>18,000</td><td>31,000</td><td>99,000</td></tr><tr><td>FedSGD</td><td>3,750 (4.8×)</td><td>6,600 (4.7×)</td><td>N/A</td></tr><tr><td>FedAvg</td><td>280 (64.3×)</td><td>630 (49.2×)</td><td>2,000 (49.5×)</td></tr></tbody></table><span class="figure-label">Reconstruction of original paper Table 3 · PDF p. 8</span><figcaption>CIFAR-10 test accuracy targets. FedSGD and FedAvg use <i>C = 0.1</i>; FedAvg uses <i>E = 5</i> and <i>B = 50</i>. The parenthesized numbers are speedups relative to baseline SGD, measured in communication rounds.</figcaption></figure><div class="boundary"><h3>What this evidence supports</h3><p>In these controlled CIFAR-10 experiments, the listed FedAvg configuration reached those target accuracies with far fewer communication rounds than the baselines. It does not show universal superiority for all client distributions, models, client availability patterns, or privacy risks.</p></div><p>The paper also reports that very large numbers of local epochs can plateau or diverge on the Shakespeare task (Figure 3, PDF p. 7). More local computation is a lever to tune, not a monotone rule.</p></section>
-      <section id="limits"><p class="section-id">7 · Boundaries and misconceptions</p><h2>Data staying local is not the same as being private.</h2><details class="reveal"><summary>Misconception: FedAvg sends each client’s raw dataset to the server.</summary><div><p>No. In the paper’s formulation, the client computes a model update locally and returns that update for aggregation. This minimizes raw-data centralization, but it does not prove updates reveal nothing about data.</p></div></details><details class="reveal"><summary>Misconception: averaging many trained models always makes a good model.</summary><div><p>No. The paper explicitly notes that parameter-space averaging can be arbitrarily bad for general non-convex objectives. Its practical success depends in part on clients beginning from a common current global model and taking limited local updates.</p></div></details><details class="reveal"><summary>Misconception: non-IID only means clients have unequal amounts of data.</summary><div><p>They are different. Unbalanced describes differing dataset sizes. Non-IID describes differing data distributions: for example, a particular user’s language or labels may not represent the overall population.</p></div></details><details class="reveal"><summary>Misconception: the 2017 paper’s method is a full modern production privacy system.</summary><div><p>No. The paper identifies differential privacy and secure multiparty computation as future directions. Production systems can add secure aggregation, privacy accounting, client eligibility rules, robustness defenses, and many other choices beyond this core algorithm.</p></div></details></section>
-      <section id="recall"><p class="section-id">8 · Active recall</p><h2>Rebuild the round without looking back.</h2><ol class="recall"><li><details><summary>What stays with a client in the paper’s federated-learning setup?</summary><p>Its local training dataset. The selected client receives the global model, trains locally, and returns an update/model for server aggregation.</p></details></li><li><details><summary>Why weight returned models by nₖ/n?</summary><p>It lets each local model contribute in proportion to the number of examples represented, matching the global example-weighted objective.</p></details></li><li><details><summary>What do C, E, and B control?</summary><p>C controls the fraction of selected clients, E the number of local epochs, and B the local minibatch size.</p></details></li><li><details><summary>Why can extra local epochs be useful and dangerous?</summary><p>They can reduce communication rounds by doing more work between messages, but on heterogeneous clients they can make local models drift and can hurt convergence.</p></details></li><li><details><summary>State one paper result without overclaiming it.</summary><p>For its CIFAR-10 configuration, Table 3 reports FedAvg reaching 85% test accuracy in 2,000 rounds versus 99,000 for the SGD baseline. That is a scoped experimental communication-round comparison, not a general privacy or deployment guarantee.</p></details></li></ol></section>
-      <section id="connect"><p class="section-id">9 · Connect it to your mental map</p><h2>FedAvg changes where optimization occurs, not what a gradient is.</h2><div class="connections"><div class="connection"><h3>Adam and SGD</h3><p>SGD describes one parameter update. FedAvg orchestrates many local SGD updates and then averages their resulting parameters. Optimizer choice and federation are separate layers.</p></div><div class="connection"><h3>Batch normalization</h3><p>BatchNorm estimates statistics from a batch. Federated learning exposes a new question: when data distributions differ by client, which local statistics or updates can be safely combined? This paper focuses on averaging model updates, not solving normalization under heterogeneity.</p></div><div class="connection"><h3>DPO and post-training</h3><p>DPO defines a preference-based loss; FedAvg is a training topology. In principle, a learning objective and a decentralized optimizer can be composed, but this paper’s evidence is about supervised experiments, not preference training.</p></div><div class="connection"><h3>AlphaGo</h3><p>AlphaGo spends extra local compute to reduce an impossible search. FedAvg spends extra device-side compute to reduce communication. Both make a constrained resource explicit, but one is deliberation at inference time and the other is optimization during training.</p></div></div></section>
-      <section id="takeaway"><p class="section-id">10 · Takeaway</p><div class="takeaway"><h2>A federated round is a compromise between local adaptation and global agreement.</h2><p>Clients work where their data lives; the server turns their differently sized local progress into one shared next model. FedAvg’s lasting idea is to trade cheap local computation for expensive communication—while remembering that non-IID data, update leakage, and overly long local training prevent that trade from being automatic.</p></div></section>
-    </article>
-    <footer class="sources"><h2>Source and further exploration</h2><ul><li><a href="communication_efficient_learning_of_deep_networks_from_decentralized_data.pdf">Original paper PDF (local copy)</a></li><li><a href="https://proceedings.mlr.press/v54/mcmahan17a.html">PMLR canonical record</a></li><li><a href="https://github.com/tensorflow/federated">TensorFlow Federated repository</a></li></ul></footer>
-  </main>
-  <script>
+<main class="page">
+<a class="home" href="../index.html">← Daily AI Paper Lab</a>
+<header class="masthead">
+<div>
+<p class="eyebrow">Distributed optimization · AISTATS 2017</p>
+<h1>Train together. Keep data apart.</h1>
+<p class="lede">Federated Averaging moves computation to many devices: each client improves a shared model locally, then a server combines the resulting models. The central trade-off is not just accuracy—it is useful progress per communication round.</p>
+<p class="citation">
+<em>Communication-Efficient Learning of Deep Networks from Decentralized Data</em> · H. Brendan McMahan, Eider Moore, Daniel Ramage, Seth Hampson &amp; Blaise Agüera y Arcas</p>
+</div>
+<aside class="promise">
+<p class="eyebrow">Learning promise</p>
+<h2>Trace one federated round and name its real compromise.</h2>
+<p>By the end, you will be able to compute a weighted model average, explain why client data can be non-IID, distinguish local work from server aggregation, and read the paper’s speed-up evidence without turning it into a privacy guarantee.</p>
+</aside>
+</header>
+<nav class="route" aria-label="Timed study route">
+<strong>One-hour study route</strong>
+<p>
+<a href="#bridge">0–7 Bridge</a> · <a href="#setting">7–16 Why centralized training does not fit</a> · <a href="#actors">16–26 Name the moving parts</a> · <a href="#mechanism">26–39 Trace FedAvg</a> · <a href="#evidence">39–49 Read the evidence</a> · <a href="#recall">49–60 Diagnose, retrieve, connect</a>
+</p>
+</nav>
+<article class="lesson">
+<section id="bridge">
+<p class="section-id">1 · Prerequisite bridge</p>
+<h2>A shared recipe, many private kitchens.</h2>
+<p>Ordinary training imagines data gathered in one place, where batches update one model. Federated learning changes where the calculation happens: the data stays with many clients, while a shared model visits them in rounds.</p>
+<div class="analogy">
+<strong>Concrete analogy</strong>
+<p>Imagine a cooking class where every kitchen keeps its own ingredient notebook. The instructor sends the same recipe draft to a selection of kitchens. Each kitchen tries several revisions using only its own notes, then reports the revised recipe—not the notebook—to the instructor. The instructor makes a size-weighted blend and starts the next round.</p>
+</div>
+<p>The boundary matters: a model update is not the raw dataset, but it can still reveal information. The paper describes privacy advantages from reducing data centralization; it does <em>not</em> claim that model averaging by itself guarantees privacy.</p>
+</section>
+<section id="setting">
+<p class="section-id">2 · The setting</p>
+<h2>Communication, not arithmetic, is the scarce resource.</h2>
+<p>The paper describes client data that is <b>non-IID</b> (one client’s examples need not resemble the population) and <b>unbalanced</b> (clients may have very different amounts of data). Mobile devices may also be offline or bandwidth-limited. Sending a model back and forth repeatedly can dominate the cost.</p>
+<div class="margin-note">
+<p>
+<b>Failed baseline:</b> Federated SGD can take one local gradient step, communicate, then repeat. It is straightforward, but it can require many communication rounds. FedAvg asks whether clients can safely do more local training before the next aggregation.</p>
+</div>
+<p>This leaves a tension: more local work can reduce messages, but clients can drift toward their unlike-local objectives before their models are averaged.</p>
+</section>
+<section id="actors">
+<p class="section-id">3 · The actors and notation</p>
+<h2>Separate the global objective from each client’s view.</h2>
+<p>There are <i>K</i> clients. Client <i>k</i> owns an index set <i>P</i>
+<sub>k</sub> with <i>n</i>
+<sub>k</sub> examples; <i>n</i> is the total number of examples. Each client has a local objective <i>F</i>
+<sub>k</sub>(<i>w</i>), while the server aims to minimize the data-size-weighted global objective:</p>
+<div class="eq">
+<math aria-label="f of w equals the sum over k of n sub k divided by n times F sub k of w">
+<mrow>
+<mi>f</mi>
+<mo>(</mo>
+<mi>w</mi>
+<mo>)</mo>
+<mo>=</mo>
+<munderover>
+<mo>∑</mo>
+<mrow>
+<mi>k</mi>
+<mo>=</mo>
+<mn>1</mn>
+</mrow>
+<mi>K</mi>
+</munderover>
+<mfrac>
+<msub>
+<mi>n</mi>
+<mi>k</mi>
+</msub>
+<mi>n</mi>
+</mfrac>
+<msub>
+<mi>F</mi>
+<mi>k</mi>
+</msub>
+<mo>(</mo>
+<mi>w</mi>
+<mo>)</mo>
+</mrow>
+</math>
+</div>
+<div class="actors">
+<div class="actor">
+<b>C</b>
+<p>
+<b>Client fraction.</b> The proportion selected for a round. The paper selects <i>m = max(CK, 1)</i> clients.</p>
+</div>
+<div class="actor">
+<b>E</b>
+<p>
+<b>Local epochs.</b> How many passes a selected client makes through its data before returning a model.</p>
+</div>
+<div class="actor">
+<b>B</b>
+<p>
+<b>Local batch size.</b> The minibatch used in each local update. Smaller batches usually mean more local update steps.</p>
+</div>
+</div>
+<p>These are levers for spending more computation at the edge in exchange for fewer server rounds. They do not remove the difficulty of heterogeneous data.</p>
+</section>
+<section id="mechanism">
+<p class="section-id">4 · The mechanism</p>
+<h2>Federated averaging is local SGD plus a carefully weighted merge.</h2>
+<figure class="diagram">
+<svg viewBox="0 0 820 360" role="img" aria-labelledby="flow-title flow-desc">
+<title id="flow-title">Federated Averaging round with three selected clients</title>
+<desc id="flow-desc">A server sends a global model to three clients. Each client does local SGD on its private data and returns its updated model. The server combines models weighted by their example counts.</desc>
+<defs>
+<marker id="arrow" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto">
+<path d="M0 0L9 4.5 0 9Z" fill="#17465b"/>
+</marker>
+</defs>
+<g fill="none" stroke="#17465b" stroke-width="3" marker-end="url(#arrow)">
+<path d="M400 95L150 165"/>
+<path d="M400 95L400 165"/>
+<path d="M400 95L650 165"/>
+<path d="M150 262L400 322"/>
+<path d="M400 262L400 322"/>
+<path d="M650 262L400 322"/>
+</g>
+<rect x="300" y="25" width="200" height="70" fill="#17465b"/>
+<text x="400" y="55" fill="#fff" font-family="Arial" font-size="17" text-anchor="middle">server model</text>
+<text x="400" y="78" fill="#fff" font-family="Arial" font-size="15" text-anchor="middle">wᵗ</text>
+<g fill="#f8faf9" stroke="#197b78" stroke-width="3">
+<rect x="70" y="165" width="160" height="97"/>
+<rect x="320" y="165" width="160" height="97"/>
+<rect x="570" y="165" width="160" height="97"/>
+</g>
+<g font-family="Arial" font-size="15" fill="#17272b" text-anchor="middle">
+<text x="150" y="194">client 1</text>
+<text x="150" y="218">private data · E epochs</text>
+<text x="150" y="241">w₁ᵗ⁺¹, n₁</text>
+<text x="400" y="194">client 2</text>
+<text x="400" y="218">private data · E epochs</text>
+<text x="400" y="241">w₂ᵗ⁺¹, n₂</text>
+<text x="650" y="194">client 3</text>
+<text x="650" y="218">private data · E epochs</text>
+<text x="650" y="241">w₃ᵗ⁺¹, n₃</text>
+</g>
+<rect x="280" y="320" width="240" height="35" fill="#a24d2e"/>
+<text x="400" y="343" fill="#fff" font-family="Arial" font-size="15" text-anchor="middle">weighted average → wᵗ⁺¹</text>
+</svg>
+<span class="figure-label">Lesson diagram</span>
+<figcaption>One synchronous FedAvg round. The server sees the returned updates and their aggregation weights; in the paper’s setting, clients retain their local training datasets.</figcaption>
+</figure>
+<ol>
+<li>
+<b>Select:</b> choose <i>m</i> clients and send each the same current model <i>w</i>
+<sub>t</sub>.</li>
+<li>
+<b>Update locally:</b> each selected client splits its own data into batches and performs <i>E</i> local epochs of SGD, producing <i>w</i>
+<sub>t+1</sub>
+<sup>k</sup>.</li>
+<li>
+<b>Aggregate:</b> the server weights each returned model by that client’s example count, rather than giving a one-example client the same influence as a large client.</li>
+</ol>
+<div class="eq">
+<math aria-label="w sub t plus one equals the sum over selected clients k in S sub t of n sub k over m sub t times w sub t plus one superscript k">
+<mrow>
+<msub>
+<mi>w</mi>
+<mrow>
+<mi>t</mi>
+<mo>+</mo>
+<mn>1</mn>
+</mrow>
+</msub>
+<mo>=</mo>
+<munder>
+<mo>∑</mo>
+<mrow>
+<mi>k</mi>
+<mo>∈</mo>
+<msub>
+<mi>S</mi>
+<mi>t</mi>
+</msub>
+</mrow>
+</munder>
+<mfrac>
+<msub>
+<mi>n</mi>
+<mi>k</mi>
+</msub>
+<msub>
+<mi>m</mi>
+<mi>t</mi>
+</msub>
+</mfrac>
+<msubsup>
+<mi>w</mi>
+<mrow>
+<mi>t</mi>
+<mo>+</mo>
+<mn>1</mn>
+</mrow>
+<mi>k</mi>
+</msubsup>
+</mrow>
+</math>
+</div>
+<p>Here <i>S</i><sub>t</sub> is the set selected in round <i>t</i>, and <i>m</i><sub>t</sub> is the total number of examples held by those selected clients. The denominator is not every client in the federation when only a subset participates.</p>
+</section>
+<section id="averaging-evidence">
+<p class="section-id">4a · Why the shared starting point matters</p>
+<h2>Model averaging needs a common reference.</h2>
+<p>FedAvg does not take arbitrary finished models and blend them. At the beginning of every round, selected clients receive the same current global model; only then do they make a limited number of local updates. That shared origin keeps the returned models in a related part of parameter space before the server averages them.</p>
+<figure class="diagram">
+<img class="original" src="fedavg_figure_1_parameter_averaging.png" alt="Original Figure 1 from the FedAvg paper: the left loss curve shows that interpolating independently initialized models can be poor, while the right curve shows a lower-loss average after common initialization.">
+<span class="figure-label">Original paper Figure 1 · PDF p. 4</span>
+<figcaption><b>Question this figure answers:</b> why broadcast the same model before local training? In this MNIST illustration, interpolation between independently initialized models passes through high loss, while models sharing an initialization have a lower-loss mixture. It motivates the round structure above; it does not prove averaging works for every non-convex model or client distribution.</figcaption>
+</figure>
+<p>This is also why the phrase “average client models” needs context. The operation is an update-and-merge step repeated from a common checkpoint—not a general claim that separately trained neural networks can be averaged safely.</p>
+</section>
+<section id="traces">
+<p class="section-id">5 · Worked traces</p>
+<h2>Calculate the merge before you trust the slogan.</h2>
+<div class="trace">
+<h3>Trace A · Example-count weighting</h3>
+<p>Two selected clients start from the same scalar model. After their local training, client A has <span class="mono">nA = 2</span> examples and returns <span class="mono">wA = 4</span>; client B has <span class="mono">nB = 8</span> examples and returns <span class="mono">wB = 10</span>.</p>
+<div class="eq">
+<math aria-label="w next equals two over ten times four plus eight over ten times ten equals eight point eight">
+<mrow>
+<msup>
+<mi>w</mi>
+<mi>next</mi>
+</msup>
+<mo>=</mo>
+<mfrac>
+<mn>2</mn>
+<mn>10</mn>
+</mfrac>
+<mo>×</mo>
+<mn>4</mn>
+<mo>+</mo>
+<mfrac>
+<mn>8</mn>
+<mn>10</mn>
+</mfrac>
+<mo>×</mo>
+<mn>10</mn>
+<mo>=</mo>
+<mn>8.8</mn>
+</mrow>
+</math>
+</div>
+<p>
+<b>Interpretation:</b> the server does not average to 7. Each model is weighted by the amount of client data it represents. This is the model-averaging form of combining example-weighted gradients in FedSGD.</p>
+</div>
+<div class="trace">
+<h3>Trace B · More local work, fewer possible messages</h3>
+<p>A client has <span class="mono">nₖ = 120</span> examples. With <span class="mono">E = 3</span> local epochs and minibatches of <span class="mono">B = 20</span>, the paper’s local-update count is:</p>
+<div class="eq">
+<math aria-label="u sub k equals E times n sub k divided by B equals three times one hundred twenty divided by twenty equals eighteen local updates">
+<mrow>
+<msub>
+<mi>u</mi>
+<mi>k</mi>
+</msub>
+<mo>=</mo>
+<mfrac>
+<mrow>
+<mi>E</mi>
+<msub>
+<mi>n</mi>
+<mi>k</mi>
+</msub>
+</mrow>
+<mi>B</mi>
+</mfrac>
+<mo>=</mo>
+<mfrac>
+<mrow>
+<mn>3</mn>
+<mo>×</mo>
+<mn>120</mn>
+</mrow>
+<mn>20</mn>
+</mfrac>
+<mo>=</mo>
+<mn>18</mn>
+<mtext> local updates</mtext>
+</mrow>
+</math>
+</div>
+<p>FedSGD’s matching endpoint is <span class="mono">E = 1, B = ∞</span>: one full-batch local gradient calculation before communicating. FedAvg deliberately lets each selected client make many updates, which can save rounds but can magnify client drift.</p>
+</div>
+<div class="instrument">
+<h3>Predict before reveal · Which returned model pulls the server farther?</h3>
+<p>Client A always has <span class="mono">nA = 2, wA = 4</span>; client B returns <span class="mono">wB = 10</span>. Move B’s example-count slider and predict the new global model.</p>
+<label for="client-b-size">Client B has <output id="count-output">8</output> examples</label>
+<input id="client-b-size" type="range" min="1" max="18" value="8">
+<div class="output" aria-live="polite">
+<p id="average-readout">
+</p>
+<p id="interpretation">
+</p>
+</div>
+<p class="small">Static reading: with B holding 8 examples, the aggregate is 8.8. With B holding 2 examples, the aggregate is 7.0. Data-size weighting changes the server’s result even though neither client’s local model has changed.</p>
+</div>
+</section>
+<section id="evidence">
+<p class="section-id">6 · Evidence reading</p>
+<h2>More local computation helped communication efficiency—under the paper’s experiments.</h2>
+<p>The paper compares communication rounds needed to reach target CIFAR-10 test accuracies. The table below faithfully reconstructs its Table 3 so the exact measurement stays visible.</p>
+<figure class="diagram reconstruction">
+<table class="evidence">
+<thead>
+<tr>
+<th>Method</th>
+<th>80% accuracy</th>
+<th>82% accuracy</th>
+<th>85% accuracy</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>SGD</td>
+<td>18,000</td>
+<td>31,000</td>
+<td>99,000</td>
+</tr>
+<tr>
+<td>FedSGD</td>
+<td>3,750 (4.8×)</td>
+<td>6,600 (4.7×)</td>
+<td>N/A</td>
+</tr>
+<tr>
+<td>FedAvg</td>
+<td>280 (64.3×)</td>
+<td>630 (49.2×)</td>
+<td>2,000 (49.5×)</td>
+</tr>
+</tbody>
+</table>
+<span class="figure-label">Reconstruction of original paper Table 3 · PDF p. 8</span>
+<figcaption>CIFAR-10 test accuracy targets. FedSGD and FedAvg use <i>C = 0.1</i>; FedAvg uses <i>E = 5</i> and <i>B = 50</i>. The parenthesized numbers are speedups relative to baseline SGD, measured in communication rounds.</figcaption>
+</figure>
+<div class="boundary">
+<h3>What this evidence supports</h3>
+<p>In these controlled CIFAR-10 experiments, the listed FedAvg configuration reached those target accuracies with far fewer communication rounds than the baselines. It does not show universal superiority for all client distributions, models, client availability patterns, or privacy risks.</p>
+</div>
+<p>The paper also reports that very large numbers of local epochs can plateau or diverge on the Shakespeare task (Figure 3, PDF p. 7). More local computation is a lever to tune, not a monotone rule.</p>
+</section>
+<section id="lstm-evidence">
+<p class="section-id">6a · A second experimental setting</p>
+<h2>The communication-round pattern appears beyond CIFAR-10.</h2>
+<p>The table above is one measurement setting. The paper also tests next-word prediction on a non-IID Shakespeare dataset, where clients correspond to roles. Read the next figure as a comparison of learning curves against <em>communication rounds</em>, not as a hardware-speed or privacy measurement.</p>
+<figure class="diagram">
+<img class="original" src="fedavg_figure_5_lstm_rounds.png" alt="Original Figure 5 from the FedAvg paper, plotting non-IID next-word-prediction LSTM test accuracy against communication rounds for FedSGD and FedAvg.">
+<span class="figure-label">Original paper Figure 5 · PDF p. 8</span>
+<figcaption><b>Question this figure answers:</b> can extra client-side work reduce synchronization on a non-IID language task? For the shown best learning rates, the paper reports reaching 10.5% accuracy after 35 FedAvg rounds versus 820 FedSGD rounds. This is a scoped experimental communication-round result, not a general wall-clock guarantee.</figcaption>
+</figure>
+<p>The same figure also preserves the trade-off from the mechanism: the advantage depends on the chosen local-computation settings and learning rates. It is evidence that the trade can work in this experiment, not a rule to maximize local epochs blindly.</p>
+</section>
+<section id="limits">
+<p class="section-id">7 · Boundaries and misconceptions</p>
+<h2>Data staying local is not the same as being private.</h2>
+<details class="reveal">
+<summary>Misconception: FedAvg sends each client’s raw dataset to the server.</summary>
+<div>
+<p>No. In the paper’s formulation, the client computes a model update locally and returns that update for aggregation. This minimizes raw-data centralization, but it does not prove updates reveal nothing about data.</p>
+</div>
+</details>
+<details class="reveal">
+<summary>Misconception: averaging many trained models always makes a good model.</summary>
+<div>
+<p>No. The paper explicitly notes that parameter-space averaging can be arbitrarily bad for general non-convex objectives. Its practical success depends in part on clients beginning from a common current global model and taking limited local updates.</p>
+</div>
+</details>
+<details class="reveal">
+<summary>Misconception: non-IID only means clients have unequal amounts of data.</summary>
+<div>
+<p>They are different. Unbalanced describes differing dataset sizes. Non-IID describes differing data distributions: for example, a particular user’s language or labels may not represent the overall population.</p>
+</div>
+</details>
+<details class="reveal">
+<summary>Misconception: the 2017 paper’s method is a full modern production privacy system.</summary>
+<div>
+<p>No. The paper identifies differential privacy and secure multiparty computation as future directions. Production systems can add secure aggregation, privacy accounting, client eligibility rules, robustness defenses, and many other choices beyond this core algorithm.</p>
+</div>
+</details>
+</section>
+<section id="recall">
+<p class="section-id">8 · Active recall</p>
+<h2>Rebuild the round without looking back.</h2>
+<ol class="recall">
+<li>
+<details>
+<summary>What stays with a client in the paper’s federated-learning setup?</summary>
+<p>Its local training dataset. The selected client receives the global model, trains locally, and returns an update/model for server aggregation.</p>
+</details>
+</li>
+<li>
+<details>
+<summary>Why weight returned models by nₖ/n?</summary>
+<p>It lets each local model contribute in proportion to the number of examples represented, matching the global example-weighted objective.</p>
+</details>
+</li>
+<li>
+<details>
+<summary>What do C, E, and B control?</summary>
+<p>C controls the fraction of selected clients, E the number of local epochs, and B the local minibatch size.</p>
+</details>
+</li>
+<li>
+<details>
+<summary>Why can extra local epochs be useful and dangerous?</summary>
+<p>They can reduce communication rounds by doing more work between messages, but on heterogeneous clients they can make local models drift and can hurt convergence.</p>
+</details>
+</li>
+<li>
+<details>
+<summary>State one paper result without overclaiming it.</summary>
+<p>For its CIFAR-10 configuration, Table 3 reports FedAvg reaching 85% test accuracy in 2,000 rounds versus 99,000 for the SGD baseline. That is a scoped experimental communication-round comparison, not a general privacy or deployment guarantee.</p>
+</details>
+</li>
+</ol>
+</section>
+<section id="connect">
+<p class="section-id">9 · Connect it to your mental map</p>
+<h2>FedAvg changes where optimization occurs, not what a gradient is.</h2>
+<div class="connections">
+<div class="connection">
+<h3>Adam and SGD</h3>
+<p>SGD describes one parameter update. FedAvg orchestrates many local SGD updates and then averages their resulting parameters. Optimizer choice and federation are separate layers.</p>
+</div>
+<div class="connection">
+<h3>Batch normalization</h3>
+<p>BatchNorm estimates statistics from a batch. Federated learning exposes a new question: when data distributions differ by client, which local statistics or updates can be safely combined? This paper focuses on averaging model updates, not solving normalization under heterogeneity.</p>
+</div>
+<div class="connection">
+<h3>DPO and post-training</h3>
+<p>DPO defines a preference-based loss; FedAvg is a training topology. In principle, a learning objective and a decentralized optimizer can be composed, but this paper’s evidence is about supervised experiments, not preference training.</p>
+</div>
+<div class="connection">
+<h3>AlphaGo</h3>
+<p>AlphaGo spends extra local compute to reduce an impossible search. FedAvg spends extra device-side compute to reduce communication. Both make a constrained resource explicit, but one is deliberation at inference time and the other is optimization during training.</p>
+</div>
+</div>
+</section>
+<section id="takeaway">
+<p class="section-id">10 · Takeaway</p>
+<div class="takeaway">
+<h2>A federated round is a compromise between local adaptation and global agreement.</h2>
+<p>Clients work where their data lives; the server turns their differently sized local progress into one shared next model. FedAvg’s lasting idea is to trade cheap local computation for expensive communication—while remembering that non-IID data, update leakage, and overly long local training prevent that trade from being automatic.</p>
+</div>
+</section>
+</article>
+<footer class="sources">
+<h2>Source and further exploration</h2>
+<ul>
+<li>
+<a href="communication_efficient_learning_of_deep_networks_from_decentralized_data.pdf">Original paper PDF (local copy)</a>
+</li>
+<li>
+<a href="https://proceedings.mlr.press/v54/mcmahan17a.html">PMLR canonical record</a>
+</li>
+<li>
+<a href="https://github.com/tensorflow/federated">TensorFlow Federated repository</a>
+</li>
+</ul>
+</footer>
+</main>
+<script>
     (()=>{const input=document.querySelector('#client-b-size'),count=document.querySelector('#count-output'),avg=document.querySelector('#average-readout'),note=document.querySelector('#interpretation');const update=()=>{const n=Number(input.value),value=(2*4+n*10)/(2+n);count.value=n;avg.textContent=`Global model: (2 × 4 + ${n} × 10) / ${2+n} = ${value.toFixed(2)}.`;note.textContent=value>7?'Client B pulls the aggregate toward 10 because it represents more examples than A.':'Equal example counts give the two returned models equal weight.'};input.addEventListener('input',update);update()})();
   </script>
 </body>
