@@ -110,9 +110,31 @@
     "tree expansion",
     "exploration bonus",
     "rollout",
-    "backup"
+    "backup",
+    "federated learning",
+    "federated averaging",
+    "decentralized data",
+    "non-IID data",
+    "client drift",
+    "communication rounds",
+    "local epochs"
   ],
   "completed_lessons": [
+    {
+      "date": "2026-09-03",
+      "slug": "communication-efficient-learning-of-deep-networks-from-decentralized-data",
+      "title": "Communication-Efficient Learning of Deep Networks from Decentralized Data",
+      "lesson_file": "communication-efficient-learning-of-deep-networks-from-decentralized-data/communication_efficient_learning_of_deep_networks_from_decentralized_data.html",
+      "paper_file": "communication-efficient-learning-of-deep-networks-from-decentralized-data/communication_efficient_learning_of_deep_networks_from_decentralized_data.pdf",
+      "authors": ["H. Brendan McMahan", "Eider Moore", "Daniel Ramage", "Seth Hampson", "Blaise Agüera y Arcas"],
+      "venue": "AISTATS 2017",
+      "canonical_url": "https://proceedings.mlr.press/v54/mcmahan17a.html",
+      "domain": "federated and decentralized optimization",
+      "areas": ["federated learning", "distributed systems", "optimization", "privacy-aware machine learning"],
+      "concepts_introduced": ["federated learning", "federated averaging", "decentralized data", "non-IID data", "client drift", "communication rounds", "local epochs"],
+      "mental_map_connection": "Adds a training-topology layer beside SGD and Adam: the optimizer still changes parameters, but FedAvg decides where the gradient work happens and how many local updates occur before models are combined.",
+      "description": "Learn how a shared model can be improved across many clients without pooling raw training data, and why fewer communication rounds require careful handling of client drift."
+    },
     {
       "date": "2026-09-02",
       "slug": "mastering-the-game-of-go-with-deep-neural-networks-and-tree-search",

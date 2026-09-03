@@ -1,6 +1,43 @@
 /* Generated from curriculum.json by scripts/build_catalog.mjs. */
 window.DAILY_PAPER_CATALOG = [
   {
+    "date": "2026-09-03",
+    "slug": "communication-efficient-learning-of-deep-networks-from-decentralized-data",
+    "topic": "federated",
+    "topicLabel": "Federated learning",
+    "title": "Communication-Efficient Learning of Deep Networks from Decentralized Data",
+    "description": "Learn how a shared model can be improved across many clients without pooling raw training data, and why fewer communication rounds require careful handling of client drift.",
+    "authors": [
+      "H. Brendan McMahan",
+      "Eider Moore",
+      "Daniel Ramage",
+      "Seth Hampson",
+      "Blaise Agüera y Arcas"
+    ],
+    "venue": "AISTATS 2017",
+    "paperFile": "communication-efficient-learning-of-deep-networks-from-decentralized-data/communication_efficient_learning_of_deep_networks_from_decentralized_data.pdf",
+    "lessonFile": "communication-efficient-learning-of-deep-networks-from-decentralized-data/communication_efficient_learning_of_deep_networks_from_decentralized_data.html",
+    "canonicalUrl": "https://proceedings.mlr.press/v54/mcmahan17a.html",
+    "domain": "federated and decentralized optimization",
+    "areas": [
+      "federated learning",
+      "distributed systems",
+      "optimization",
+      "privacy-aware machine learning"
+    ],
+    "concepts": [
+      "federated learning",
+      "federated averaging",
+      "decentralized data",
+      "non-IID data",
+      "client drift",
+      "communication rounds",
+      "local epochs"
+    ],
+    "mentalMapConnection": "Adds a training-topology layer beside SGD and Adam: the optimizer still changes parameters, but FedAvg decides where the gradient work happens and how many local updates occur before models are combined.",
+    "search": "communication-efficient learning of deep networks from decentralized data communication-efficient-learning-of-deep-networks-from-decentralized-data h. brendan mcmahan,eider moore,daniel ramage,seth hampson,blaise agüera y arcas aistats 2017 federated federated learning learn how a shared model can be improved across many clients without pooling raw training data, and why fewer communication rounds require careful handling of client drift. federated and decentralized optimization adds a training-topology layer beside sgd and adam: the optimizer still changes parameters, but fedavg decides where the gradient work happens and how many local updates occur before models are combined. https://proceedings.mlr.press/v54/mcmahan17a.html federated learning distributed systems optimization privacy-aware machine learning federated learning federated averaging decentralized data non-iid data client drift communication rounds local epochs"
+  },
+  {
     "date": "2026-09-02",
     "slug": "mastering-the-game-of-go-with-deep-neural-networks-and-tree-search",
     "topic": "planning",
