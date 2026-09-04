@@ -117,9 +117,32 @@
     "non-IID data",
     "client drift",
     "communication rounds",
-    "local epochs"
+    "local epochs",
+    "neural Turing machines",
+    "external memory",
+    "soft addressing",
+    "content-based addressing",
+    "location-based addressing",
+    "erase-add write",
+    "circular shift",
+    "sharpening"
   ],
   "completed_lessons": [
+    {
+      "date": "2026-09-04",
+      "slug": "neural-turing-machines",
+      "title": "Neural Turing Machines",
+      "lesson_file": "neural-turing-machines/neural_turing_machines.html",
+      "paper_file": "neural-turing-machines/neural_turing_machines.pdf",
+      "authors": ["Alex Graves", "Greg Wayne", "Ivo Danihelka"],
+      "venue": "arXiv preprint 2014",
+      "canonical_url": "https://arxiv.org/abs/1410.5401v2",
+      "domain": "memory-augmented neural networks and differentiable addressing",
+      "areas": ["deep learning", "memory-augmented neural networks", "differentiable programming", "sequence modeling"],
+      "concepts_introduced": ["neural Turing machines", "external memory", "soft addressing", "content-based addressing", "location-based addressing", "erase-add write", "circular shift", "sharpening"],
+      "mental_map_connection": "Adds a persistent differentiable workspace beside Transformer attention: instead of reading only the current token context, a controller learns where to write and later retrieve information across a sequence.",
+      "description": "Learn why a neural controller becomes more capable when it can read from and write to a differentiable external notebook, then trace how soft addresses find, shift, and sharpen their focus."
+    },
     {
       "date": "2026-09-03",
       "slug": "communication-efficient-learning-of-deep-networks-from-decentralized-data",

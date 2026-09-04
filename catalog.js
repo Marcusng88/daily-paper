@@ -1,6 +1,42 @@
 /* Generated from curriculum.json by scripts/build_catalog.mjs. */
 window.DAILY_PAPER_CATALOG = [
   {
+    "date": "2026-09-04",
+    "slug": "neural-turing-machines",
+    "topic": "memory",
+    "topicLabel": "Memory-augmented models",
+    "title": "Neural Turing Machines",
+    "description": "Learn why a neural controller becomes more capable when it can read from and write to a differentiable external notebook, then trace how soft addresses find, shift, and sharpen their focus.",
+    "authors": [
+      "Alex Graves",
+      "Greg Wayne",
+      "Ivo Danihelka"
+    ],
+    "venue": "arXiv preprint 2014",
+    "paperFile": "neural-turing-machines/neural_turing_machines.pdf",
+    "lessonFile": "neural-turing-machines/neural_turing_machines.html",
+    "canonicalUrl": "https://arxiv.org/abs/1410.5401v2",
+    "domain": "memory-augmented neural networks and differentiable addressing",
+    "areas": [
+      "deep learning",
+      "memory-augmented neural networks",
+      "differentiable programming",
+      "sequence modeling"
+    ],
+    "concepts": [
+      "neural Turing machines",
+      "external memory",
+      "soft addressing",
+      "content-based addressing",
+      "location-based addressing",
+      "erase-add write",
+      "circular shift",
+      "sharpening"
+    ],
+    "mentalMapConnection": "Adds a persistent differentiable workspace beside Transformer attention: instead of reading only the current token context, a controller learns where to write and later retrieve information across a sequence.",
+    "search": "neural turing machines neural-turing-machines alex graves,greg wayne,ivo danihelka arxiv preprint 2014 memory memory-augmented models learn why a neural controller becomes more capable when it can read from and write to a differentiable external notebook, then trace how soft addresses find, shift, and sharpen their focus. memory-augmented neural networks and differentiable addressing adds a persistent differentiable workspace beside transformer attention: instead of reading only the current token context, a controller learns where to write and later retrieve information across a sequence. https://arxiv.org/abs/1410.5401v2 deep learning memory-augmented neural networks differentiable programming sequence modeling neural turing machines external memory soft addressing content-based addressing location-based addressing erase-add write circular shift sharpening"
+  },
+  {
     "date": "2026-09-03",
     "slug": "communication-efficient-learning-of-deep-networks-from-decentralized-data",
     "topic": "federated",
