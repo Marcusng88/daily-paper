@@ -592,6 +592,10 @@
            <img src="original_dqn_architecture_figure.png" width="1670" height="755" alt="Original Figure 1 from the DQN paper: an Atari frame feeds convolutional stages, two fully connected stages, and one output for each joystick action.">
            <figcaption><strong>Original paper Figure 1 (p. 530).</strong> The paper’s schematic makes the architectural commitment visible: only the processed state enters the network, and all valid action values emerge together. The Methods specify three convolutional layers followed by 512 rectifier units and a linear output layer.</figcaption>
          </figure>
+         <figure class="source-architecture">
+           <img src="original_dqn_value_functions_extended_figure_2.png" width="1660" height="1740" alt="Original Extended Data Figure 2 from the DQN paper: Breakout screens and a rising state-value curve, plus Pong screens with the action values for no-op, up, and down.">
+           <figcaption><strong>Original paper Extended Data Figure 2 (PDF p. 9).</strong> This is the paper’s most concrete view of a value forecast. In Breakout, the estimated state value rises as the agent approaches a rewarding breakthrough; in Pong, the bars show that <em>each</em> available action can receive a different Q-value in the same screen. The dashed ball paths are explanatory overlays, not information available to DQN during play.</figcaption>
+         </figure>
        </section>
 
        <section id="stability">
@@ -642,6 +646,14 @@
            </div>
          </div>
          <p class="math-note">During a gradient update, DQN changes θ to reduce the TD error <math class="math-inline" aria-label="delta equals y minus Q theta of phi comma a"><mrow><mi>δ</mi><mo>=</mo><mi>y</mi><mo>−</mo><msub><mi>Q</mi><mi>θ</mi></msub><mo>(</mo><mi>φ</mi><mo>,</mo><mi>a</mi><mo>)</mo></mrow></math>. The target network supplies y but is not differentiated through. The original implementation also clipped large error signals for stability.</p>
+         <figure class="paper-figure">
+           <img src="original_dqn_replay_target_ablation_extended_table_3.png" width="1770" height="760" alt="Original Extended Data Table 3 from the DQN paper. Across five Atari games, the highest scores are reported with both experience replay and a separate target Q-network, compared with ablations removing either or both.">
+           <figcaption><strong>Original paper Extended Data Table 3 (PDF p. 12).</strong> This ablation answers whether the two stabilizers are merely decorative. In these five games, the combination of replay and a separate target network reports the strongest score in every row. Read it narrowly: agents were trained for 10 million frames with the paper’s standard hyperparameters, and the table reports each condition’s highest average episode score.</figcaption>
+         </figure>
+         <figure class="paper-figure">
+           <img src="original_dqn_hyperparameters_extended_table_1.png" width="1720" height="1300" alt="Original Extended Data Table 1 from the DQN paper, listing the minibatch size, replay memory size, target-network update frequency, discount factor, exploration schedule, and other hyperparameters.">
+           <figcaption><strong>Original paper Extended Data Table 1 (PDF p. 10).</strong> The recipe was not just “use a neural network.” It used a replay memory of 1,000,000 recent frames, minibatches of 32, a target copy every 10,000 parameter updates, and γ = 0.99, alongside a particular exploration and RMSProp setup. These are reported settings selected by an informal search on a subset of games, not universal defaults.</figcaption>
+         </figure>
        </section>
 
        <section id="evidence">
@@ -649,6 +661,10 @@
          <h2>From pixels and rewards to strong Atari play.</h2>
          <p class="lede">The Nature paper trained a separate agent for each Atari 2600 game, using one broad architecture and setup. It was a landmark result, but not a single general-purpose agent and not a proof that deep RL will converge in arbitrary environments.</p>
          <p class="small"><strong>Bridge to evidence:</strong> we now have the whole causal mechanism—Bellman target, convolutional value estimator, replay, and delayed target network. Read the result as evidence for that training recipe on this Atari protocol, not as a general-intelligence claim.</p>
+         <figure class="paper-figure" style="margin-top:1.35rem">
+           <img src="original_dqn_training_curves_figure_2.png" width="1345" height="1000" alt="Original Figure 2 from the DQN paper. Training curves for Space Invaders and Seaquest compare average episode score with average predicted action value across training epochs.">
+           <figcaption><strong>Original paper Figure 2 (PDF p. 2; Nature p. 530).</strong> DQN’s internal Q-values and game scores often rise together here, but they are not the same quantity. The upper plots are average score per episode; the lower plots are average predicted action value on a held-out set of states. This is why a low TD loss or high Q-value alone is not enough to establish good control.</figcaption>
+         </figure>
          <div class="evidence">
            <figure class="paper-figure">
              <img src="original_dqn_results_figure.png" width="1584" height="1665" alt="Original Figure 3 from the DQN paper: a bar chart comparing DQN and the best earlier linear learner across 49 Atari games, normalized relative to a professional human player.">
@@ -665,6 +681,10 @@
              <p class="small">This is “human-level” under the paper’s operational definition. It is not a claim that one agent became generally human-like.</p>
            </aside>
          </div>
+         <figure class="paper-figure" style="margin-top:1.35rem">
+           <img src="original_dqn_representation_figure_4.png" width="1550" height="1420" alt="Original Figure 4 from the DQN paper: a two-dimensional t-SNE map of last-hidden-layer representations for Space Invaders states, coloured by the state values predicted by DQN and connected to selected game screens.">
+           <figcaption><strong>Original paper Figure 4 (PDF p. 4; Nature p. 532).</strong> Similar visual screens are grouped, but the instructive cases are the visually different screens placed near one another because DQN gives them similar future value. It is evidence that the learned hidden representation carried task-relevant, reward-linked structure in this Space Invaders analysis; it is not a direct map of raw pixels or a proof of causal understanding.</figcaption>
+         </figure>
          <div class="callout" style="margin-top:1.4rem">
            <p><strong>One paper detail worth retaining:</strong> reward clipping to [−1, 1] made a common setup work across games with wildly different score scales. It improves practical stability, but in edge cases it can change which long-term policy is preferred.</p>
          </div>

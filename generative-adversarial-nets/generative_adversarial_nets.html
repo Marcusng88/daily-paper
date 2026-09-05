@@ -95,6 +95,7 @@ figcaption strong,.label{color:var(--discriminator)}
 .source-figure img{width:100%;height:auto}
 .source-figure.figure-one img{aspect-ratio:1500/470}
 .source-figure.figure-two img{aspect-ratio:1470/980}
+.source-figure.figure-three img{aspect-ratio:2000/180}
 .steps{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--rule);border:1px solid var(--rule);padding:0;list-style:none;counter-reset:step}
 .steps li{counter-increment:step;background:var(--sheet);padding:1.25rem}
 .steps li::before{content:"Update " counter(step);display:block;margin-bottom:.45rem;color:var(--generator);font:700 .72rem var(--utility);letter-spacing:.1em;text-transform:uppercase}
@@ -472,17 +473,16 @@ footer li+li{margin-top:.45rem}
     <summary>Evidence check: what does the nearest-neighbor column establish - and what does it not establish?</summary>
     <p>It offers a targeted check that the displayed generated sample is not a pixel-for-pixel copy of its nearest training example. It does not prove that the model never memorizes, that every latent seed yields a novel sample, or that the generated distribution covers all data modes.</p>
   </details>
+  <p>The sample grids make the output concrete; the next two pieces of evidence ask whether the generator's latent coordinates change coherently and how the authors attempted to quantify its distribution.</p>
+  <figure class="source-figure figure-three">
+    <img src="gan_figure_3_latent_interpolation.png" width="2000" height="180" alt="Original paper Figure 3. Two strips of handwritten digits change gradually as the authors linearly interpolate between two coordinates in the generator's latent space.">
+    <figcaption><strong>Original paper Figure 3, PDF p. 7.</strong> The authors linearly interpolate between two latent <em>z</em> coordinates and generate each in-between point. The smoothly changing digit strokes are qualitative evidence that nearby coordinates in this learned latent space can produce related samples; it does not establish coverage of every data mode.</figcaption>
+  </figure>
   <h3>Table 1: Parzen-window log-likelihood estimates</h3>
-  <table class="evidence-table">
-    <thead><tr><th>Model</th><th>MNIST</th><th>TFD</th></tr></thead>
-    <tbody>
-      <tr><td>DBN</td><td>138 &plusmn; 2</td><td>1909 &plusmn; 66</td></tr>
-      <tr><td>Stacked CAE</td><td>121 &plusmn; 1.6</td><td><strong>2110 &plusmn; 50</strong></td></tr>
-      <tr><td>Deep GSN</td><td>214 &plusmn; 1.1</td><td>1890 &plusmn; 29</td></tr>
-      <tr><td>Adversarial nets</td><td><strong>225 &plusmn; 2</strong></td><td>2057 &plusmn; 26</td></tr>
-    </tbody>
-  </table>
-  <p class="static">Values transcribed from the original paper's Table 1, PDF p. 6. Higher is better for these reported estimates; bold marks the largest value in each column.</p>
+  <figure class="source-figure">
+    <img src="gan_table_1_parzen_log_likelihood.png" width="1250" height="400" alt="Original paper Table 1. It reports Parzen-window log-likelihood estimates: adversarial nets score 225 plus or minus 2 on MNIST and 2057 plus or minus 26 on TFD; the best listed TFD score is 2110 plus or minus 50 for stacked CAE.">
+    <figcaption><strong>Original paper Table 1, PDF p. 6.</strong> Higher is better for these reported Parzen-window estimates. GANs have the largest MNIST value shown, but not the largest TFD value. The paper cautions that this estimator has high variance and performs poorly in high-dimensional spaces.</figcaption>
+  </figure>
   <p class="wide">GANs have the highest reported MNIST estimate in this table, but not the highest TFD estimate. More importantly, the authors warn that the Parzen-window procedure has somewhat high variance and performs poorly in high-dimensional spaces. Treat the values as a period-specific comparison, not a definitive measure of perceptual quality or distribution coverage.</p>
 </section>
 
@@ -496,6 +496,11 @@ footer li+li{margin-top:.45rem}
     <article><h3>An evaluation problem</h3><p>Visual samples can be cherry-picked, nearest neighbors are only a narrow memorization check, and the paper's Parzen estimator is unreliable in high dimensions.</p></article>
     <article><h3>A moving objective</h3><p>G changes the data seen by D, while D changes the gradient seen by G. Standard loss curves are harder to interpret because one player's progress changes the other's task.</p></article>
   </div>
+  <p>The original paper frames those limitations as a trade: adversarial models avoid Markov-chain sampling and use a learned approximate inference procedure, but they exchange that convenience for a coupled two-player optimization problem.</p>
+  <figure class="source-figure">
+    <img src="gan_table_2_modeling_tradeoffs.png" width="2250" height="1450" alt="Original paper Table 2 compares deep directed and undirected graphical models, generative autoencoders, and adversarial models across training, inference, sampling, density evaluation, and model design. The adversarial-model column says discriminator-generator synchronization is required during training, sampling has no difficulties, and density evaluation is not explicit and may use Parzen estimation.">
+    <figcaption><strong>Original paper Table 2, PDF p. 7.</strong> This is the paper's own comparison of the burdens each family carries. Read the adversarial-model column with its era-specific terminology: it explains the motivation for GANs, but is not a current benchmark or a claim that GANs dominate every generative approach.</figcaption>
+  </figure>
   <div class="callout"><strong>Diagnostic habit.</strong> When GAN training fails, ask three separate questions: Is D's signal informative? Is G receiving a usable gradient? Does p_g cover the modes of p_data? A few attractive samples answer only part of the third question.</div>
 </section>
 

@@ -42,14 +42,14 @@
     .weight-strip { display: grid; grid-template-columns: repeat(8, 1fr); gap: 6px; align-items: end; min-height: 132px; }
     .weight-strip i { display: block; height: var(--h); min-height: 18px; background: var(--cyan); border-top: 5px solid var(--carbon); }
     .weight-strip i:nth-child(2), .weight-strip i:nth-child(6), .weight-strip i:nth-child(8) { background: repeating-linear-gradient(135deg, transparent 0 5px, var(--cut) 5px 7px); border-color: var(--cut); }
-    .lesson-grid { display: grid; grid-template-columns: 190px minmax(0, 1fr); gap: clamp(30px, 6vw, 80px); align-items: start; }
-    .route-rail { position: sticky; top: 22px; padding: 20px 0 20px 18px; border-left: 3px solid var(--carbon); }
+    .lesson-grid { display: block; }
+    .route-rail { width: min(100%, 820px); margin: 0 auto; padding: 18px 0 22px; border-top: 3px solid var(--carbon); border-bottom: 1px solid var(--rule); }
     .rail-title { margin: 0 0 15px; color: var(--cut); }
-    .route-rail ol { margin: 0; padding: 0; list-style: none; }
-    .route-rail li { display: grid; grid-template-columns: 48px 1fr; gap: 7px; margin: 0 0 13px; }
+    .route-rail ol { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin: 0; padding: 0; list-style: none; }
+    .route-rail li { display: block; margin: 0; }
     .route-rail time { color: var(--cyan); font: 700 .73rem/1.45 var(--utility); }
     .route-rail span { font-size: .82rem; line-height: 1.35; }
-    main { min-width: 0; padding-bottom: 72px; }
+    main { width: min(100%, 820px); min-width: 0; margin: 0 auto; padding-bottom: 72px; }
     section { padding: 46px 0 52px; }
     section + section { border-top: 1px solid var(--rule); }
     .section-mark { margin: 0 0 11px; color: var(--cut); }
@@ -70,9 +70,11 @@
     .math-display mtable { row-gap: .42em; }
     .math-display .derivation { font-size: 1.12rem; }
     .math-block { max-width: 68ch; margin: 22px 0; padding: 16px 18px; overflow-x: auto; color: var(--carbon); background: rgba(255,255,255,.38); border-top: 1px solid var(--carbon); border-bottom: 1px solid var(--carbon); font: .9rem/1.65 var(--utility); }
-    .notation { max-width: 760px; margin: 26px 0; border-collapse: collapse; }
+    .notation { width: 100%; max-width: 100%; margin: 26px 0; border-collapse: collapse; table-layout: fixed; }
     .notation th, .notation td { padding: 12px 10px; text-align: left; border-bottom: 1px solid var(--rule); }
-    .notation th { width: 125px; color: var(--cyan); font: 700 .83rem/1.4 var(--utility); }
+    .notation th { color: var(--cyan); font: 700 .83rem/1.4 var(--utility); }
+    .notation th:nth-child(1), .notation td:nth-child(1) { width: 17%; }
+    .notation th:nth-child(2), .notation td:nth-child(2) { width: 20%; }
     figure { margin: 34px 0; }
     .figure-kind { margin: 0 0 10px; color: var(--cyan); }
     figcaption { max-width: 74ch; margin-top: 12px; color: var(--graphite); font-size: .92rem; }
@@ -142,19 +144,16 @@
     .takeaway { margin-top: 18px; padding: clamp(26px, 5vw, 48px); color: var(--ticket); background: var(--carbon); border-left: 10px solid var(--cyan); }
     .takeaway h2 { color: white; }
     .takeaway p { max-width: 62ch; margin-bottom: 0; font-size: 1.12rem; }
-    footer { margin: 0 0 40px 270px; padding: 34px 0 50px; border-top: 3px solid var(--carbon); }
+    footer { width: min(100%, 820px); margin: 0 auto 40px; padding: 34px 0 50px; border-top: 3px solid var(--carbon); }
     footer h2 { font-size: 1.7rem; text-transform: none; }
     footer ul { max-width: 68ch; padding-left: 1.2em; }
     footer li + li { margin-top: 8px; }
     @media (max-width: 840px) {
       .ticket-hero { grid-template-columns: 1fr; }
       .hero-stamp { min-height: 260px; }
-      .lesson-grid { grid-template-columns: 1fr; }
-      .route-rail { position: static; border-left: 0; border-top: 3px solid var(--carbon); }
-      .route-rail ol { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+      .route-rail { width: 100%; }
       .route-rail li { display: block; }
       .route-rail time, .route-rail span { display: block; }
-      footer { margin-left: 0; }
     }
     @media (max-width: 600px) {
       body { font-size: 17px; }
@@ -260,7 +259,8 @@
         <section aria-labelledby="evidence-title">
           <p class="section-mark">Original evidence · 39–49 min</p><h2 id="evidence-title">Figure 3 separates useful pruning from too much pruning.</h2>
           <fieldset class="prediction"><legend>Predict before reading the curves: which comparison best isolates the role of the original initialization?</legend><label><input type="radio" name="evidence-prediction"> Same mask, matching <span class="math-inline">θ₀</span> versus the same mask, fresh <span class="math-inline">θ′₀</span></label><label><input type="radio" name="evidence-prediction"> Dense architecture versus a different random sparse mask</label><label><input type="radio" name="evidence-prediction"> One optimizer versus another optimizer</label><details class="answer-details"><summary>Reveal the answer</summary><p><strong>Answer: hold the mask fixed and replace only its initialization.</strong> Then a difference in the reported curves can be attributed to that initialization intervention within this experimental setup. This does not prove that initialization is the only factor in every architecture or training regime.</p></details></fieldset>
-          <figure><p class="figure-kind">Original paper figure</p><div class="source-figure source-scroll" tabindex="0" aria-label="Scrollable original Figure 3"><img src="original_figure_3_training_curves.png" width="1667" height="510" alt="Original Figure 3 with three Lenet test-accuracy plots. The left panel compares 100, 51.3, and 21.1 percent of weights remaining; 21.1 percent rises fastest. The middle adds 7.0, 3.6, and 1.9 percent, showing that excessive pruning slows learning. The right compares matching original initialization with random reinitialization at 51.3 and 21.1 percent, where reinitialized networks rise more slowly."></div><figcaption><strong>Frankle and Carbin, Figure 3, paper p. 4.</strong> Lenet test accuracy during iterative pruning, averaged over five trials. Labels are <span class="math-inline">P<sub>m</sub></span>, the percentage of weights remaining; error bars show the minimum and maximum trial. On a narrow screen, scroll horizontally to keep labels sharp. <a href="the_lottery_ticket_hypothesis.pdf#page=4">Open the source page in the local PDF.</a></figcaption></figure>
+          <aside class="callout"><p><strong>How to read this source figure.</strong> Hold the architecture and mask fixed before comparing the solid and dashed curves on the right. Then the changed ingredient is the surviving weights' initialization: solid uses the matching values from <span class="math-inline">θ<sub>0</sub></span>; dashed uses a fresh random draw. Read the left and middle panels separately: they ask whether pruning helps at all, and where it becomes too aggressive.</p></aside>
+          <figure><p class="figure-kind">Original paper figure</p><div class="source-figure source-scroll" tabindex="0" aria-label="Scrollable original Figure 3"><img src="original_figure_3_training_curves.png" width="1667" height="510" alt="Original Figure 3 with three Lenet test-accuracy plots. The left panel compares 100, 51.3, and 21.1 percent of weights remaining; 21.1 percent rises fastest. The middle adds 7.0, 3.6, and 1.9 percent, showing that excessive pruning slows learning. The right compares matching original initialization with random reinitialization at 51.3 and 21.1 percent, where reinitialized networks rise more slowly."></div><figcaption><strong>Frankle and Carbin, Figure 3, paper p. 4.</strong> This is the evidence for the mask-plus-initialization claim: Lenet test accuracy during iterative pruning, averaged over five trials. Labels are <span class="math-inline">P<sub>m</sub></span>, the percentage of weights remaining; error bars show the minimum and maximum trial. On a narrow screen, scroll horizontally to keep labels sharp. <a href="the_lottery_ticket_hypothesis.pdf#page=4">Open the source page in the local PDF.</a></figcaption></figure>
           <div class="panel-guide" aria-label="How to read the three panels"><article><h3>Left · useful pruning</h3><p>The 51.3%- and 21.1%-remaining tickets rise sooner than the dense 100% run; 21.1% is fastest among these curves.</p></article><article><h3>Middle · turning point</h3><p>Below 21.1%, further pruning slows learning. At 3.6%, the paper reports a return to roughly the dense network’s learning speed; 1.9% is worse.</p></article><article><h3>Right · initialization control</h3><p>At the same 51.3% and 21.1% masks, fresh random values rise more slowly than matching original values, especially at 21.1%.</p></article></div>
           <div class="prose"><p><strong>What the figure supports.</strong> In this Lenet/MNIST setup, moderate iterative pruning uncovers subnetworks that learn faster, and keeping the mask while randomizing surviving values erases much of that advantage. This supports the importance of the mask–initialization pairing.</p><p><strong>What the figure does not support.</strong> It does not show that sparsity monotonically helps, that every sparse mask is trainable, or that random reinitialization always fails. It also does not make ticket discovery cheap: the mask was found using repeated dense or masked training rounds.</p></div>
           <div class="table-scroll" tabindex="0" aria-label="Scrollable evidence scope table"><table class="evidence-table"><caption>Evidence beyond the displayed curves</caption><thead><tr><th scope="col">Paper result</th><th scope="col">Exact scope</th><th scope="col">Careful interpretation</th></tr></thead><tbody><tr><td>At about 21% remaining, the Lenet ticket reached minimum validation loss 2.51× faster and was 0.5 percentage point more accurate than its random reinitialization.</td><td>Lenet-300-100 on MNIST with the paper’s iterative-pruning and Adam setup.</td><td>The same discovered topology benefited from its matching original coordinates in this setting.</td></tr><tr><td>The abstract reports winning tickets below 10–20% of original size.</td><td>Several fully connected and convolutional feed-forward architectures on MNIST and CIFAR-10.</td><td>Broad empirical evidence inside the tested vision settings, not a universal theorem.</td></tr><tr><td>Deeper VGG-19 and ResNet-18 experiments required lower learning rates or warmup to expose strong tickets.</td><td>CIFAR-10, stated schedules, global convolutional pruning, and selected hyperparameters.</td><td>The discovery method is coupled to optimization; failure to find a ticket is not proof that none exists.</td></tr></tbody></table></div>

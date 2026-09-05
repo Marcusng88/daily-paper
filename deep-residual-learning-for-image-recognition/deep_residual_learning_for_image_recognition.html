@@ -719,6 +719,12 @@
           </svg>
           <figcaption><strong>Lesson diagram</strong> The paper’s Figure 2 uses a post-activation block: the second ReLU comes after addition. Later ResNet variants reorder these operations, so keep this lesson’s block tied to the 2015 paper.</figcaption>
         </figure>
+        <figure>
+          <div class="paper-figure-scroller" tabindex="0" role="region" aria-label="Original Figure 2 from the ResNet paper">
+            <img class="paper-figure" src="original_figure_2_residual_block.png" width="850" height="500" alt="Original ResNet paper Figure 2. Input x travels through two weight layers on the residual branch and directly through an identity shortcut; the paths are added and then passed through ReLU.">
+          </div>
+          <figcaption><span class="figure-kind">Original paper figure</span> Figure 2 on PDF page 2. This is the paper’s compact version of the block above: its key reading is that the shortcut carries <em>x</em> unchanged to the addition, while the learned path supplies <em>F(x)</em>.</figcaption>
+        </figure>
 
         <table class="symbol-table">
           <caption>Map every symbol to a path and a shape before calculating.</caption>
@@ -833,6 +839,12 @@
         <p class="eyebrow">05 · Shapes, projections, and stages</p>
         <h2>A shortcut can add only after the geometry agrees.</h2>
         <p class="lede">When height, width, and channels match, the cheapest shortcut is the identity. When they differ, the paper considers zero-padding or a learned projection <math class="math-inline" aria-label="W sub s times x"><msub><mi>W</mi><mi>s</mi></msub><mi>x</mi></math>.</p>
+        <figure>
+          <div class="paper-figure-scroller" tabindex="0" role="region" aria-label="Scrollable original Figure 3 from the ResNet paper">
+            <img class="paper-figure" src="original_figure_3_imagenet_architectures.png" width="960" height="2600" alt="Original ResNet paper Figure 3 comparing VGG-19, a 34-layer plain network, and a 34-layer residual network. Curved solid shortcuts preserve dimensions and dotted shortcuts mark stage transitions that increase dimensions.">
+          </div>
+          <figcaption><span class="figure-kind">Original paper figure</span> Figure 3 on PDF page 4. The middle and right columns hold the depth and compute budget fixed. The visual difference to follow is the residual network’s shortcuts; solid curves preserve dimensions and dotted curves mark an increase in dimensions.</figcaption>
+        </figure>
         <figure class="diagram">
           <svg viewBox="0 0 720 455" role="img" aria-labelledby="stage-title stage-desc">
             <title id="stage-title">A normal ResNet stage transition</title>
@@ -867,6 +879,13 @@
             <text x="25" y="447" fill="#556970" font-family="Georgia" font-size="24">Stride halves H and W; learned filters raise C.</text>
           </svg>
           <figcaption><strong>Lesson diagram</strong> In the original basic-block ImageNet architecture, normal stage transitions halve spatial resolution and double the number of filters. The first residual-branch convolution downsamples with stride 2; an Option B projection shortcut uses a 1×1 stride-2 convolution so addition is defined.</figcaption>
+        </figure>
+
+        <figure>
+          <div class="paper-figure-scroller" tabindex="0" role="region" aria-label="Scrollable original Table 1 from the ResNet paper">
+            <img class="paper-figure" src="original_table_1_imagenet_architectures.png" width="1480" height="780" alt="Original ResNet paper Table 1. It lists ImageNet architectures from 18 to 152 layers, their stage output sizes, basic or bottleneck blocks, repetition counts, and FLOPs.">
+          </div>
+          <figcaption><span class="figure-kind">Original paper table</span> Table 1 on PDF page 5. Read across one model column to see its stage schedule. The 18- and 34-layer models use two 3×3 layers per block; the 50-, 101-, and 152-layer models use the three-layer bottleneck to grow depth without VGG-19’s compute cost.</figcaption>
         </figure>
 
         <h3>What a 1×1 projection actually does</h3>
@@ -912,6 +931,12 @@
         <div class="callout sum">
           <p><span class="label">Do not confuse two uses of 1×1 convolutions</span><strong>Shortcut projection:</strong> align the shortcut to a new output shape, usually expanding channels at a downsampling stage. <strong>Bottleneck residual branch:</strong> a first 1×1 convolution compresses channels, the 3×3 works in that narrower space, and a final 1×1 restores the block’s output width. In Figure 5, the 256-dimensional input is reduced to 64, processed at 64, then restored to 256.</p>
         </div>
+        <figure>
+          <div class="paper-figure-scroller" tabindex="0" role="region" aria-label="Original Figure 5 from the ResNet paper">
+            <img class="paper-figure" src="original_figure_5_basic_and_bottleneck.png" width="1160" height="530" alt="Original ResNet paper Figure 5. The left basic block has two 3 by 3 convolutions at 64 channels; the right bottleneck has 1 by 1, 3 by 3, and 1 by 1 convolutions, reducing 256 channels to 64 and restoring 256 channels before the residual addition.">
+          </div>
+          <figcaption><span class="figure-kind">Original paper figure</span> Figure 5 on PDF page 6. It answers why “1×1” appears in two different roles: the right-hand bottleneck uses it inside the residual branch to reduce and restore width, whereas a projection shortcut is used only when the two paths must be aligned.</figcaption>
+        </figure>
         <details class="answer">
           <summary>Predict: does “1×1” mean each output channel copies one input channel?</summary>
           <p>No. The 1×1 label describes the spatial footprint. Each output channel can be a learned weighted mixture of all input channels at that sampled location.</p>
@@ -963,6 +988,13 @@
           </article>
         </div>
 
+        <figure>
+          <div class="paper-figure-scroller" tabindex="0" role="region" aria-label="Scrollable original Figure 6 from the ResNet paper">
+            <img class="paper-figure" src="original_figure_6_cifar_depth_curves.png" width="1880" height="800" alt="Original ResNet paper Figure 6. On CIFAR-10, deeper plain networks have worse training and testing curves, deeper ResNets improve training and testing error, and a 1202-layer ResNet has nearly zero training error but worse testing error than the 110-layer network.">
+          </div>
+          <figcaption><span class="figure-kind">Original paper figure</span> Figure 6 on PDF page 8. The three panels separate the claims: depth hurts plain-network optimization (left), residual parameterization restores the depth trend (middle), and very deep residual networks can still overfit (right).</figcaption>
+        </figure>
+
         <h3>What the evidence does not establish</h3>
         <div class="callout residual">
           <p>The experiments establish strong results for supervised convolutional vision models and 2015 training recipes. They do not prove that every deeper residual network generalizes better, that residual branches must be small, or that shortcuts alone guarantee stable gradients.</p>
@@ -979,6 +1011,13 @@
       <div class="reading">
         <p class="eyebrow">07 · Misconception clinic</p>
         <h2>Keep four boundaries sharp.</h2>
+        <p>The phrase “residual” describes a parameterization, not a promise that the learned correction is numerically tiny. The paper measured smaller layer responses in these CIFAR-10 runs, but treats that as supporting evidence for its hypothesis rather than a rule every residual block must obey.</p>
+        <figure>
+          <div class="paper-figure-scroller" tabindex="0" role="region" aria-label="Original Figure 7 from the ResNet paper">
+            <img class="paper-figure" src="original_figure_7_layer_responses.png" width="1050" height="650" alt="Original ResNet paper Figure 7. It plots the standard deviations of layer responses for plain and residual CIFAR-10 networks in original layer order and in descending magnitude order.">
+          </div>
+          <figcaption><span class="figure-kind">Original paper figure</span> Figure 7 on PDF page 8. In these runs, the residual models’ layer responses are generally smaller than the plain models’. That observation supports the “learn a correction” intuition; it does not require every correction to be small.</figcaption>
+        </figure>
         <details>
           <summary>“Residual” means the learned correction must be small.</summary>
           <p>False. The correction can be large. The name means the branch is parameterized relative to <math class="math-inline" aria-label="x"><mi>x</mi></math>. Figure 7 reports that residual responses were generally smaller in the experiments, but smallness is an observation, not a constraint.</p>

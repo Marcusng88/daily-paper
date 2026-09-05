@@ -427,6 +427,11 @@
           <div class="note"><p><strong>What is isolated reasonably well?</strong></p><p>BN-Baseline is the same Inception variant with BatchNorm inserted before each nonlinearity. Its 13.3M versus 31.0M comparison supports a substantial speedup from adding BN in this setup.</p></div>
           <div class="note"><p><strong>What is a package, not a pure ablation?</strong></p><p>The paper’s “14× fewer steps” headline refers to BN-x5, which combines BN with a five-times larger initial learning rate and the Section 4.2.1 training changes. It should not be read as a clean universal 14× effect from the layer alone.</p></div>
         </div>
+        <figure>
+          <img src="original_figure_4_imagenet_benchmark.png" width="1900" height="575" alt="Original Figure 4 from the Batch Normalization paper. A comparison table lists ImageNet validation and test top-5 error for prior systems and BN-Inception variants using single crop, multi-crop, and ensemble evaluation.">
+          <figcaption><span class="label">Original paper figure</span><strong>Figure 4, paper p. 8.</strong> This is the paper’s end-to-end ImageNet benchmark rather than a clean layer-only ablation. Its BN-Inception single-crop entry reports 4.9% validation top-5 error; the caption separately notes 4.82% top-5 error on the test server. Multi-crop and ensemble rows add evaluation-time compute and model combination, so compare them only with rows under the same protocol.</figcaption>
+        </figure>
+        <div class="evidence-note"><strong>Read the last table carefully</strong><p>Figure 4 asks whether the complete reported system was competitive with contemporary ImageNet systems. It supports that narrow comparison. It does not show that BatchNorm alone caused every difference, nor that a single-crop number can be compared directly with a multi-crop or ensemble number.</p></div>
         <details class="answer"><summary>Interpretation check: does 74.8% prove BN always improves final accuracy?</summary><p>No. It is the maximum single-crop validation accuracy of BN-x30 in the paper’s Inception/ImageNet experiment. Architecture, optimization changes, learning rate, data handling, and evaluation protocol all define the scope of the result.</p></details>
       </section>
 

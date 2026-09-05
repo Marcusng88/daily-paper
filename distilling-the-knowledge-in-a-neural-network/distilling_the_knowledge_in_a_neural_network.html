@@ -533,7 +533,28 @@
             <p>On speech, hard targets with 3% of training data reached 67.3% train but only 44.5% test frame accuracy. Soft targets on that same 3% reached 65.4% train and 57.0% test, near the 58.9% full-data baseline.</p>
           </article>
         </div>
-        <p>The paper also explores 61 independently trained specialists for confusable JFT class subsets. Their combined predictions improve the generalist, but the authors explicitly say they had not yet shown that the specialist ensemble could be distilled back into one large model.</p>
+        <figure class="source-figure">
+          <img src="paper_table_5_soft_target_regularizer.png" loading="lazy" alt="Original paper Table 5. With 3 percent of the speech training data, soft targets improve test frame accuracy from 44.5 percent to 57.0 percent while hard-target training has higher training accuracy.">
+          <figcaption><strong>Original paper, Table 5 (PDF page 8).</strong> <strong>Question this table answers:</strong> can an input-specific teacher target regularize learning when labels are scarce? In this reported 3% speech setting, the soft-target model has lower training accuracy but much higher test accuracy—a generalization result for this setup, not proof that every teacher transfers usefully.</figcaption>
+        </figure>
+        <h3>Specialists are a separate ensemble strategy</h3>
+        <p>The paper also explores 61 independently trained specialists for confusable JFT class subsets. This is not ordinary one-teacher-to-one-student distillation: first identify classes that the generalist confuses, then train extra models only where their expertise may help.</p>
+        <figure class="source-figure">
+          <img src="paper_table_2_specialist_clusters.png" loading="lazy" alt="Original paper Table 2. Examples of specialist clusters include tea party and Easter, bridge types, and several car categories selected because the generalist confuses them.">
+          <figcaption><strong>Original paper, Table 2 (PDF page 6).</strong> <strong>Question this table answers:</strong> what does “specialist” mean here? Each row names a semantically confusable class cluster; a specialist is trained around such a cluster, rather than around a random slice of labels.</figcaption>
+        </figure>
+        <p>Once that setup is clear, Table 3 asks whether the additional specialist predictions improved the JFT development result, while Table 4 qualifies the aggregate result by showing where coverage helps most.</p>
+        <div class="evidence-grid">
+          <figure class="source-figure">
+            <img src="paper_table_3_jft_accuracy.png" loading="lazy" alt="Original paper Table 3. Adding 61 specialists to a generalist improves JFT development-set accuracy from 25.0 to 26.1 percent for top one and from 43.1 to 45.9 percent for conditional accuracy.">
+            <figcaption><strong>Original paper, Table 3 (PDF page 7).</strong> The reported specialist ensemble improves the stated JFT development metrics over the generalist.</figcaption>
+          </figure>
+          <figure class="source-figure">
+            <img src="paper_table_4_specialist_coverage.png" loading="lazy" alt="Original paper Table 4. Relative top-one accuracy improvements increase as more specialists cover the correct class, reaching 16.6 percent for nine covering specialists.">
+            <figcaption><strong>Original paper, Table 4 (PDF page 7).</strong> <strong>Question this table answers:</strong> where is the average gain coming from? In this evaluation, examples whose correct class is covered by more specialists receive larger relative top-one improvements.</figcaption>
+          </figure>
+        </div>
+        <p>The authors explicitly say they had not yet shown that the specialist ensemble could be distilled back into one large model. Treat the specialist results as evidence for the ensemble design, not evidence that every specialist gain survives a later compression step.</p>
       </section>
 
       <section aria-labelledby="limits-title">

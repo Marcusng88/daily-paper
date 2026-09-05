@@ -831,6 +831,19 @@
               </tbody>
             </table>
           </div>
+          <p class="paper-mark">Original paper · Table 4 · PDF page 11 (journal p. 1939)</p>
+          <h3>Does the comparison survive another dataset family?</h3>
+          <p>Table 4 repeats the architecture-style comparison on CIFAR-10 and CIFAR-100. It gives the feature-visualization claim a separate empirical companion: lower error is reported when dropout is applied throughout the convolutional network in this setup.</p>
+          <div class="table-wrap result-table">
+            <table>
+              <thead><tr><th>Reported configuration</th><th>CIFAR-10 error</th><th>CIFAR-100 error</th></tr></thead>
+              <tbody>
+                <tr><td>Conv net + max pooling</td><td>15.60%</td><td>43.48%</td></tr>
+                <tr><td>+ dropout in all layers</td><td>12.61%</td><td>37.20%</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <aside class="scope"><strong>Read the comparison narrowly.</strong> Table 4 reports these two dataset-specific errors for the paper's tuned network and training recipe. It does not show that every placement rate or every modern architecture benefits from applying dropout to every layer.</aside>
           <p>The paper also reports improvements across MNIST, CIFAR-10/100, ImageNet, TIMIT, Reuters-RCV1, and alternative splicing. Read these as results for the paper's tuned architectures and training recipes, not as a guarantee for every modern model or placement.</p>
         </div>
       </section>

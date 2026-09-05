@@ -231,6 +231,7 @@
     .figure-reading div:nth-child(1) { border-color: var(--forward); }
     .figure-reading div:nth-child(3) { border-color: var(--reverse); }
     .figure-reading strong { display: block; font-family: var(--sans); }
+    .source-pair { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 22px; margin: 22px 0; }
     .evidence-table td:first-child { width: 30%; font-family: var(--mono); font-size: .86rem; }
     .scope-note { margin: 24px 0 0; padding: 17px 19px; background: var(--reverse-soft); border-left: 4px solid var(--reverse); }
     .limits { padding-top: 16px; border-top: 4px solid var(--forward); }
@@ -258,7 +259,7 @@
       .control label { grid-column: 1 / -1; }
       .mix-row { grid-template-columns: 125px 1fr 52px; }
       .instrument, .worked, .mental-map { padding: 21px 16px; }
-      .figure-reading { grid-template-columns: 1fr; gap: 10px; }
+      .figure-reading, .source-pair { grid-template-columns: 1fr; gap: 10px; }
       .symbols th:nth-child(3) { width: auto; }
       th, td { padding-inline: 6px; }
     }
@@ -327,6 +328,10 @@
       <p>A natural image distribution is sharply structured and multimodal; a standard Gaussian is simple to sample. A one-step map from one to the other must discover global layout, object identity, texture, and pixel detail at once. Earlier diffusion models supplied a likelihood-based route, but the paper notes that high-quality image synthesis had not yet been demonstrated with them.</p>
       <p>Ho, Jain, and Abbeel ask how to make the journey locally learnable. Their answer is to design the destructive path first. If every forward corruption step is known, small, and Gaussian, then learning can focus on reversing local damage rather than inventing a global transformation from scratch.</p>
       <div class="analogy"><strong>Darkroom analogy.</strong> Imagine photographing the same print after repeatedly fogging the film. You control every exposure, so you know exactly how much structure should remain at each time. A restorer learns from pairs of fogged and clean evidence. Generation begins from a fully fogged plate and applies the learned restoration repeatedly. The analogy is useful because it separates the <em>known damage process</em> from the <em>learned restoration process</em>; unlike a real darkroom, the reverse step is probabilistic and neural.</div>
+      <figure class="source-figure">
+        <img src="ddpm_figure_1_samples.png" loading="lazy" alt="Original DDPM paper Figure 1. It shows generated CelebA-HQ and unconditional CIFAR-10 image samples from the denoising diffusion model.">
+        <figcaption><span class="caption-label">Original paper, Figure 1 (PDF page 1).</span> <strong>Question this figure answers:</strong> what kind of image-generation result motivated the paper? These are qualitative samples from the paper, not a numerical comparison or evidence that a finite grid captures all modes of the data.</figcaption>
+      </figure>
     </section>
 
     <section aria-labelledby="baseline-title">
@@ -408,6 +413,10 @@
         <li><strong>Simplify the weights.</strong> Uniformly sample t and minimize unweighted noise MSE. This is <em>L</em><sub>simple</sub>, the objective behind the best sample quality in the paper.</li>
         <li><strong>Run the learned chain.</strong> Sample x<sub>T</sub>∼N(0,I), then apply the reverse update for t=T,…,1.</li>
       </ol>
+      <figure class="source-figure">
+        <img src="ddpm_figure_2_graphical_model.png" loading="lazy" alt="Original DDPM paper Figure 2. It contrasts the forward diffusion chain, whose arrows progressively corrupt x zero into x T, with the learned reverse chain that starts at x T and repeatedly predicts toward x zero.">
+        <figcaption><span class="caption-label">Original paper, Figure 2 (PDF page 2).</span> <strong>Question this figure answers:</strong> what is fixed, and what is learned? The forward arrows are the chosen Gaussian corruption process q; the reverse arrows are the learned model p<sub>θ</sub>. The rest of the lesson makes those two directions executable.</figcaption>
+      </figure>
     </section>
 
     <section aria-labelledby="forward-title">
@@ -572,10 +581,34 @@
       <div class="scope-note"><strong>What Figure 6 does not show.</strong> Its columns are not independent one-shot generations, and the network is not directly outputting a final image at each column. During one reverse trajectory, the authors calculate:
         <div class="equation"><math display="block" aria-label="x hat zero equals x t minus square root one minus alpha bar t times epsilon theta of x t, divided by square root alpha bar t"><msub><mover><mi>x</mi><mo>^</mo></mover><mn>0</mn></msub><mo>=</mo><mfrac><mrow><msub><mi>x</mi><mi>t</mi></msub><mo>−</mo><msqrt><mrow><mn>1</mn><mo>−</mo><msub><mover><mi>α</mi><mo>¯</mo></mover><mi>t</mi></msub></mrow></msqrt><msub><mi>ε</mi><mi>θ</mi></msub><mo>(</mo><msub><mi>x</mi><mi>t</mi></msub><mo>)</mo></mrow><msqrt><msub><mover><mi>α</mi><mo>¯</mo></mover><mi>t</mi></msub></msqrt></mfrac></math></div>
         from the current x<sub>t</sub>.</div>
+      <h3>The same chain produces high-resolution scene samples</h3>
+      <p>Figure 6 is a process trace on CIFAR-10. The paper also reports unconditional 256×256 samples on two LSUN scene datasets. These are visual examples, not a numerical comparison or proof of coverage; the metrics below answer a different question.</p>
+      <div class="source-pair" aria-label="Two original DDPM sample figures from LSUN">
+        <figure class="source-figure">
+          <img src="ddpm_figure_3_lsun_church_samples.png" loading="lazy" alt="Original DDPM paper Figure 3, a grid of unconditional 256 by 256 LSUN church-outdoor samples.">
+          <figcaption><span class="caption-label">Original paper, Figure 3 (PDF page 6).</span> Unconditional LSUN church-outdoor samples.</figcaption>
+        </figure>
+        <figure class="source-figure">
+          <img src="ddpm_figure_4_lsun_bedroom_samples.png" loading="lazy" alt="Original DDPM paper Figure 4, a grid of unconditional 256 by 256 LSUN bedroom samples.">
+          <figcaption><span class="caption-label">Original paper, Figure 4 (PDF page 6).</span> Unconditional LSUN bedroom samples. Read Figures 3–4 as qualitative evidence that the same iterative procedure was used beyond the small CIFAR-10 trace—not as an estimate of sample diversity.</figcaption>
+        </figure>
+      </div>
       <h3>Objective ablation: sample quality and likelihood pull differently</h3>
       <table class="evidence-table"><thead><tr><th>Unconditional CIFAR-10 setting</th><th>IS</th><th>FID</th><th>NLL test (train), bits/dim</th></tr></thead><tbody><tr><td>True bound L, ε-prediction, fixed isotropic Σ</td><td>7.67 ± 0.13</td><td>13.51</td><td>≤ 3.70 (3.69)</td></tr><tr><td>L<sub>simple</sub>, ε-prediction</td><td>9.46 ± 0.11</td><td>3.17</td><td>≤ 3.75 (3.72)</td></tr></tbody></table>
       <p><strong>Source: paper Tables 1 and 2, PDF page 5.</strong> Lower FID and higher IS favor <em>L</em><sub>simple</sub> for sample quality, while the true variational bound gives the better codelength. The paper computes its headline FID 3.17 against the CIFAR-10 training set; against the test set it reports FID 5.24.</p>
       <details class="prediction"><summary>Interpretation exercise: does FID 3.17 prove the model has the best likelihood?</summary><p>No. The same table reports a better NLL for the model trained on the true bound. FID, Inception Score, and NLL measure different properties; the paper explicitly notes that its likelihoods are not competitive with other likelihood-based models.</p></details>
+      <h3>One forward chain can also allocate a coding budget</h3>
+      <p>The forward process is not just a training convenience. The paper uses it for progressive lossy compression: transmit enough information to reconstruct an earlier diffusion state, then sample the remaining reverse steps. Figure 5 makes the rate–distortion trade-off visible.</p>
+      <figure class="source-figure">
+        <img src="ddpm_figure_5_rate_distortion.png" loading="lazy" alt="Original DDPM paper Figure 5. Rate-distortion curves compare DDPM progressive lossy compression with other image compression methods on CIFAR-10 and ImageNet 32 by 32.">
+        <figcaption><span class="caption-label">Original paper, Figure 5 (PDF page 7).</span> <strong>Question this figure answers:</strong> can intermediate diffusion states support progressive compression? The plotted distortion depends on the rate and dataset; it does not say that DDPM is uniformly best at image compression.</figcaption>
+      </figure>
+      <h3>Shared noise can preserve a visual factor across samples</h3>
+      <p>Finally, the paper starts several reverse trajectories from the same partially noised latent. Figure 7 is a small demonstration that broad attributes can persist while samples vary; it is not an evaluation of controllability.</p>
+      <figure class="source-figure">
+        <img src="ddpm_figure_7_shared_latent_samples.png" loading="lazy" alt="Original DDPM paper Figure 7. It shows several samples started from the same partially noised latent, with some high-level visual attributes persisting as samples vary.">
+        <figcaption><span class="caption-label">Original paper, Figure 7 (PDF page 7).</span> <strong>Question this figure answers:</strong> what can remain stable when reverse sampling starts from the same partially noised state? The source figure gives an intuition for shared latent structure, not a claim that every semantic factor is independently controlled.</figcaption>
+      </figure>
     </section>
 
     <section aria-labelledby="limits-title">
