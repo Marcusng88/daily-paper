@@ -1,6 +1,41 @@
 /* Generated from curriculum.json by scripts/build_catalog.mjs. */
 window.DAILY_PAPER_CATALOG = [
   {
+    "date": "2026-09-05",
+    "slug": "you-only-look-once-unified-real-time-object-detection",
+    "topic": "vision",
+    "topicLabel": "Computer vision",
+    "title": "You Only Look Once: Unified, Real-Time Object Detection",
+    "description": "Learn how YOLO predicts a grid of bounding-box and class reports in one network pass, why that makes detection fast, and where its fixed grid creates localization and crowded-object limits.",
+    "authors": [
+      "Joseph Redmon",
+      "Santosh Divvala",
+      "Ross Girshick",
+      "Ali Farhadi"
+    ],
+    "venue": "CVPR 2016",
+    "paperFile": "you-only-look-once-unified-real-time-object-detection/you_only_look_once_unified_real_time_object_detection.pdf",
+    "lessonFile": "you-only-look-once-unified-real-time-object-detection/you_only_look_once_unified_real_time_object_detection.html",
+    "canonicalUrl": "https://openaccess.thecvf.com/content_cvpr_2016/html/Redmon_You_Only_Look_CVPR_2016_paper.html",
+    "domain": "one-stage object detection and spatial prediction",
+    "areas": [
+      "computer vision",
+      "object detection",
+      "real-time inference",
+      "supervised learning"
+    ],
+    "concepts": [
+      "object detection",
+      "bounding boxes",
+      "intersection over union",
+      "non-maximum suppression",
+      "grid-cell responsibility",
+      "mean average precision"
+    ],
+    "mentalMapConnection": "Adds a spatial output contract beside image classification: a visual backbone can produce not one label, but a coordinated set of class-and-location hypotheses that must be scored and filtered.",
+    "search": "you only look once: unified, real-time object detection you-only-look-once-unified-real-time-object-detection joseph redmon,santosh divvala,ross girshick,ali farhadi cvpr 2016 vision computer vision learn how yolo predicts a grid of bounding-box and class reports in one network pass, why that makes detection fast, and where its fixed grid creates localization and crowded-object limits. one-stage object detection and spatial prediction adds a spatial output contract beside image classification: a visual backbone can produce not one label, but a coordinated set of class-and-location hypotheses that must be scored and filtered. https://openaccess.thecvf.com/content_cvpr_2016/html/redmon_you_only_look_cvpr_2016_paper.html computer vision object detection real-time inference supervised learning object detection bounding boxes intersection over union non-maximum suppression grid-cell responsibility mean average precision"
+  },
+  {
     "date": "2026-09-04",
     "slug": "neural-turing-machines",
     "topic": "memory",

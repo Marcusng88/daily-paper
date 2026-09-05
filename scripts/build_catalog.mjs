@@ -7,6 +7,7 @@ const root = path.resolve(scriptDir, "..");
 const curriculum = JSON.parse(fs.readFileSync(path.join(root, "curriculum.json"), "utf8"));
 
 const presentation = {
+  "you-only-look-once-unified-real-time-object-detection": ["vision", "Computer vision", "CVPR 2016"],
   "neural-turing-machines": ["memory", "Memory-augmented models", "arXiv preprint 2014"],
   "communication-efficient-learning-of-deep-networks-from-decentralized-data": ["federated", "Federated learning", "AISTATS 2017"],
   "mastering-the-game-of-go-with-deep-neural-networks-and-tree-search": ["planning", "Planning and search", "Nature 2016"],
