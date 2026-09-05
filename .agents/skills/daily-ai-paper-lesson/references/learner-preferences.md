@@ -29,6 +29,7 @@ Mix domains over time: language models, computer vision, reinforcement learning,
 - Include an original paper figure only if it can remain sharp. Prefer vector PDF/SVG. Do not embed blurry snapshots.
 - Do not embed the complete source-paper PDF merely to display one figure. Extract or create a dedicated, sharp local figure asset; keep the full original paper as a footer link.
 - The learner prefers source-paper visuals to be integrated where their teaching role becomes necessary: place a mechanism figure beside the mechanism it clarifies and a result figure beside the evidence it qualifies. Do not append a detached figure gallery unless comparing the figures themselves is the lesson activity.
+- The learner strongly prefers rich use of original-paper figures, architecture diagrams, tables, and result plots. There is no maximum count: include every sharp, non-redundant source visual that has a distinct teaching role in the lesson's causal flow. For substantial lessons, ask the visual-audit subagent to prepare a high-resolution local candidate crop for each recommended source visual, with figure/table number, PDF page, and teaching role; remove unused current-run candidates before delivery.
 - A paper's raster figure may be shown at native size with a clear caption; do not upscale it merely to fill layout.
 - Use custom SVG/animation when it makes the mechanism easier to understand. It must be clearly a lesson diagram, not passed off as an original figure.
 - Keep lessons self-contained and avoid remote dependencies where practical.

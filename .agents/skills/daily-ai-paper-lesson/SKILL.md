@@ -41,7 +41,7 @@ Before delivery, confirm that the completed lesson is a plausible 60-minute acti
 
 Use original paper visuals only when sharp; custom explanatory visuals must be labeled as lesson diagrams. Follow `$paper-lesson-visuals` for visual selection, accessibility, offline behaviour, and visual QA. The lesson must stay usable offline, keyboard accessible, visibly focused, and reduced-motion aware.
 
-For a substantial new collection lesson, use independent research/verification, visual-source audit, and pedagogy/design briefs whenever delegation is available. For smaller revisions, use delegation when the user asks or when it materially improves confidence. Integrate the evidence into one coherent output; do not paste briefs together.
+For a substantial new collection lesson, use independent research/verification, visual-source audit, and pedagogy/design briefs whenever delegation is available. The visual-source audit should prepare high-resolution local candidate crops for every recommended source figure, table, or plot, with its provenance and teaching role; do not impose a fixed maximum number of visuals in the final lesson. Integrate every sharp, non-redundant source visual that advances the causal teaching flow, and remove unused current-run candidates before delivery. For smaller revisions, use delegation when the user asks or when it materially improves confidence. Integrate the evidence into one coherent output; do not paste briefs together.
 
 ## Deliver and validate
 

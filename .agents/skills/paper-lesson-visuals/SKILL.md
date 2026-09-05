@@ -14,12 +14,17 @@ Make a visual only when it makes a paper's mechanism, evidence, comparison, or m
 - Use a compact interactive lab only when changing an input helps the learner form intuition. It must have a useful static reading path too.
 - Prefer a source figure from the original paper when it remains sharp at its displayed size and supports a specific teaching point. Prefer vector extraction or high-resolution rendering, but do not force it when a faithful reconstruction teaches the evidence more clearly. Never enlarge a blurry screenshot.
 - Label non-paper visuals **Lesson diagram** in the nearby caption. Attribute original-paper visuals precisely.
+- Do not impose an arbitrary numerical cap on useful source-paper visuals. When several sharp figures, tables, or plots each clarify a distinct mechanism, architecture, result, comparison, or limitation, retain all of them. Omit only visuals that are redundant, illegible, or lack a clear nearby teaching role.
 
 ## Lesson-first composition
 
 The reader is studying, not operating a dashboard. Give each visual one question to answer and one dominant visual field. Keep labels, values, and a short caption close to the figure; avoid KPI cards, decorative panels, status badges, pill controls, and duplicate legends.
 
 Place every retained source-paper visual in the causal lesson flow where its question becomes necessary: a mechanism figure beside the mechanism it clarifies, and a result figure beside the evidence it qualifies. Do not append a detached source-figure gallery unless comparing the figures themselves is the learning activity.
+
+## Delegated source-asset preparation
+
+For a substantial lesson, the visual-source audit should do more than list recommendations. It should prepare a high-resolution, tightly cropped local candidate asset for every source figure, table, or plot it recommends. For each candidate, record the source figure/table number, PDF page, and the teaching question it answers. This is a broad candidate set, not a quota: the lead may use every candidate that remains sharp and serves a distinct point in the lesson. Remove current-run candidate assets that are ultimately not used from the final lesson folder.
 
 For diagrams, use direct labels and arrows instead of a legend when possible. For plots, include meaningful axes and units, label important values directly, and use a legend only when direct labels are insufficient. Preserve the paper's units, splits, metrics, and experimental conditions.
 
