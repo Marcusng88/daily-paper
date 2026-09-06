@@ -131,9 +131,29 @@
     "intersection over union",
     "non-maximum suppression",
     "grid-cell responsibility",
-    "mean average precision"
+    "mean average precision",
+    "bidirectional pretraining",
+    "masked language modeling",
+    "next sentence prediction",
+    "contextual token representations",
+    "fine-tuning"
   ],
   "completed_lessons": [
+    {
+      "date": "2026-09-06",
+      "slug": "bert-pre-training-of-deep-bidirectional-transformers",
+      "title": "BERT: Pre-training of Deep Bidirectional Transformers for Language Understanding",
+      "lesson_file": "bert-pre-training-of-deep-bidirectional-transformers/bert_pre_training_of_deep_bidirectional_transformers.html",
+      "paper_file": "bert-pre-training-of-deep-bidirectional-transformers/bert_pre_training_of_deep_bidirectional_transformers.pdf",
+      "authors": ["Jacob Devlin", "Ming-Wei Chang", "Kenton Lee", "Kristina Toutanova"],
+      "venue": "NAACL 2019",
+      "canonical_url": "https://arxiv.org/abs/1810.04805",
+      "domain": "bidirectional language-model pretraining",
+      "areas": ["natural language processing", "self-supervised learning", "transfer learning", "Transformers"],
+      "concepts_introduced": ["bidirectional pretraining", "masked language modeling", "next sentence prediction", "contextual token representations", "fine-tuning"],
+      "mental_map_connection": "Reuses the Transformer encoder while changing the source of supervision: deliberately hidden tokens in ordinary text become labels before a task-specific fine-tuning stage.",
+      "description": "Learn why BERT hides parts of a sentence during pretraining, how bidirectional context creates contextual token representations, and how one encoder becomes many downstream task models."
+    },
     {
       "date": "2026-09-05",
       "slug": "you-only-look-once-unified-real-time-object-detection",

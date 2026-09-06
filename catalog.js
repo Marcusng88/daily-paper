@@ -1,6 +1,40 @@
 /* Generated from curriculum.json by scripts/build_catalog.mjs. */
 window.DAILY_PAPER_CATALOG = [
   {
+    "date": "2026-09-06",
+    "slug": "bert-pre-training-of-deep-bidirectional-transformers",
+    "topic": "language",
+    "topicLabel": "Language pretraining",
+    "title": "BERT: Pre-training of Deep Bidirectional Transformers for Language Understanding",
+    "description": "Learn why BERT hides parts of a sentence during pretraining, how bidirectional context creates contextual token representations, and how one encoder becomes many downstream task models.",
+    "authors": [
+      "Jacob Devlin",
+      "Ming-Wei Chang",
+      "Kenton Lee",
+      "Kristina Toutanova"
+    ],
+    "venue": "NAACL 2019",
+    "paperFile": "bert-pre-training-of-deep-bidirectional-transformers/bert_pre_training_of_deep_bidirectional_transformers.pdf",
+    "lessonFile": "bert-pre-training-of-deep-bidirectional-transformers/bert_pre_training_of_deep_bidirectional_transformers.html",
+    "canonicalUrl": "https://arxiv.org/abs/1810.04805",
+    "domain": "bidirectional language-model pretraining",
+    "areas": [
+      "natural language processing",
+      "self-supervised learning",
+      "transfer learning",
+      "Transformers"
+    ],
+    "concepts": [
+      "bidirectional pretraining",
+      "masked language modeling",
+      "next sentence prediction",
+      "contextual token representations",
+      "fine-tuning"
+    ],
+    "mentalMapConnection": "Reuses the Transformer encoder while changing the source of supervision: deliberately hidden tokens in ordinary text become labels before a task-specific fine-tuning stage.",
+    "search": "bert: pre-training of deep bidirectional transformers for language understanding bert-pre-training-of-deep-bidirectional-transformers jacob devlin,ming-wei chang,kenton lee,kristina toutanova naacl 2019 language language pretraining learn why bert hides parts of a sentence during pretraining, how bidirectional context creates contextual token representations, and how one encoder becomes many downstream task models. bidirectional language-model pretraining reuses the transformer encoder while changing the source of supervision: deliberately hidden tokens in ordinary text become labels before a task-specific fine-tuning stage. https://arxiv.org/abs/1810.04805 natural language processing self-supervised learning transfer learning transformers bidirectional pretraining masked language modeling next sentence prediction contextual token representations fine-tuning"
+  },
+  {
     "date": "2026-09-05",
     "slug": "you-only-look-once-unified-real-time-object-detection",
     "topic": "vision",
