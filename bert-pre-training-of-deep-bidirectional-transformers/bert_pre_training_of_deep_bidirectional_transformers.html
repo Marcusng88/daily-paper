@@ -58,7 +58,11 @@
     .quiz h3 { margin-top:0; }
     .quiz button, .lab button { appearance:none; padding:9px 12px; margin:4px 7px 4px 0; border:1px solid var(--blue); background:transparent; color:var(--ink); font:inherit; cursor:pointer; }
     .quiz button:hover, .lab button:hover { background:var(--blue-pale); }
+    .quiz button:focus-visible, .lab button:focus-visible { outline:3px solid var(--amber); outline-offset:3px; }
+    .quiz button.is-wrong { border-color:#a33b2a; background:#f9e8e3; }
+    .quiz button.is-correct { border-color:var(--blue); background:var(--blue-pale); }
     .answer { margin-top:15px; padding-top:14px; border-top:1px solid var(--rule); }
+    .quiz-feedback { min-height:1.5em; margin:12px 0 0; color:#713124; font-weight:bold; }
     .lab { margin:30px 0; padding:21px; border:1px solid var(--rule); border-top:4px solid var(--blue); background:var(--white); }
     .lab-grid { display:grid; grid-template-columns:1fr 1.2fr; gap:24px; align-items:start; }
     .choice { display:block; margin:9px 0; }
@@ -102,7 +106,7 @@
       </div>
       <div class="causal" aria-label="BERT causal chain"><div><strong>No labels?</strong>Raw text contains words but no task annotations.</div><span>→</span><div><strong>Remove selected words</strong>The original words become targets.</div><span>→</span><div><strong>Restore from context</strong>A bidirectional encoder learns contextual representations.</div></div>
       <aside class="callout"><strong>Concrete analogy.</strong> A proofreader can use the words before and after a smudged word. BERT practises that exact skill at scale. The un-smudged original supplies the answer key.</aside>
-      <div class="quiz" data-quiz><h3>Predict before reveal</h3><p>If the true target token is still visible to a bidirectional encoder, what shortcut can it use?</p><button type="button">It must still infer the word</button><button type="button" data-correct="true">It can copy the visible target</button><button type="button">It can only use the left context</button><p class="answer" hidden><strong>It can copy the visible target.</strong> Masking removes that leakage, so both left and right context can become useful evidence.</p></div>
+      <div class="quiz" data-quiz><h3>Predict before reveal</h3><p>If the true target token is still visible to a bidirectional encoder, what shortcut can it use?</p><button type="button" data-feedback="Not quite: seeing the target makes inference unnecessary.">It must still infer the word</button><button type="button" data-correct="true">It can copy the visible target</button><button type="button" data-feedback="Not quite: a bidirectional encoder can see both sides; the issue is that it can also see the target itself.">It can only use the left context</button><p class="quiz-feedback" aria-live="polite"></p><p class="answer" hidden><strong>It can copy the visible target.</strong> Masking removes that leakage, so both left and right context can become useful evidence.</p></div>
     </section>
 
     <section>
@@ -134,7 +138,7 @@
       <h2>Change a right-side clue.</h2>
       <p>Before using the control, predict: which candidate should become more plausible for “The fisherman stood on the river [MASK]” if the right-side clue changes from <em>river</em> to <em>money</em>?</p>
       <div class="lab"><div class="lab-grid"><div><h3>Right-side clue</h3><button class="choice" type="button" data-clue="river" aria-pressed="true">river</button><button class="choice" type="button" data-clue="money" aria-pressed="false">money</button><p class="byline">Static reading: the same word form <em>bank</em> should mean different things when its surrounding context changes.</p></div><div class="result" id="repair-result" aria-live="polite"><strong>Clue: river</strong><p><em>bank</em> is the leading repair because “river bank” is a common contextual fit. The model’s hidden state at the blank uses this right-side clue as well as the left side.</p><p>Illustrative ranking: bank 0.72 · shore 0.16 · loan 0.01</p></div></div></div>
-      <div class="quiz" data-quiz><h3>Predict before reveal</h3><p>Fine-tuning text normally contains no <code>[MASK]</code>. If pretraining used only literal masks, what would change?</p><button type="button">Nothing: input distributions are identical</button><button type="button" data-correct="true">The encoder could over-rely on a token it will not see later</button><button type="button">It would become a left-to-right decoder</button><p class="answer" hidden><strong>The encoder could over-rely on an absent token.</strong> The paper’s 80/10/10 corruption mixture partially addresses this pretrain-to-fine-tune mismatch.</p></div>
+      <div class="quiz" data-quiz><h3>Predict before reveal</h3><p>Fine-tuning text normally contains no <code>[MASK]</code>. If pretraining used only literal masks, what would change?</p><button type="button" data-feedback="Not quite: [MASK] appears during pretraining but not ordinary fine-tuning, so the input distributions differ.">Nothing: input distributions are identical</button><button type="button" data-correct="true">The encoder could over-rely on a token it will not see later</button><button type="button" data-feedback="Not quite: masking does not change BERT into a left-to-right decoder; it remains bidirectional.">It would become a left-to-right decoder</button><p class="quiz-feedback" aria-live="polite"></p><p class="answer" hidden><strong>The encoder could over-rely on an absent token.</strong> The paper’s 80/10/10 corruption mixture partially addresses this pretrain-to-fine-tune mismatch.</p></div>
     </section>
 
     <section>
@@ -144,7 +148,7 @@
       <figure class="source"><div class="source-scroll" tabindex="0" aria-label="Scrollable original paper Figure 1"><img src="original_figure_1_pretraining_and_finetuning.png" alt="Original BERT paper Figure 1 showing masked-language-model and next-sentence-prediction pretraining on the left, and fine-tuning for MNLI, NER, and SQuAD on the right."></div><figcaption><span class="label">Original paper, Figure 1 · PDF page 3</span> Apart from output layers, the encoder architecture persists. The paper initializes different downstream models from the same pretrained parameters, then fine-tunes all of them. On a narrow screen, scroll the figure horizontally to keep its labels readable.</figcaption></figure>
       <div class="trace"><h3>Worked trace B: extract an answer span</h3><p>Question: “Where did Ada work?” Context: “Ada worked at <em>Bell</em> <em>Labs</em>.” BERT outputs a state T<sub>i</sub> for every token. A start vector gives P(start = Bell) = 0.70; an end vector gives P(end = Labs) = 0.80. The span loss is <strong>−log(0.70) − log(0.80) ≈ 0.580</strong>. This task needs token-level states, not only the [CLS] state.</p></div>
       <div class="math-wrap" aria-label="Question answering start probability"><math display="block"><mi>P</mi><mo>(</mo><mi>start</mi><mo>=</mo><mi>i</mi><mo>)</mo><mo>=</mo><mfrac><msup><mi>e</mi><mrow><mi>S</mi><mo>·</mo><msub><mi>T</mi><mi>i</mi></msub></mrow></msup><mrow><munderover><mo>∑</mo><mi>j</mi><mrow></mrow></munderover><msup><mi>e</mi><mrow><mi>S</mi><mo>·</mo><msub><mi>T</mi><mi>j</mi></msub></mrow></msup></mrow></mfrac></math></div>
-      <div class="quiz" data-quiz><h3>Predict before reveal</h3><p>Can a classifier reading only C = T<sub>[CLS]</sub> identify the exact start and end of a passage answer?</p><button type="button">Yes, C names every span boundary</button><button type="button" data-correct="true">No, QA uses the individual T<sub>i</sub> states</button><button type="button">Only if the passage has one word</button><p class="answer" hidden><strong>No.</strong> The paper scores each contextual token state with start and end vectors. [CLS] is used for sentence-level classification, not the ordinary span head.</p></div>
+      <div class="quiz" data-quiz><h3>Predict before reveal</h3><p>Can a classifier reading only C = T<sub>[CLS]</sub> identify the exact start and end of a passage answer?</p><button type="button" data-feedback="Not quite: one summary vector does not give the separate scores needed for every possible start and end token.">Yes, C names every span boundary</button><button type="button" data-correct="true">No, QA uses the individual T<sub>i</sub> states</button><button type="button" data-feedback="Not quite: the span head is still token-level even for a one-word answer; it predicts start and end positions.">Only if the passage has one word</button><p class="quiz-feedback" aria-live="polite"></p><p class="answer" hidden><strong>No.</strong> The paper scores each contextual token state with start and end vectors. [CLS] is used for sentence-level classification, not the ordinary span head.</p></div>
     </section>
 
     <section>
@@ -193,8 +197,12 @@
   </main>
   <script>
     document.querySelectorAll('[data-quiz]').forEach((quiz) => quiz.querySelectorAll('button').forEach((button) => button.addEventListener('click', () => {
-      quiz.querySelector('.answer').hidden = false;
-      quiz.querySelectorAll('button').forEach((choice) => { choice.style.background = choice.dataset.correct === 'true' ? '#dce8ea' : 'transparent'; choice.style.borderColor = choice.dataset.correct === 'true' ? '#1e5266' : '#b9c2be'; });
+      const correct = button.dataset.correct === 'true';
+      const feedback = quiz.querySelector('.quiz-feedback');
+      quiz.querySelectorAll('button').forEach((choice) => choice.classList.remove('is-wrong', 'is-correct'));
+      button.classList.add(correct ? 'is-correct' : 'is-wrong');
+      feedback.textContent = correct ? 'Correct — here is why.' : `${button.dataset.feedback} Try another answer.`;
+      if (correct) quiz.querySelector('.answer').hidden = false;
     })));
     const repair = document.querySelector('#repair-result');
     document.querySelectorAll('[data-clue]').forEach((button) => button.addEventListener('click', () => {
