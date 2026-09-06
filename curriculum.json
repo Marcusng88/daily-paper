@@ -147,7 +147,7 @@
       "paper_file": "bert-pre-training-of-deep-bidirectional-transformers/bert_pre_training_of_deep_bidirectional_transformers.pdf",
       "authors": ["Jacob Devlin", "Ming-Wei Chang", "Kenton Lee", "Kristina Toutanova"],
       "venue": "NAACL 2019",
-      "canonical_url": "https://arxiv.org/abs/1810.04805",
+      "canonical_url": "https://aclanthology.org/N19-1423/",
       "domain": "bidirectional language-model pretraining",
       "areas": ["natural language processing", "self-supervised learning", "transfer learning", "Transformers"],
       "concepts_introduced": ["bidirectional pretraining", "masked language modeling", "next sentence prediction", "contextual token representations", "fine-tuning"],
