@@ -17,7 +17,7 @@ Mix domains over time: language models, computer vision, reinforcement learning,
 ## File-first delivery
 
 - The reader wants files to open and navigate, especially a comprehensive HTML lesson and the original paper PDF; Markdown alone is not the deliverable.
-- Default collection location, when explicitly in scope: /Users/zhengjie.ng/Documents/intern diary/daily-ai-papers/daily-paper/
+- Default collection location, when explicitly in scope: /Users/zhengjie.ng/Documents/daily-ai-papers/daily-paper/
 - Store each paper in its own undated title-slug folder. Keep the study date in `curriculum.json`, and keep the original PDF in the folder with a filesystem-safe title-based filename such as attention_is_all_you_need.pdf.
 - Update index.html and curriculum.json only for a completed addition to this collection.
 - Preserve existing lessons. Clean up only temporary assets or current-run duplicates; never leave low-quality replacement PDFs/PNGs beside the intended final assets.

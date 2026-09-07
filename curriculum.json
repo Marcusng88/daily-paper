@@ -136,9 +136,31 @@
     "masked language modeling",
     "next sentence prediction",
     "contextual token representations",
-    "fine-tuning"
+    "fine-tuning",
+    "back-propagation",
+    "credit assignment",
+    "chain rule",
+    "computational graph",
+    "gradient descent",
+    "sigmoid activation",
+    "momentum"
   ],
   "completed_lessons": [
+    {
+      "date": "2026-09-07",
+      "slug": "learning-representations-by-back-propagating-errors",
+      "title": "Learning representations by back-propagating errors",
+      "lesson_file": "learning-representations-by-back-propagating-errors/learning_representations_by_back_propagating_errors.html",
+      "paper_file": "learning-representations-by-back-propagating-errors/learning_representations_by_back_propagating_errors.pdf",
+      "authors": ["David E. Rumelhart", "Geoffrey E. Hinton", "Ronald J. Williams"],
+      "venue": "Nature 1986",
+      "canonical_url": "https://doi.org/10.1038/323533a0",
+      "domain": "gradient-based credit assignment and representation learning",
+      "areas": ["deep learning", "optimization", "representation learning", "neural networks"],
+      "concepts_introduced": ["back-propagation", "credit assignment", "chain rule", "computational graph", "gradient descent", "sigmoid activation", "momentum"],
+      "mental_map_connection": "Supplies the common credit-assignment mechanism beneath later lessons: DQN distributes a temporal-difference discrepancy, ResNet changes the paths gradients travel, and Adam changes how the resulting gradients are converted into updates.",
+      "description": "Learn how one visible output mistake becomes precise local feedback for hidden-layer connections, then work through the chain rule that lets useful internal representations emerge."
+    },
     {
       "date": "2026-09-06",
       "slug": "bert-pre-training-of-deep-bidirectional-transformers",

@@ -7,6 +7,7 @@ const root = path.resolve(scriptDir, "..");
 const curriculum = JSON.parse(fs.readFileSync(path.join(root, "curriculum.json"), "utf8"));
 
 const presentation = {
+  "learning-representations-by-back-propagating-errors": ["optimization", "Optimization", "Nature 1986"],
   "bert-pre-training-of-deep-bidirectional-transformers": ["language", "Language pretraining", "NAACL 2019"],
   "you-only-look-once-unified-real-time-object-detection": ["vision", "Computer vision", "CVPR 2016"],
   "neural-turing-machines": ["memory", "Memory-augmented models", "arXiv preprint 2014"],

@@ -1,6 +1,41 @@
 /* Generated from curriculum.json by scripts/build_catalog.mjs. */
 window.DAILY_PAPER_CATALOG = [
   {
+    "date": "2026-09-07",
+    "slug": "learning-representations-by-back-propagating-errors",
+    "topic": "optimization",
+    "topicLabel": "Optimization",
+    "title": "Learning representations by back-propagating errors",
+    "description": "Learn how one visible output mistake becomes precise local feedback for hidden-layer connections, then work through the chain rule that lets useful internal representations emerge.",
+    "authors": [
+      "David E. Rumelhart",
+      "Geoffrey E. Hinton",
+      "Ronald J. Williams"
+    ],
+    "venue": "Nature 1986",
+    "paperFile": "learning-representations-by-back-propagating-errors/learning_representations_by_back_propagating_errors.pdf",
+    "lessonFile": "learning-representations-by-back-propagating-errors/learning_representations_by_back_propagating_errors.html",
+    "canonicalUrl": "https://doi.org/10.1038/323533a0",
+    "domain": "gradient-based credit assignment and representation learning",
+    "areas": [
+      "deep learning",
+      "optimization",
+      "representation learning",
+      "neural networks"
+    ],
+    "concepts": [
+      "back-propagation",
+      "credit assignment",
+      "chain rule",
+      "computational graph",
+      "gradient descent",
+      "sigmoid activation",
+      "momentum"
+    ],
+    "mentalMapConnection": "Supplies the common credit-assignment mechanism beneath later lessons: DQN distributes a temporal-difference discrepancy, ResNet changes the paths gradients travel, and Adam changes how the resulting gradients are converted into updates.",
+    "search": "learning representations by back-propagating errors learning-representations-by-back-propagating-errors david e. rumelhart,geoffrey e. hinton,ronald j. williams nature 1986 optimization optimization learn how one visible output mistake becomes precise local feedback for hidden-layer connections, then work through the chain rule that lets useful internal representations emerge. gradient-based credit assignment and representation learning supplies the common credit-assignment mechanism beneath later lessons: dqn distributes a temporal-difference discrepancy, resnet changes the paths gradients travel, and adam changes how the resulting gradients are converted into updates. https://doi.org/10.1038/323533a0 deep learning optimization representation learning neural networks back-propagation credit assignment chain rule computational graph gradient descent sigmoid activation momentum"
+  },
+  {
     "date": "2026-09-06",
     "slug": "bert-pre-training-of-deep-bidirectional-transformers",
     "topic": "language",

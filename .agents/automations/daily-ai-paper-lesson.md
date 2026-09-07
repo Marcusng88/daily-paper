@@ -14,7 +14,7 @@ When changing the Daily AI paper lesson workflow:
 
 ## Task prompt
 
-Create the next daily AI/ML/DL paper lesson in `/Users/zhengjie.ng/Documents/intern diary/daily-ai-papers/daily-paper/`.
+Create the next daily AI/ML/DL paper lesson in `/Users/zhengjie.ng/Documents/daily-ai-papers/daily-paper/`.
 
 Read and follow this project-scoped instruction file first, together with the project `AGENTS.md` and the project-scoped skills it names. This file is the canonical scheduled-task prompt.
 
