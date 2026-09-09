@@ -143,9 +143,15 @@
     "computational graph",
     "gradient descent",
     "sigmoid activation",
-    "momentum"
+    "momentum",
+    "long short-term memory",
+    "constant error carousel",
+    "input gate",
+    "output gate",
+    "vanishing gradients"
   ],
   "completed_lessons": [
+    {"date":"2026-09-09","slug":"long-short-term-memory","title":"Long Short-Term Memory","lesson_file":"long-short-term-memory/long_short_term_memory.html","paper_file":"long-short-term-memory/long_short_term_memory.pdf","authors":["Sepp Hochreiter","Jürgen Schmidhuber"],"venue":"Neural Computation 1997","canonical_url":"https://doi.org/10.1162/neco.1997.9.8.1735","domain":"gated recurrent memory and long-range credit assignment","areas":["sequence modeling","recurrent neural networks","memory"],"concepts_introduced":["long short-term memory","constant error carousel","input gate","output gate","vanishing gradients"],"mental_map_connection":"Builds on back-propagation’s long credit paths with a protected recurrent state, then bridges to Neural Turing Machines and Transformer attention.","description":"Learn how LSTM protects a memory value and its learning signal across long delays, using gates to control writing and readout."},
     {
       "date": "2026-09-07",
       "slug": "learning-representations-by-back-propagating-errors",

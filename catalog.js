@@ -1,6 +1,37 @@
 /* Generated from curriculum.json by scripts/build_catalog.mjs. */
 window.DAILY_PAPER_CATALOG = [
   {
+    "date": "2026-09-09",
+    "slug": "long-short-term-memory",
+    "topic": "memory",
+    "topicLabel": "Memory-augmented models",
+    "title": "Long Short-Term Memory",
+    "description": "Learn how LSTM protects a memory value and its learning signal across long delays, using gates to control writing and readout.",
+    "authors": [
+      "Sepp Hochreiter",
+      "Jürgen Schmidhuber"
+    ],
+    "venue": "Neural Computation 1997",
+    "paperFile": "long-short-term-memory/long_short_term_memory.pdf",
+    "lessonFile": "long-short-term-memory/long_short_term_memory.html",
+    "canonicalUrl": "https://doi.org/10.1162/neco.1997.9.8.1735",
+    "domain": "gated recurrent memory and long-range credit assignment",
+    "areas": [
+      "sequence modeling",
+      "recurrent neural networks",
+      "memory"
+    ],
+    "concepts": [
+      "long short-term memory",
+      "constant error carousel",
+      "input gate",
+      "output gate",
+      "vanishing gradients"
+    ],
+    "mentalMapConnection": "Builds on back-propagation’s long credit paths with a protected recurrent state, then bridges to Neural Turing Machines and Transformer attention.",
+    "search": "long short-term memory long-short-term-memory sepp hochreiter,jürgen schmidhuber neural computation 1997 memory memory-augmented models learn how lstm protects a memory value and its learning signal across long delays, using gates to control writing and readout. gated recurrent memory and long-range credit assignment builds on back-propagation’s long credit paths with a protected recurrent state, then bridges to neural turing machines and transformer attention. https://doi.org/10.1162/neco.1997.9.8.1735 sequence modeling recurrent neural networks memory long short-term memory constant error carousel input gate output gate vanishing gradients"
+  },
+  {
     "date": "2026-09-07",
     "slug": "learning-representations-by-back-propagating-errors",
     "topic": "optimization",
