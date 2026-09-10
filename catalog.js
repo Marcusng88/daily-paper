@@ -1,6 +1,44 @@
 /* Generated from curriculum.json by scripts/build_catalog.mjs. */
 window.DAILY_PAPER_CATALOG = [
   {
+    "date": "2026-09-10",
+    "slug": "lora-low-rank-adaptation-of-large-language-models",
+    "topic": "post-training",
+    "topicLabel": "Post-training",
+    "title": "LoRA: Low-Rank Adaptation of Large Language Models",
+    "description": "Learn how LoRA freezes a pretrained model and learns a small low-rank weight update, then trace why that update can be stored cheaply and merged for ordinary inference.",
+    "authors": [
+      "Edward Hu",
+      "Yelong Shen",
+      "Phillip Wallis",
+      "Zeyuan Allen-Zhu",
+      "Yuanzhi Li",
+      "Shean Wang",
+      "Lu Wang",
+      "Weizhu Chen"
+    ],
+    "venue": "ICLR 2022",
+    "paperFile": "lora-low-rank-adaptation-of-large-language-models/lora_low_rank_adaptation_of_large_language_models.pdf",
+    "lessonFile": "lora-low-rank-adaptation-of-large-language-models/lora_low_rank_adaptation_of_large_language_models.html",
+    "canonicalUrl": "https://openreview.net/forum?id=nZeVKeeFYf9",
+    "domain": "parameter-efficient adaptation of pretrained language models",
+    "areas": [
+      "language models",
+      "parameter-efficient fine-tuning",
+      "transfer learning",
+      "Transformers"
+    ],
+    "concepts": [
+      "parameter-efficient fine-tuning",
+      "low-rank adaptation",
+      "intrinsic rank",
+      "frozen weights",
+      "mergeable adapters"
+    ],
+    "mentalMapConnection": "Extends BERT’s pretrain-then-adapt recipe and DPO’s adaptation objective with a new question: which low-dimensional directions in a pretrained weight matrix must move for a task?",
+    "search": "lora: low-rank adaptation of large language models lora-low-rank-adaptation-of-large-language-models edward hu,yelong shen,phillip wallis,zeyuan allen-zhu,yuanzhi li,shean wang,lu wang,weizhu chen iclr 2022 post-training post-training learn how lora freezes a pretrained model and learns a small low-rank weight update, then trace why that update can be stored cheaply and merged for ordinary inference. parameter-efficient adaptation of pretrained language models extends bert’s pretrain-then-adapt recipe and dpo’s adaptation objective with a new question: which low-dimensional directions in a pretrained weight matrix must move for a task? https://openreview.net/forum?id=nzevkeefyf9 language models parameter-efficient fine-tuning transfer learning transformers parameter-efficient fine-tuning low-rank adaptation intrinsic rank frozen weights mergeable adapters"
+  },
+  {
     "date": "2026-09-09",
     "slug": "long-short-term-memory",
     "topic": "memory",
