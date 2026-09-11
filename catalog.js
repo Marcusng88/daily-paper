@@ -1,6 +1,45 @@
 /* Generated from curriculum.json by scripts/build_catalog.mjs. */
 window.DAILY_PAPER_CATALOG = [
   {
+    "date": "2026-09-11",
+    "slug": "react-synergizing-reasoning-and-acting-in-language-models",
+    "topic": "agents",
+    "topicLabel": "Language agents",
+    "title": "ReAct: Synergizing Reasoning and Acting in Language Models",
+    "description": "Learn how ReAct interleaves language thoughts, task actions, and observations so a model can use external evidence to revise a plan, then trace why grounding helps without guaranteeing correctness.",
+    "authors": [
+      "Shunyu Yao",
+      "Jeffrey Zhao",
+      "Dian Yu",
+      "Nan Du",
+      "Izhak Shafran",
+      "Karthik Narasimhan",
+      "Yuan Cao"
+    ],
+    "venue": "ICLR 2023",
+    "paperFile": "react-synergizing-reasoning-and-acting-in-language-models/react_synergizing_reasoning_and_acting_in_language_models.pdf",
+    "lessonFile": "react-synergizing-reasoning-and-acting-in-language-models/react_synergizing_reasoning_and_acting_in_language_models.html",
+    "canonicalUrl": "https://arxiv.org/abs/2210.03629",
+    "domain": "closed-loop language-model reasoning and acting",
+    "areas": [
+      "agents",
+      "language models",
+      "tool use",
+      "interactive decision making"
+    ],
+    "concepts": [
+      "language agents",
+      "ReAct",
+      "thought-action-observation loop",
+      "tool use",
+      "grounded reasoning",
+      "task-specific action space",
+      "in-context trajectories"
+    ],
+    "mentalMapConnection": "Adds an inference-time interaction protocol above the language-model lessons: unlike BERT's static pretraining, DPO's preference objective, or LoRA's low-rank update, ReAct structures generation into a loop where external observations can revise a plan; it parallels DQN and AlphaGo's interaction with state without using their learned value backups or tree search.",
+    "search": "react: synergizing reasoning and acting in language models react-synergizing-reasoning-and-acting-in-language-models shunyu yao,jeffrey zhao,dian yu,nan du,izhak shafran,karthik narasimhan,yuan cao iclr 2023 agents language agents learn how react interleaves language thoughts, task actions, and observations so a model can use external evidence to revise a plan, then trace why grounding helps without guaranteeing correctness. closed-loop language-model reasoning and acting adds an inference-time interaction protocol above the language-model lessons: unlike bert's static pretraining, dpo's preference objective, or lora's low-rank update, react structures generation into a loop where external observations can revise a plan; it parallels dqn and alphago's interaction with state without using their learned value backups or tree search. https://arxiv.org/abs/2210.03629 agents language models tool use interactive decision making language agents react thought-action-observation loop tool use grounded reasoning task-specific action space in-context trajectories"
+  },
+  {
     "date": "2026-09-10",
     "slug": "lora-low-rank-adaptation-of-large-language-models",
     "topic": "post-training",
@@ -68,6 +107,42 @@ window.DAILY_PAPER_CATALOG = [
     ],
     "mentalMapConnection": "Builds on back-propagation’s long credit paths with a protected recurrent state, then bridges to Neural Turing Machines and Transformer attention.",
     "search": "long short-term memory long-short-term-memory sepp hochreiter,jürgen schmidhuber neural computation 1997 memory memory-augmented models learn how lstm protects a memory value and its learning signal across long delays, using gates to control writing and readout. gated recurrent memory and long-range credit assignment builds on back-propagation’s long credit paths with a protected recurrent state, then bridges to neural turing machines and transformer attention. https://doi.org/10.1162/neco.1997.9.8.1735 sequence modeling recurrent neural networks memory long short-term memory constant error carousel input gate output gate vanishing gradients"
+  },
+  {
+    "date": "2026-09-08",
+    "slug": "u-net-convolutional-networks-for-biomedical-image-segmentation",
+    "topic": "vision",
+    "topicLabel": "Computer vision",
+    "title": "U-Net: Convolutional Networks for Biomedical Image Segmentation",
+    "description": "Learn how U-Net combines broad image context with fine spatial detail to label every pixel, then trace why cropped skip concatenations and border-weighted loss help separate touching cells.",
+    "authors": [
+      "Olaf Ronneberger",
+      "Philipp Fischer",
+      "Thomas Brox"
+    ],
+    "venue": "arXiv 2015",
+    "paperFile": "u-net-convolutional-networks-for-biomedical-image-segmentation/u_net_convolutional_networks_for_biomedical_image_segmentation.pdf",
+    "lessonFile": "u-net-convolutional-networks-for-biomedical-image-segmentation/u_net_convolutional_networks_for_biomedical_image_segmentation.html",
+    "canonicalUrl": "https://arxiv.org/abs/1505.04597",
+    "domain": "fully convolutional encoder-decoder segmentation",
+    "areas": [
+      "computer vision",
+      "semantic segmentation",
+      "dense prediction",
+      "convolutional neural networks"
+    ],
+    "concepts": [
+      "semantic segmentation",
+      "dense prediction",
+      "contracting path",
+      "expansive path",
+      "skip concatenation",
+      "overlap-tile inference",
+      "weighted pixel-wise loss",
+      "elastic deformation augmentation"
+    ],
+    "mentalMapConnection": "Extends YOLO’s spatial prediction from grid-level reports to a class distribution at every pixel, and contrasts with ResNet: U-Net concatenates cropped high-resolution features into a decoder instead of adding an identity residual.",
+    "search": "u-net: convolutional networks for biomedical image segmentation u-net-convolutional-networks-for-biomedical-image-segmentation olaf ronneberger,philipp fischer,thomas brox arxiv 2015 vision computer vision learn how u-net combines broad image context with fine spatial detail to label every pixel, then trace why cropped skip concatenations and border-weighted loss help separate touching cells. fully convolutional encoder-decoder segmentation extends yolo’s spatial prediction from grid-level reports to a class distribution at every pixel, and contrasts with resnet: u-net concatenates cropped high-resolution features into a decoder instead of adding an identity residual. https://arxiv.org/abs/1505.04597 computer vision semantic segmentation dense prediction convolutional neural networks semantic segmentation dense prediction contracting path expansive path skip concatenation overlap-tile inference weighted pixel-wise loss elastic deformation augmentation"
   },
   {
     "date": "2026-09-07",

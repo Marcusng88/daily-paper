@@ -7,8 +7,10 @@ const root = path.resolve(scriptDir, "..");
 const curriculum = JSON.parse(fs.readFileSync(path.join(root, "curriculum.json"), "utf8"));
 
 const presentation = {
+  "react-synergizing-reasoning-and-acting-in-language-models": ["agents", "Language agents", "ICLR 2023"],
   "lora-low-rank-adaptation-of-large-language-models": ["post-training", "Post-training", "ICLR 2022"],
   "long-short-term-memory": ["memory", "Memory-augmented models", "Neural Computation 1997"],
+  "u-net-convolutional-networks-for-biomedical-image-segmentation": ["vision", "Computer vision", "arXiv 2015"],
   "learning-representations-by-back-propagating-errors": ["optimization", "Optimization", "Nature 1986"],
   "bert-pre-training-of-deep-bidirectional-transformers": ["language", "Language pretraining", "NAACL 2019"],
   "you-only-look-once-unified-real-time-object-detection": ["vision", "Computer vision", "CVPR 2016"],
