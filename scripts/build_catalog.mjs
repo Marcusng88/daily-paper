@@ -7,6 +7,7 @@ const root = path.resolve(scriptDir, "..");
 const curriculum = JSON.parse(fs.readFileSync(path.join(root, "curriculum.json"), "utf8"));
 
 const presentation = {
+  "proximal-policy-optimization-algorithms": ["reinforcement", "Reinforcement learning", "arXiv preprint 2017"],
   "react-synergizing-reasoning-and-acting-in-language-models": ["agents", "Language agents", "ICLR 2023"],
   "lora-low-rank-adaptation-of-large-language-models": ["post-training", "Post-training", "ICLR 2022"],
   "long-short-term-memory": ["memory", "Memory-augmented models", "Neural Computation 1997"],

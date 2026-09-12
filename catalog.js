@@ -1,6 +1,40 @@
 /* Generated from curriculum.json by scripts/build_catalog.mjs. */
 window.DAILY_PAPER_CATALOG = [
   {
+    "date": "2026-09-12",
+    "slug": "proximal-policy-optimization-algorithms",
+    "topic": "reinforcement",
+    "topicLabel": "Reinforcement learning",
+    "title": "Proximal Policy Optimization Algorithms",
+    "description": "Learn how PPO bounds the incentive to change a policy’s action probabilities, using a clipped probability-ratio objective that permits repeated minibatch updates.",
+    "authors": [
+      "John Schulman",
+      "Filip Wolski",
+      "Prafulla Dhariwal",
+      "Alec Radford",
+      "Oleg Klimov"
+    ],
+    "venue": "arXiv preprint 2017",
+    "paperFile": "proximal-policy-optimization-algorithms/proximal_policy_optimization_algorithms.pdf",
+    "lessonFile": "proximal-policy-optimization-algorithms/proximal_policy_optimization_algorithms.html",
+    "canonicalUrl": "https://arxiv.org/abs/1707.06347",
+    "domain": "stable on-policy policy optimization with clipped probability ratios",
+    "areas": [
+      "reinforcement learning",
+      "policy gradients",
+      "continuous control"
+    ],
+    "concepts": [
+      "policy gradient",
+      "advantage estimate",
+      "probability ratio",
+      "clipped surrogate objective",
+      "on-policy learning"
+    ],
+    "mentalMapConnection": "Adds direct stochastic-policy optimization beside DQN’s action values and AlphaGo’s search, then relates to ReAct’s action loop at inference time.",
+    "search": "proximal policy optimization algorithms proximal-policy-optimization-algorithms john schulman,filip wolski,prafulla dhariwal,alec radford,oleg klimov arxiv preprint 2017 reinforcement reinforcement learning learn how ppo bounds the incentive to change a policy’s action probabilities, using a clipped probability-ratio objective that permits repeated minibatch updates. stable on-policy policy optimization with clipped probability ratios adds direct stochastic-policy optimization beside dqn’s action values and alphago’s search, then relates to react’s action loop at inference time. https://arxiv.org/abs/1707.06347 reinforcement learning policy gradients continuous control policy gradient advantage estimate probability ratio clipped surrogate objective on-policy learning"
+  },
+  {
     "date": "2026-09-11",
     "slug": "react-synergizing-reasoning-and-acting-in-language-models",
     "topic": "agents",
