@@ -18,7 +18,16 @@ Create the next daily AI/ML/DL paper lesson in `/Users/zhengjie.ng/Documents/dai
 
 Read and follow this project-scoped instruction file first, together with the project `AGENTS.md` and the project-scoped skills it names. This file is the canonical scheduled-task prompt.
 
-Use `$daily-ai-paper-lesson` and follow it fully, including its learner-preferences reference. Use delegated mode for this substantial lesson: independently research and verify candidate papers, audit original visual sources, and develop pedagogy and design, then integrate one coherent lesson.
+Use `$daily-ai-paper-lesson` and follow it fully, including its learner-preferences reference. Use `$supervisor-worker`. You are the supervisor for this scheduled run.
+
+Before paper selection, inspect `curriculum.json`, `index.html`, and representative existing lessons: at least three recent lessons and two older lessons from different domains. Extract curriculum coverage, recent concept overlap, prerequisite gaps, strong teaching and visual patterns, and known quality defects to avoid. Treat existing lessons as references, not templates.
+
+Use two delegated waves. Spawn only as many workers as materially help, up to the configured limit of six.
+
+1. **Selection:** assign read-only workers to curriculum analysis, candidate discovery, and source verification. Compare their evidence yourself. Reject title or slug repeats, penalize overlap with the last three to five lessons, and prefer papers that fill a learning gap or make a meaningful connection. Do not create lesson files, assets, curriculum updates, commits, or pushes until you independently verify one selected paper.
+2. **Preparation:** after selection, assign a mechanism researcher, visual-source auditor, and pedagogy designer. The visual auditor must inspect candidate assets at native and intended display size, and return only sharp, tightly cropped candidates with figure/table number, PDF page, provenance, teaching question, and staging path. The pedagogy brief must propose a paper-specific 60-minute causal route, prediction exercise, active recall, misconceptions, and relevant mental-map connections.
+
+Workers must not spawn workers. Assign writes only with exclusive boundaries. No worker may modify `curriculum.json`, `index.html`, `catalog.js`, or another worker's files. You own lesson integration, shared collection files, final validation, commit, and push. Verify ambiguous, conflicting, or weakly supported claims against the primary PDF or with one targeted follow-up.
 
 Inspect the Git collection, `curriculum.json`, `index.html`, and existing lessons first. Choose one distinct, highly teachable core paper that broadens an AI university student's mental model. Avoid repeats and recently taught central mechanisms, and keep the collection balanced across AI, ML, and DL domains and credible venue ecosystems.
 
@@ -51,4 +60,4 @@ Update `curriculum.json` with the date and undated paths, then regenerate `catal
 
 After all validation succeeds, inspect Git status. Commit only the files created or modified by this run, using a descriptive commit message prefixed `[ai-assisted]`. Then push the current branch to origin. Do not force-push. If pre-existing unrelated changes, a missing Git identity, authentication issue, or a push rejection prevents a safe push, do not alter unrelated work; report the exact issue.
 
-Finish with a concise completion report naming the paper, linking the lesson HTML and PDF, and stating the commit hash and push result.
+Finish with a learner-friendly completion report: name the paper, explain what the learner will understand, why it was selected as the next useful lesson, its central mental model, relevant prior-lesson connections, estimated study time, and links to the lesson HTML and PDF. Follow with a short technical note stating validation completed or unavailable, the commit hash, push result, and any limitations or blockers.

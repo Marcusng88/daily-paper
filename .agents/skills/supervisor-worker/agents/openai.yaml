@@ -1,0 +1,6 @@
+interface:
+  display_name: "Supervisor–Worker"
+  short_description: "Coordinate parallel worker subagents"
+  default_prompt: "Use $supervisor-worker to coordinate this task with parallel Luna workers."
+policy:
+  allow_implicit_invocation: true
