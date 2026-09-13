@@ -1,6 +1,49 @@
 /* Generated from curriculum.json by scripts/build_catalog.mjs. */
 window.DAILY_PAPER_CATALOG = [
   {
+    "date": "2026-09-13",
+    "slug": "learning-transferable-visual-models-from-natural-language-supervision",
+    "topic": "multimodal",
+    "topicLabel": "Multimodal learning",
+    "title": "Learning Transferable Visual Models From Natural Language Supervision",
+    "description": "Learn how CLIP aligns images and text with a symmetric contrastive loss, then turns prompted class names into a zero-shot visual classifier—with evidence for broad transfer and its limits.",
+    "authors": [
+      "Alec Radford",
+      "Jong Wook Kim",
+      "Chris Hallacy",
+      "Aditya Ramesh",
+      "Gabriel Goh",
+      "Sandhini Agarwal",
+      "Girish Sastry",
+      "Amanda Askell",
+      "Pamela Mishkin",
+      "Jack Clark",
+      "Gretchen Krueger",
+      "Ilya Sutskever"
+    ],
+    "venue": "ICML 2021",
+    "paperFile": "learning-transferable-visual-models-from-natural-language-supervision/learning_transferable_visual_models_from_natural_language_supervision.pdf",
+    "lessonFile": "learning-transferable-visual-models-from-natural-language-supervision/learning_transferable_visual_models_from_natural_language_supervision.html",
+    "canonicalUrl": "https://proceedings.mlr.press/v139/radford21a.html",
+    "domain": "cross-modal contrastive pre-training and zero-shot visual classification",
+    "areas": [
+      "multimodal learning",
+      "contrastive learning",
+      "computer vision",
+      "language models"
+    ],
+    "concepts": [
+      "multimodal learning",
+      "contrastive language-image pre-training",
+      "joint embedding space",
+      "zero-shot classification",
+      "prompt ensembling",
+      "temperature-scaled contrastive loss"
+    ],
+    "mentalMapConnection": "Extends SimCLR’s contrastive geometry from two views of one image to an image-language pair, then turns BERT-like language representations into an inference-time classifier interface for vision.",
+    "search": "learning transferable visual models from natural language supervision learning-transferable-visual-models-from-natural-language-supervision alec radford,jong wook kim,chris hallacy,aditya ramesh,gabriel goh,sandhini agarwal,girish sastry,amanda askell,pamela mishkin,jack clark,gretchen krueger,ilya sutskever icml 2021 multimodal multimodal learning learn how clip aligns images and text with a symmetric contrastive loss, then turns prompted class names into a zero-shot visual classifier—with evidence for broad transfer and its limits. cross-modal contrastive pre-training and zero-shot visual classification extends simclr’s contrastive geometry from two views of one image to an image-language pair, then turns bert-like language representations into an inference-time classifier interface for vision. https://proceedings.mlr.press/v139/radford21a.html multimodal learning contrastive learning computer vision language models multimodal learning contrastive language-image pre-training joint embedding space zero-shot classification prompt ensembling temperature-scaled contrastive loss"
+  },
+  {
     "date": "2026-09-12",
     "slug": "proximal-policy-optimization-algorithms",
     "topic": "reinforcement",
