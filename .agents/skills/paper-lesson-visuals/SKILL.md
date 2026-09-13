@@ -24,7 +24,7 @@ Place every retained source-paper visual in the causal lesson flow where its que
 
 ## Delegated source-asset preparation
 
-For a substantial lesson, the visual-source audit should do more than list recommendations. It should prepare a high-resolution, tightly cropped local candidate asset for every source figure, table, or plot it recommends. For each candidate, record the source figure/table number, PDF page, and the teaching question it answers. This is a broad candidate set, not a quota: the lead may use every candidate that remains sharp and serves a distinct point in the lesson. Remove current-run candidate assets that are ultimately not used from the final lesson folder.
+For a substantial lesson, the visual-source audit should do more than list recommendations. Give that worker exclusive ownership of the current lesson folder’s visual-asset files. It should render, inspect, and save a high-resolution, tightly cropped local PNG for every source figure, table, or plot it recommends; the supervisor then only selects returned assets and references them from the lesson HTML. For each candidate, record the source figure/table number, PDF page, provenance, and teaching question. This is a broad candidate set, not a quota: the lead may use every candidate that remains sharp and serves a distinct point in the lesson. Remove current-run candidate assets that are ultimately not used from the final lesson folder.
 
 For diagrams, use direct labels and arrows instead of a legend when possible. For plots, include meaningful axes and units, label important values directly, and use a legend only when direct labels are insufficient. Preserve the paper's units, splits, metrics, and experimental conditions.
 

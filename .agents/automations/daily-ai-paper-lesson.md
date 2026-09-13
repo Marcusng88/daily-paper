@@ -16,16 +16,24 @@ When changing the Daily AI paper lesson workflow:
 
 Create the next daily AI/ML/DL paper lesson in `/Users/zhengjie.ng/Documents/daily-ai-papers/daily-paper/`.
 
-Read and follow this project-scoped instruction file first, together with the project `AGENTS.md` and the project-scoped skills it names. This file is the canonical scheduled-task prompt.
+Read and follow this project-scoped instruction file first, together with the project `AGENTS.md`. This file is the canonical scheduled-task prompt.
 
-Use `$daily-ai-paper-lesson` and follow it fully, including its learner-preferences reference. Use `$supervisor-worker`. You are the supervisor for this scheduled run.
+Use only the project-scoped instruction files below; they are the single source of truth for this collection. Do not use, compare against, or substitute user-scoped copies under `/Users/zhengjie.ng/.codex/skills/`:
+
+- `.agents/skills/daily-ai-paper-lesson/SKILL.md`, including `.agents/skills/daily-ai-paper-lesson/references/learner-preferences.md`
+- `.agents/skills/paper2html/SKILL.md`
+- `.agents/skills/paper-lesson-visuals/SKILL.md`
+- `.agents/skills/frontend-design/SKILL.md`
+- `.agents/skills/supervisor-worker/SKILL.md`
+
+Use `$daily-ai-paper-lesson` and follow the project-scoped copy fully, including its learner-preferences reference. Use `$supervisor-worker`. You are the supervisor for this scheduled run.
 
 Before paper selection, inspect `curriculum.json`, `index.html`, and representative existing lessons: at least three recent lessons and two older lessons from different domains. Extract curriculum coverage, recent concept overlap, prerequisite gaps, strong teaching and visual patterns, and known quality defects to avoid. Treat existing lessons as references, not templates.
 
 Use two delegated waves. Spawn only as many workers as materially help, up to the configured limit of six.
 
 1. **Selection:** assign read-only workers to curriculum analysis, candidate discovery, and source verification. Compare their evidence yourself. Reject title or slug repeats, penalize overlap with the last three to five lessons, and prefer papers that fill a learning gap or make a meaningful connection. Do not create lesson files, assets, curriculum updates, commits, or pushes until you independently verify one selected paper.
-2. **Preparation:** after selection, assign a mechanism researcher, visual-source auditor, and pedagogy designer. The visual auditor must inspect candidate assets at native and intended display size, and return only sharp, tightly cropped candidates with figure/table number, PDF page, provenance, teaching question, and staging path. The pedagogy brief must propose a paper-specific 60-minute causal route, prediction exercise, active recall, misconceptions, and relevant mental-map connections.
+2. **Preparation:** after selection, assign a mechanism researcher, visual-source auditor, and pedagogy designer. Give the visual auditor exclusive write ownership of the current lesson folder’s visual-asset files only. The visual auditor—not the supervisor—must render, inspect at native and intended display size, tightly crop, and save every recommended source figure/table/plot PNG in that folder. It returns the files plus figure/table number, PDF page, provenance, and teaching question. The supervisor may only select returned assets and reference them in the lesson HTML; after integration, the supervisor deletes every current-run asset that is not referenced. The pedagogy brief must propose a paper-specific 60-minute causal route, prediction exercise, active recall, misconceptions, and relevant mental-map connections.
 
 Workers must not spawn workers. Assign writes only with exclusive boundaries. No worker may modify `curriculum.json`, `index.html`, `catalog.js`, or another worker's files. You own lesson integration, shared collection files, final validation, commit, and push. Verify ambiguous, conflicting, or weakly supported claims against the primary PDF or with one targeted follow-up.
 
@@ -52,11 +60,13 @@ Organize the material as a gradual causal teaching path for a university student
 11. “Connect it to your mental map” using relevant completed lessons from `curriculum.json`.
 12. A compact “Takeaway.”
 
-Each section should resolve the question left by the previous section. Prefer a sharp original-paper architecture or result visual when it serves a clear teaching role: favour vector extraction or a high-resolution dedicated crop, never embed a whole PDF merely to show one figure, and never enlarge a blurry screenshot. The visual-source audit must prepare a tightly cropped, high-resolution local candidate for every figure, table, or plot it recommends, recording its source number, PDF page, and teaching question. This is not a quota: use every candidate that is sharp, non-redundant, and advances the causal lesson flow; remove current-run candidates that are not used. A faithful named reconstruction remains equally valid when it presents the source evidence more clearly. Label custom explanatory visuals exactly “Lesson diagram.”
+Each section should resolve the question left by the previous section. Prefer a sharp original-paper architecture or result visual when it serves a clear teaching role: favour vector extraction or a high-resolution dedicated crop, never embed a whole PDF merely to show one figure, and never enlarge a blurry screenshot. The visual-source auditor must prepare a tightly cropped, high-resolution local PNG for every figure, table, or plot it recommends, recording its source number, PDF page, and teaching question. The supervisor only inserts returned assets into the HTML and deletes each current-run returned asset that is not used. This is not a quota: use every candidate that is sharp, non-redundant, and advances the causal lesson flow. A faithful named reconstruction remains equally valid when it presents the source evidence more clearly. Label custom explanatory visuals exactly “Lesson diagram.”
 
 Make interactions keyboard-usable, visibly focused, reduced-motion aware, and accompanied by a static explanation. Use the exact Home text “← Daily AI Paper Lab”. Keep reader-facing HTML free of metadata and process wording. End with “Source and further exploration” using concise bullets for the local original PDF, canonical record, and an official repository only when useful.
 
-Update `curriculum.json` with the date and undated paths, then regenerate `catalog.js` with `node scripts/build_catalog.mjs`. Ensure `index.html` remains newest-first by curriculum date and includes the learner-facing description beneath every paper title. Validate the HTML, embedded JavaScript, local assets, PDF readability and provenance, accessibility basics, mobile layout, curriculum JSON, and catalog paths.
+First validate the completed lesson: HTML and embedded JavaScript, local assets, PDF readability and provenance, accessibility basics, and mobile layout. Do not update `curriculum.json`, `index.html`, or `catalog.js` while any lesson-quality gate remains open.
+
+Only after that lesson validation passes, update `curriculum.json` with the date and undated paths. Add the new slug's presentation entry in `scripts/build_catalog.mjs` (topic key, learner-facing topic label, and venue) before regenerating `catalog.js` with `node scripts/build_catalog.mjs`; this map supplies the existing index filters and labels. Ensure `index.html` remains newest-first by curriculum date and includes the learner-facing description beneath every paper title. Then validate curriculum JSON and catalog paths as the final collection-validation pass.
 
 After all validation succeeds, inspect Git status. Commit only the files created or modified by this run, using a descriptive commit message prefixed `[ai-assisted]`. Then push the current branch to origin. Do not force-push. If pre-existing unrelated changes, a missing Git identity, authentication issue, or a push rejection prevents a safe push, do not alter unrelated work; report the exact issue.
 
